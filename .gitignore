@@ -7,7 +7,9 @@ __pycache__/
 # Node / frontend build
 node_modules/
 frontend/dist/
-crm_app/public/frontend/assets/
+# NOTE: crm_app/public/frontend (the built PWA) IS committed so the repo is
+# deployable without a yarn build (Dexciss installs as-is). Rebuild with
+# `cd frontend && yarn build` when the frontend changes.
 
 # Editors / OS
 .DS_Store
