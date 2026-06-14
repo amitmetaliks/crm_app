@@ -22,8 +22,8 @@ def _haversine_km(a, b):
 
 
 @frappe.whitelist()
-def record_ping(latitude, longitude, accuracy=None, source="ping"):
-	"""Store a foreground location ping for the session rep."""
+def record_ping(latitude, longitude, accuracy=None, source="ping", is_mock=0):
+	"""Store a location ping for the session rep (is_mock flags spoofed GPS, native)."""
 	emp = get_current_employee()
 	if latitude in (None, "") or longitude in (None, ""):
 		return {"ok": False}
@@ -36,6 +36,7 @@ def record_ping(latitude, longitude, accuracy=None, source="ping"):
 			"longitude": flt(longitude),
 			"accuracy": flt(accuracy) if accuracy not in (None, "") else None,
 			"source": source,
+			"is_mock": 1 if int(is_mock or 0) else 0,
 		}
 	).insert(ignore_permissions=True)
 	frappe.db.commit()

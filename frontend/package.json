@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor-community/background-geolocation": "^1.2.20",
     "dayjs": "^1.11.11",
     "frappe-ui": "0.1.105",
     "lucide-vue-next": "^0.460.0",
@@ -16,6 +18,8 @@
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/android": "^6.1.2",
     "@vitejs/plugin-vue": "^4.4.0",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.5",

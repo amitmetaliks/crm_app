@@ -1,0 +1,53 @@
+name: Build Android APK
+
+# Manual trigger: GitHub → Actions → "Build Android APK" → Run workflow.
+# Produces an installable debug-signed APK artifact for internal sideloading.
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build web + add Android
+        working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npx cap add android
+          npx cap sync android
+
+      - name: Add location permissions to manifest
+        working-directory: frontend
+        run: |
+          MAN=android/app/src/main/AndroidManifest.xml
+          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>\n    $1#' "$MAN"
+          echo "--- manifest permissions ---"; grep uses-permission "$MAN" || true
+
+      - name: Assemble debug APK
+        working-directory: frontend/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: triam-aplus-apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

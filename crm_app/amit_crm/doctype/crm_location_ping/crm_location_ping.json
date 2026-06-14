@@ -11,7 +11,8 @@
   "latitude",
   "longitude",
   "accuracy",
-  "source"
+  "source",
+  "is_mock"
  ],
  "fields": [
   {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1},
@@ -19,7 +20,8 @@
   {"fieldname": "latitude", "fieldtype": "Float", "label": "Latitude", "precision": "6"},
   {"fieldname": "longitude", "fieldtype": "Float", "label": "Longitude", "precision": "6"},
   {"fieldname": "accuracy", "fieldtype": "Float", "label": "Accuracy (m)", "precision": "1"},
-  {"fieldname": "source", "fieldtype": "Data", "label": "Source"}
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source"},
+  {"fieldname": "is_mock", "fieldtype": "Check", "label": "Mock Location", "in_standard_filter": 1}
  ],
  "links": [],
  "modified": "2026-06-15 00:00:00",

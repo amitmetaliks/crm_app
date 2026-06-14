@@ -44,12 +44,21 @@ import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
 import { openWhatsApp } from "../utils/wa"
+import { toast } from "../utils/toast"
 
 const data = ref({ total: 0, overdue: 0, customers: [] })
 const loading = ref(true)
 
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
-function remind(c) {
+async function remind(c) {
+	// Hands-free send via Meta Cloud API when configured; otherwise free deep-link.
+	try {
+		await call("crm_app.whatsapp.send_payment_reminder", { customer: c.customer })
+		toast.success("Reminder sent on WhatsApp")
+		return
+	} catch (e) {
+		/* not configured / blocked — fall back to deep link */
+	}
 	const msg = `Dear ${c.customer_name},\nA gentle reminder from *TRIAM A+*: ₹${fmt(c.outstanding)} is outstanding on your account${c.overdue > 0 ? ` (₹${fmt(c.overdue)} overdue)` : ""}. Kindly arrange payment. Thank you.`
 	openWhatsApp("", msg)
 }

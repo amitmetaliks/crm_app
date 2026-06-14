@@ -7,11 +7,13 @@ import { applyStoredTheme } from "./utils/theme"
 import { initOffline } from "./data/offline"
 import { startTracking } from "./data/tracker"
 import { initLock } from "./data/lock"
+import { startNative } from "./data/native"
 
 applyStoredTheme()
 initLock()
 initOffline()
 startTracking()
+startNative()
 
 // Route all frappe-ui resources through the Frappe request helper (cookie/session auth)
 setConfig("resourceFetcher", frappeRequest)
