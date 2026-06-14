@@ -13,6 +13,8 @@ const routes = [
 	{ path: "/beat", name: "Beat", component: () => import("./pages/Beat.vue") },
 	{ path: "/targets", name: "Targets", component: () => import("./pages/Targets.vue") },
 	{ path: "/collections", name: "Collections", component: () => import("./pages/Collections.vue") },
+	{ path: "/leads", name: "Leads", component: () => import("./pages/Leads.vue") },
+	{ path: "/team", name: "Team", component: () => import("./pages/Team.vue") },
 	{ path: "/notifications", name: "Notifications", component: () => import("./pages/Notifications.vue") },
 	{ path: "/more", name: "More", component: () => import("./pages/More.vue") },
 ]

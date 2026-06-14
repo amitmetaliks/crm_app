@@ -23,8 +23,11 @@ permission_query_conditions = {
 	"CRM Sales Target": "crm_app.permissions.crm_sales_target_query",
 }
 
-# Scheduled background tasks (missed-visit + follow-up reminders) are added in Phase 4:
-# scheduler_events = {
-# 	"cron": {"*/5 * * * *": ["crm_app.tasks.send_due_reminders"]},
-# 	"daily": ["crm_app.tasks.flag_missed_visits"],
-# }
+# Scheduled background tasks: daily beat/follow-up reminders + missed-visit flags.
+scheduler_events = {
+	"daily": [
+		"crm_app.tasks.send_beat_reminders",
+		"crm_app.tasks.send_followup_reminders",
+		"crm_app.tasks.flag_missed_visits",
+	],
+}

@@ -143,6 +143,86 @@ def seed_phase3():
 	return {"employee": emp, "customers": custs}
 
 
+MGR_USER = "salesmgr@crmtest.local"
+
+
+def _ensure_manager():
+	if not frappe.db.exists("User", MGR_USER):
+		frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": MGR_USER,
+				"first_name": "Sales",
+				"last_name": "Manager",
+				"send_welcome_email": 0,
+				"new_password": TEST_PW,
+				"roles": [{"role": "Sales Manager"}, {"role": "Sales User"}],
+			}
+		).insert(ignore_permissions=True)
+	emp = frappe.db.get_value("Employee", {"user_id": MGR_USER}, "name")
+	if not emp:
+		company = _ensure_company()
+		for g in ("Male", "Female"):
+			if not frappe.db.exists("Gender", g):
+				frappe.get_doc({"doctype": "Gender", "gender": g}).insert(ignore_permissions=True)
+		emp = frappe.get_doc(
+			{
+				"doctype": "Employee",
+				"first_name": "Sales",
+				"last_name": "Manager",
+				"employee_name": "Sales Manager",
+				"user_id": MGR_USER,
+				"company": company,
+				"status": "Active",
+				"gender": "Male",
+				"date_of_birth": "1985-01-01",
+				"date_of_joining": "2020-01-01",
+			}
+		).insert(ignore_permissions=True).name
+	frappe.db.commit()
+	return emp
+
+
+def verify4():
+	"""Exercise leads + manager dashboard + scheduler tasks."""
+	out = {}
+	_ensure_manager()
+
+	# leads as the rep
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import leads
+
+		created = leads.create_lead(lead_name="Test Builder Pvt Ltd", organization="Test Builder Pvt Ltd", mobile_no="9811122233")
+		out["lead_created"] = created.get("name")
+		out["my_leads"] = len(leads.get_leads())
+		out["my_deals"] = len(leads.get_deals())
+	finally:
+		frappe.set_user("Administrator")
+
+	# manager dashboard
+	frappe.set_user(MGR_USER)
+	try:
+		from crm_app import dashboards
+
+		ov = dashboards.get_team_overview()
+		out["team_today_total"] = ov.get("today_total")
+		out["team_leaderboard"] = len(ov.get("leaderboard", []))
+		out["team_recent"] = len(ov.get("recent", []))
+	finally:
+		frappe.set_user("Administrator")
+
+	# scheduler tasks should run without error
+	from crm_app import tasks
+
+	tasks.send_beat_reminders()
+	tasks.send_followup_reminders()
+	tasks.flag_missed_visits()
+	out["scheduler"] = "ran"
+	frappe.db.commit()
+	return out
+
+
 def verify3():
 	"""Exercise beat/targets/collections as the test rep."""
 	seed_phase3()
