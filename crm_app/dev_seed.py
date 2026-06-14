@@ -110,6 +110,64 @@ def seed_demo():
 	return {"employee": emp, "customers": names}
 
 
+def seed_phase3():
+	"""Seed a beat plan (today, 3 dealers) + a monthly sales target for the test rep."""
+	seeded = seed_demo()
+	emp = seeded["employee"]
+	custs = seeded["customers"]
+	from frappe.utils import get_first_day, get_last_day, today
+
+	# Beat plan for today
+	if not frappe.db.exists("CRM Beat Plan", {"sales_person": emp, "plan_date": today()}):
+		bp = frappe.new_doc("CRM Beat Plan")
+		bp.sales_person = emp
+		bp.plan_date = today()
+		bp.title = "Kolkata North beat"
+		bp.status = "Active"
+		for cn in custs:
+			bp.append("entries", {"party_type": "Customer", "customer": cn, "area": "Kolkata"})
+		bp.insert(ignore_permissions=True)
+
+	# Monthly target
+	fd, ld = str(get_first_day(today())), str(get_last_day(today()))
+	if not frappe.db.exists("CRM Sales Target", {"sales_person": emp, "from_date": fd}):
+		tg = frappe.new_doc("CRM Sales Target")
+		tg.sales_person = emp
+		tg.period_label = "This Month"
+		tg.from_date = fd
+		tg.to_date = ld
+		tg.target_amount = 5000000
+		tg.target_qty_mt = 100
+		tg.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"employee": emp, "customers": custs}
+
+
+def verify3():
+	"""Exercise beat/targets/collections as the test rep."""
+	seed_phase3()
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import beat, collections, targets
+
+		out = {}
+		b = beat.get_my_beat()
+		out["beat_planned"] = b.get("planned")
+		out["beat_visited"] = b.get("visited")
+		out["beat_entries"] = len(b.get("entries", []))
+		tg = targets.get_my_targets()
+		out["targets"] = len(tg)
+		if tg:
+			out["target_amount_pct"] = tg[0].get("amount_pct")
+			out["target_achieved_amount"] = tg[0].get("achieved_amount")
+		col = collections.get_my_collections()
+		out["collections_total"] = col.get("total")
+		out["collections_customers"] = len(col.get("customers", []))
+	finally:
+		frappe.set_user("Administrator")
+	return out
+
+
 def verify():
 	"""Exercise the Phase 1 backend end-to-end as the test rep. Returns a report dict."""
 	out = {}

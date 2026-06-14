@@ -10,6 +10,9 @@ const routes = [
 	{ path: "/visit/:name", name: "VisitDetail", component: () => import("./pages/VisitDetail.vue"), props: true },
 	{ path: "/customers", name: "Customers", component: () => import("./pages/Customers.vue") },
 	{ path: "/customer/:name", name: "CustomerDetail", component: () => import("./pages/CustomerDetail.vue"), props: true },
+	{ path: "/beat", name: "Beat", component: () => import("./pages/Beat.vue") },
+	{ path: "/targets", name: "Targets", component: () => import("./pages/Targets.vue") },
+	{ path: "/collections", name: "Collections", component: () => import("./pages/Collections.vue") },
 	{ path: "/notifications", name: "Notifications", component: () => import("./pages/Notifications.vue") },
 	{ path: "/more", name: "More", component: () => import("./pages/More.vue") },
 ]

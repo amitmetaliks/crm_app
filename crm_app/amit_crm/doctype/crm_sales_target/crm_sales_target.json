@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:TGT-{#####}",
+ "creation": "2026-06-14 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "sales_person",
+  "sales_person_name",
+  "period_label",
+  "from_date",
+  "to_date",
+  "target_amount",
+  "target_qty_mt"
+ ],
+ "fields": [
+  {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1, "in_list_view": 1},
+  {"fieldname": "sales_person_name", "fieldtype": "Data", "label": "Sales Person Name", "fetch_from": "sales_person.employee_name", "read_only": 1},
+  {"fieldname": "period_label", "fieldtype": "Data", "label": "Period", "in_list_view": 1, "reqd": 1},
+  {"fieldname": "from_date", "fieldtype": "Date", "label": "From Date", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "to_date", "fieldtype": "Date", "label": "To Date", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "target_amount", "fieldtype": "Currency", "label": "Target Amount", "in_list_view": 1},
+  {"fieldname": "target_qty_mt", "fieldtype": "Float", "label": "Target Qty (MT)", "precision": "3"}
+ ],
+ "links": [],
+ "modified": "2026-06-14 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Sales Target",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales User", "read": 1, "report": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

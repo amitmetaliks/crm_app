@@ -211,6 +211,7 @@ onMounted(() => {
 			sub: route.query.sub || "",
 		}
 	}
+	if (route.query.purpose) purpose.value = route.query.purpose
 })
 
 const PURPOSES = [

@@ -22,3 +22,11 @@ def _own_employee(user: str, doctype: str, field: str = "sales_person") -> str:
 def crm_visit_query(user: str | None = None) -> str:
 	"""Reps see only their own visits; sales managers see the whole team."""
 	return _own_employee(user or frappe.session.user, "CRM Visit", "sales_person")
+
+
+def crm_beat_plan_query(user: str | None = None) -> str:
+	return _own_employee(user or frappe.session.user, "CRM Beat Plan", "sales_person")
+
+
+def crm_sales_target_query(user: str | None = None) -> str:
+	return _own_employee(user or frappe.session.user, "CRM Sales Target", "sales_person")

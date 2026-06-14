@@ -59,6 +59,19 @@
 				</div>
 			</div>
 
+			<!-- Quick access -->
+			<div class="grid grid-cols-3 gap-3">
+				<router-link :to="{ name: 'Beat' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
+					<Route class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Beat</span>
+				</router-link>
+				<router-link :to="{ name: 'Targets' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
+					<Target class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Targets</span>
+				</router-link>
+				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
+					<IndianRupee class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Collect</span>
+				</router-link>
+			</div>
+
 			<!-- Recent visits -->
 			<div>
 				<div class="mb-2 flex items-center justify-between px-1">
@@ -84,7 +97,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue"
-import { Bell, MapPin, ChevronRight } from "lucide-vue-next"
+import { Bell, MapPin, ChevronRight, Route, Target, IndianRupee } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"

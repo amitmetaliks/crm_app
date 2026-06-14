@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:BEAT-{#####}",
+ "creation": "2026-06-14 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "sales_person",
+  "sales_person_name",
+  "plan_date",
+  "title",
+  "status",
+  "entries"
+ ],
+ "fields": [
+  {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1, "in_list_view": 1},
+  {"fieldname": "sales_person_name", "fieldtype": "Data", "label": "Sales Person Name", "fetch_from": "sales_person.employee_name", "read_only": 1},
+  {"fieldname": "plan_date", "fieldtype": "Date", "label": "Plan Date", "reqd": 1, "default": "Today", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "title", "fieldtype": "Data", "label": "Title", "in_list_view": 1},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nActive\nCompleted\nCancelled", "default": "Active", "in_standard_filter": 1},
+  {"fieldname": "entries", "fieldtype": "Table", "label": "Planned Stops", "options": "CRM Beat Plan Entry"}
+ ],
+ "links": [],
+ "modified": "2026-06-14 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Beat Plan",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales User", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

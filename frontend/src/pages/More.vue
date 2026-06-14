@@ -14,6 +14,15 @@
 
 		<div class="mx-auto -mt-4 max-w-xl space-y-3 px-4">
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+				<router-link :to="{ name: 'Beat' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Route class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Beat plan</span>
+				</router-link>
+				<router-link :to="{ name: 'Targets' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Target class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My targets</span>
+				</router-link>
+				<router-link :to="{ name: 'Collections' }" class="flex items-center gap-3 px-4 py-3.5">
+					<IndianRupee class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Collections</span>
+				</router-link>
 				<router-link :to="{ name: 'Notifications' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Bell class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Notifications</span>
 				</router-link>
@@ -35,7 +44,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import { session, logoutResource } from "../data/session"
 import { isDark, setDark } from "../utils/theme"

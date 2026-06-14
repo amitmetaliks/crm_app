@@ -16,9 +16,11 @@ page_renderer = ["crm_app.spa.SPARenderer"]
 # Create/refresh custom fields (on Customer / CRM Lead) on every migrate (idempotent).
 after_migrate = "crm_app.setup.after_migrate"
 
-# Row-level visibility: reps see only their own visits; sales managers see all.
+# Row-level visibility: reps see only their own rows; sales managers see all.
 permission_query_conditions = {
 	"CRM Visit": "crm_app.permissions.crm_visit_query",
+	"CRM Beat Plan": "crm_app.permissions.crm_beat_plan_query",
+	"CRM Sales Target": "crm_app.permissions.crm_sales_target_query",
 }
 
 # Scheduled background tasks (missed-visit + follow-up reminders) are added in Phase 4:

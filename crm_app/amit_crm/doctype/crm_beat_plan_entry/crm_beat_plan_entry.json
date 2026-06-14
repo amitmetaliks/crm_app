@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-06-14 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "party_type",
+  "customer",
+  "crm_lead",
+  "party_name",
+  "area",
+  "planned_time",
+  "visited",
+  "visit",
+  "notes"
+ ],
+ "fields": [
+  {"fieldname": "party_type", "fieldtype": "Select", "label": "Type", "options": "Customer\nCRM Lead\nProspect", "default": "Customer", "in_list_view": 1, "columns": 1},
+  {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Customer", "in_list_view": 1, "columns": 3, "depends_on": "eval:doc.party_type=='Customer'"},
+  {"fieldname": "crm_lead", "fieldtype": "Link", "label": "CRM Lead", "options": "CRM Lead", "depends_on": "eval:doc.party_type=='CRM Lead'"},
+  {"fieldname": "party_name", "fieldtype": "Data", "label": "Name / Prospect", "in_list_view": 1, "columns": 2},
+  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "in_list_view": 1, "columns": 2},
+  {"fieldname": "planned_time", "fieldtype": "Data", "label": "Time"},
+  {"fieldname": "visited", "fieldtype": "Check", "label": "Visited", "in_list_view": 1, "columns": 1, "read_only": 1},
+  {"fieldname": "visit", "fieldtype": "Link", "label": "Visit", "options": "CRM Visit", "read_only": 1},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "links": [],
+ "modified": "2026-06-14 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Beat Plan Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
