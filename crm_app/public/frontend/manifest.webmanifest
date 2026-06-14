@@ -1,0 +1,16 @@
+{
+	"name": "TRIAM A+",
+	"short_name": "TRIAM A+",
+	"description": "TRIAM A+ field sales — dealer visits, orders, beats & targets",
+	"start_url": "/amit-crm",
+	"scope": "/amit-crm",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#15264c",
+	"theme_color": "#15264c",
+	"icons": [
+		{ "src": "/assets/crm_app/frontend/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/assets/crm_app/frontend/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "/assets/crm_app/frontend/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	]
+}

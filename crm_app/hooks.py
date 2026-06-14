@@ -1,7 +1,7 @@
 app_name = "crm_app"
-app_title = "Amit Alliance CRM"
+app_title = "TRIAM A+ CRM"
 app_publisher = "Amit Alliance (Amit Metaliks Limited)"
-app_description = "Amit Alliance CRM — field-visit CRM PWA built on Frappe CRM"
+app_description = "TRIAM A+ CRM — field-visit CRM PWA built on Frappe CRM"
 app_email = "developments@amitalliance.com"
 app_license = "mit"
 

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html,
+	body,
+	#app {
+		height: 100%;
+	}
+	body {
+		@apply bg-gray-50 text-navy-700 antialiased;
+		/* respect iOS safe areas */
+		padding: env(safe-area-inset-top) env(safe-area-inset-right)
+			env(safe-area-inset-bottom) env(safe-area-inset-left);
+	}
+}
+
+@layer components {
+	.aa-card {
+		@apply rounded-2xl bg-white p-4 ring-1 ring-gray-100;
+		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 14px rgba(16, 24, 40, 0.05);
+	}
+	.aa-btn-primary {
+		@apply inline-flex w-full items-center justify-center rounded-xl bg-saffron px-4 py-3 font-semibold text-white transition active:scale-[0.98] disabled:opacity-60;
+		box-shadow: 0 4px 12px rgba(232, 84, 28, 0.25);
+	}
+	.aa-input {
+		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-navy-700 outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20;
+	}
+}
+
+/* ───────── Loading skeleton shimmer ───────── */
+.aa-skel {
+	background: linear-gradient(90deg, #eceff3 25%, #f6f8fa 37%, #eceff3 63%);
+	background-size: 400% 100%;
+	animation: aa-shimmer 1.4s ease infinite;
+}
+@keyframes aa-shimmer {
+	0% { background-position: 100% 0; }
+	100% { background-position: 0 0; }
+}
+.dark .aa-skel {
+	background: linear-gradient(90deg, #1b2942 25%, #22324f 37%, #1b2942 63%);
+	background-size: 400% 100%;
+}
+
+/* ───────── Dark mode (global surface remap) ───────── */
+.dark body {
+	background-color: #0b1326;
+	color: #e5e7eb;
+}
+.dark .aa-card {
+	background-color: #16233f;
+	box-shadow: none;
+	--tw-ring-color: #26334f;
+}
+.dark .aa-input {
+	background-color: #16233f;
+	border-color: #2b3a5a;
+	color: #e8edf6;
+}
+.dark .aa-input::placeholder {
+	color: #6b7a99;
+}
+.dark .bg-white {
+	background-color: #16233f !important;
+}
+.dark .bg-gray-50 {
+	background-color: #0b1326 !important;
+}
+.dark .bg-gray-100 {
+	background-color: #233252 !important;
+}
+.dark .text-navy-700,
+.dark .text-navy-600 {
+	color: #e8edf6 !important;
+}
+.dark .text-navy-500 {
+	color: #c7d0e0 !important;
+}
+.dark .text-gray-400 {
+	color: #8b97b0 !important;
+}
+.dark .text-gray-500 {
+	color: #9aa6bd !important;
+}
+.dark .ring-gray-100 {
+	--tw-ring-color: #26334f !important;
+}
+.dark .border-gray-100,
+.dark .border-gray-200 {
+	border-color: #2b3a5a !important;
+}
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
+	border-color: #26334f !important;
+}
