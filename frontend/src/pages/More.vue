@@ -1,6 +1,9 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-8 pt-6 text-white">
+			<div class="mb-4 inline-block rounded-lg bg-white px-3 py-1.5 shadow-sm">
+				<img :src="wordmark" alt="TRIAM A+" class="h-6" />
+			</div>
 			<div class="flex items-center gap-3">
 				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-saffron text-lg font-bold">
 					{{ initials }}
@@ -85,6 +88,7 @@ import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, Calend
 import BottomNav from "../components/BottomNav.vue"
 import { session, logoutResource } from "../data/session"
 import { isDark, setDark } from "../utils/theme"
+import wordmark from "../assets/logo-wordmark.png"
 
 const router = useRouter()
 const version = "0.1.0"

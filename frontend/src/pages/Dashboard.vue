@@ -3,13 +3,16 @@
 		<!-- Header -->
 		<header class="bg-gradient-to-b from-navy-700 to-navy-600 px-5 pb-8 pt-6 text-white">
 			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm text-navy-200">{{ greeting }}</p>
-					<h1 class="text-xl font-bold">{{ session.employeeName || "Field Sales" }}</h1>
+				<div class="rounded-lg bg-white px-3 py-1.5 shadow-sm">
+					<img :src="wordmark" alt="TRIAM A+" class="h-6" />
 				</div>
 				<router-link :to="{ name: 'Notifications' }" class="rounded-full bg-white/10 p-2.5">
 					<Bell class="h-5 w-5" />
 				</router-link>
+			</div>
+			<div class="mt-4">
+				<p class="text-sm text-navy-200">{{ greeting }}</p>
+				<h1 class="text-xl font-bold">{{ session.employeeName || "Field Sales" }}</h1>
 			</div>
 		</header>
 
@@ -117,6 +120,7 @@ import EmptyState from "../components/EmptyState.vue"
 import VisitRow from "../components/VisitRow.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
+import wordmark from "../assets/logo-wordmark.png"
 
 const loading = ref(true)
 const visits = ref([])
