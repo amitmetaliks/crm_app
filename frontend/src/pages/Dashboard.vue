@@ -22,6 +22,18 @@
 				your admin to link your account.
 			</p>
 
+			<!-- Mark attendance -->
+			<router-link :to="{ name: 'Attendance' }" class="aa-card flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="flex h-10 w-10 items-center justify-center rounded-full bg-navy-100 text-navy-700"><CalendarCheck class="h-5 w-5" /></div>
+					<div>
+						<p class="font-semibold text-navy-700 dark:text-white">Mark attendance</p>
+						<p class="text-xs text-gray-400">Selfie + GPS check-in / out</p>
+					</div>
+				</div>
+				<ChevronRight class="h-5 w-5 text-gray-300" />
+			</router-link>
+
 			<!-- Resume in-progress visit -->
 			<router-link
 				v-if="inProgress"
@@ -97,7 +109,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue"
-import { Bell, MapPin, ChevronRight, Route, Target, IndianRupee } from "lucide-vue-next"
+import { Bell, MapPin, ChevronRight, Route, Target, IndianRupee, CalendarCheck } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"

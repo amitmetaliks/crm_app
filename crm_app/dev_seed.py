@@ -3,6 +3,8 @@
 Run e.g.:  bench --site crm-dev execute crm_app.dev_seed.verify
 """
 
+import base64
+
 import frappe
 
 TEST_USER = "fieldrep@crmtest.local"
@@ -219,6 +221,80 @@ def verify4():
 	tasks.send_followup_reminders()
 	tasks.flag_missed_visits()
 	out["scheduler"] = "ran"
+	frappe.db.commit()
+	return out
+
+
+def verify7():
+	"""Exercise the enterprise round: attendance (selfie+GPS), expense/leave/salary/holiday
+	reads, manager approvals + analytics. Needs hrms installed."""
+	from io import BytesIO
+
+	from PIL import Image
+
+	_ensure_manager()
+	buf = BytesIO()
+	Image.new("RGB", (8, 8), (40, 60, 90)).save(buf, format="PNG")
+	selfie = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+	out = {}
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import attendance, expense, holidays, leave, salary
+
+		ci = attendance.check_in_out(latitude=22.5726, longitude=88.3639, selfie_base64=selfie, address="Kolkata")
+		out["checkin"] = {"log_type": ci.get("log_type"), "name": ci.get("name")}
+		ov = attendance.get_attendance_overview()
+		out["attendance_next"] = ov.get("next_action")
+		out["attendance_logs_today"] = len(ov.get("logs_today", []))
+		out["expense_types"] = len(expense.get_expense_types())
+		out["my_expenses"] = len(expense.get_my_expenses())
+		out["leave_types"] = len(leave.get_leave_types())
+		out["my_leaves"] = len(leave.get_my_leaves())
+		out["salary_slips"] = len(salary.get_my_salary_slips())
+		out["holidays"] = len(holidays.get_holidays().get("holidays", []))
+
+		# offline one-shot visit submit
+		from crm_app import field_visit
+
+		cust = frappe.db.get_value("Customer", {}, "name")
+		payload = {
+			"client_ref": "verify7-ref-1",
+			"party_type": "Customer",
+			"customer": cust,
+			"visit_purpose": "Order Booking",
+			"check_in_time": frappe.utils.now(),
+			"check_out_time": frappe.utils.now(),
+			"notes": "offline submit test",
+			"order_items": [{"order_type": "Firm Order", "grade": "Fe 550D", "quantity_mt": 10}],
+			"competitors": [],
+			"photos": [],
+		}
+		import json as _json
+
+		r1 = field_visit.submit_full_visit(_json.dumps(payload))
+		r2 = field_visit.submit_full_visit(_json.dumps(payload))  # replay → should dedupe
+		out["offline_visit"] = r1.get("name")
+		out["offline_dedupe"] = bool(r2.get("duplicate"))
+	finally:
+		frappe.set_user("Administrator")
+
+	frappe.set_user(MGR_USER)
+	try:
+		from crm_app import approvals, dashboards
+
+		pend = approvals.get_pending_approvals()
+		out["approvals_count"] = pend.get("count")
+		out["visits_to_verify"] = len(pend.get("visits", []))
+		an = dashboards.get_analytics()
+		out["analytics"] = {
+			"conversion_pct": an.get("conversion_pct"),
+			"adherence_pct": an.get("adherence_pct"),
+			"attendance_today": an.get("attendance_today"),
+			"ar_total": an.get("ar_total"),
+		}
+	finally:
+		frappe.set_user("Administrator")
 	frappe.db.commit()
 	return out
 

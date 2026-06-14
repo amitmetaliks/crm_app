@@ -63,9 +63,27 @@ def _install_custom_fields():
 		},
 	]
 
+	# Selfie + address on Employee Checkin (field attendance). Only applied where
+	# hrms is installed (guarded by the existence filter below).
+	checkin_fields = [
+		{
+			"fieldname": "custom_selfie",
+			"fieldtype": "Attach Image",
+			"label": "Check-in Selfie",
+			"insert_after": "device_id",
+		},
+		{
+			"fieldname": "custom_check_in_address",
+			"fieldtype": "Small Text",
+			"label": "Check-in Address",
+			"insert_after": "custom_selfie",
+		},
+	]
+
 	custom_fields: dict[str, list[dict]] = {
 		"Customer": geo_fields,
 		"CRM Lead": geo_fields,
+		"Employee Checkin": checkin_fields,
 	}
 
 	to_install = {dt: fields for dt, fields in custom_fields.items() if frappe.db.exists("DocType", dt)}

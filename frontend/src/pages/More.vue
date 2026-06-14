@@ -26,9 +26,40 @@
 				<router-link :to="{ name: 'Leads' }" class="flex items-center gap-3 px-4 py-3.5">
 					<UserPlus class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Leads &amp; Deals</span>
 				</router-link>
-				<router-link v-if="session.isSalesManager" :to="{ name: 'Team' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Users class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team activity</span>
+			</div>
+
+			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">My workplace</p>
+			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+				<router-link :to="{ name: 'Attendance' }" class="flex items-center gap-3 px-4 py-3.5">
+					<CalendarCheck class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Attendance</span>
 				</router-link>
+				<router-link :to="{ name: 'Expense' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Receipt class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Expense claims</span>
+				</router-link>
+				<router-link :to="{ name: 'Leave' }" class="flex items-center gap-3 px-4 py-3.5">
+					<CalendarOff class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Leave</span>
+				</router-link>
+				<router-link :to="{ name: 'Salary' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Wallet class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Salary slips</span>
+				</router-link>
+			</div>
+
+			<div v-if="session.isSalesManager">
+				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Manager</p>
+				<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+					<router-link :to="{ name: 'Approvals' }" class="flex items-center gap-3 px-4 py-3.5">
+						<CheckSquare class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Approvals</span>
+					</router-link>
+					<router-link :to="{ name: 'Analytics' }" class="flex items-center gap-3 px-4 py-3.5">
+						<BarChart3 class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Analytics</span>
+					</router-link>
+					<router-link :to="{ name: 'Team' }" class="flex items-center gap-3 px-4 py-3.5">
+						<Users class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team activity</span>
+					</router-link>
+				</div>
+			</div>
+
+			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<router-link :to="{ name: 'Notifications' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Bell class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Notifications</span>
 				</router-link>
@@ -50,7 +81,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3 } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import { session, logoutResource } from "../data/session"
 import { isDark, setDark } from "../utils/theme"

@@ -4,8 +4,10 @@ import router from "./router"
 import App from "./App.vue"
 import "./index.css"
 import { applyStoredTheme } from "./utils/theme"
+import { initOffline } from "./data/offline"
 
 applyStoredTheme()
+initOffline()
 
 // Route all frappe-ui resources through the Frappe request helper (cookie/session auth)
 setConfig("resourceFetcher", frappeRequest)

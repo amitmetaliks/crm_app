@@ -354,6 +354,68 @@ def get_visit(name):
 
 
 @frappe.whitelist()
+def submit_full_visit(payload):
+	"""Create a COMPLETE visit in one call (party, check-in/out, notes, orders,
+	competitors, photos[]). Used by the offline queue so a whole visit syncs at once.
+	Idempotent-ish: a client_ref dedupes replays."""
+	employee = get_current_employee()
+	data = _parse(payload) or {}
+
+	client_ref = data.get("client_ref")
+	if client_ref:
+		existing = frappe.db.get_value("CRM Visit", {"sales_person": employee, "client_ref": client_ref}, "name")
+		if existing:
+			return {"name": existing, "duplicate": True}
+
+	doc = frappe.new_doc("CRM Visit")
+	doc.sales_person = employee
+	doc.visit_date = data.get("visit_date") or frappe.utils.today()
+	_apply_party(
+		doc, data.get("party_type"), data.get("customer"), data.get("crm_lead"),
+		data.get("crm_deal"), data.get("prospect_name"),
+	)
+	for f in ("visit_purpose", "contact_name", "contact_phone", "notes", "outcome", "next_action", "next_visit_date"):
+		if data.get(f) is not None:
+			doc.set(f, data.get(f))
+	doc.visit_purpose = doc.visit_purpose or "Follow-up"
+	doc.visit_status = data.get("visit_status") or "Completed"
+	if data.get("check_in_time"):
+		doc.check_in_time = data["check_in_time"]
+		doc.check_in_latitude = flt(data.get("check_in_latitude")) if data.get("check_in_latitude") not in (None, "") else None
+		doc.check_in_longitude = flt(data.get("check_in_longitude")) if data.get("check_in_longitude") not in (None, "") else None
+	if data.get("check_out_time"):
+		doc.check_out_time = data["check_out_time"]
+		doc.check_out_latitude = flt(data.get("check_out_latitude")) if data.get("check_out_latitude") not in (None, "") else None
+		doc.check_out_longitude = flt(data.get("check_out_longitude")) if data.get("check_out_longitude") not in (None, "") else None
+	if doc.meta.has_field("client_ref"):
+		doc.client_ref = client_ref
+	for row in data.get("order_items") or []:
+		doc.append("order_items", _clean_order_row(row))
+	for row in data.get("competitors") or []:
+		doc.append("competitors", _clean_competitor_row(row))
+	doc.insert(ignore_permissions=True)
+
+	for ph in data.get("photos") or []:
+		b64 = ph.get("content_base64") if isinstance(ph, dict) else ph
+		if not b64:
+			continue
+		try:
+			content = base64.b64decode(b64.split(",")[-1])
+			validate_upload("visit.jpg", content, images_only=True, max_mb=8)
+			f = frappe.get_doc(
+				{"doctype": "File", "file_name": f"visit-{doc.name}-{len(doc.photos)}.jpg",
+				 "attached_to_doctype": "CRM Visit", "attached_to_name": doc.name, "content": content, "is_private": 1}
+			).insert(ignore_permissions=True)
+			doc.append("photos", {"image": f.file_url, "captured_at": now_datetime()})
+		except Exception:
+			frappe.log_error(title="offline visit photo failed", message=frappe.get_traceback())
+	if doc.photos:
+		doc.save(ignore_permissions=True)
+	frappe.db.commit()
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
 def cancel_visit(name, reason=None):
 	employee = get_current_employee()
 	_require_access(name, employee)

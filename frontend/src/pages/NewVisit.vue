@@ -194,6 +194,7 @@ import {
 } from "lucide-vue-next"
 import dayjs from "dayjs"
 import { call } from "../data/api"
+import { enqueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
 import { toast } from "../utils/toast"
@@ -239,6 +240,10 @@ const visitName = ref(null)
 const checkInTime = ref(null)
 const busy = ref(false)
 const photoBusy = ref(false)
+const offlineMode = ref(false)
+const photoData = ref([]) // base64 photos kept for offline one-shot submit
+const checkInData = ref({})
+const clientRef = "v" + Date.now() + "-" + Math.random().toString(36).slice(2, 8)
 
 const photos = ref([])
 const orders = reactive([])
@@ -299,20 +304,32 @@ async function doCheckIn() {
 	busy.value = true
 	try {
 		const pos = await getPosition()
-		const res = await call("crm_app.field_visit.start_visit", {
-			...partyParams(),
-			visit_purpose: purpose.value,
-			contact_name: contactName.value,
-			contact_phone: contactPhone.value,
-			latitude: pos.latitude,
-			longitude: pos.longitude,
-		})
-		visitName.value = res.name
-		checkInTime.value = res.check_in_time || new Date().toISOString()
+		const ts = new Date().toISOString()
+		checkInData.value = { time: ts, lat: pos.latitude, lng: pos.longitude }
+		if (navigator.onLine) {
+			const res = await call("crm_app.field_visit.start_visit", {
+				...partyParams(),
+				visit_purpose: purpose.value,
+				contact_name: contactName.value,
+				contact_phone: contactPhone.value,
+				latitude: pos.latitude,
+				longitude: pos.longitude,
+			})
+			visitName.value = res.name
+			checkInTime.value = res.check_in_time || ts
+			toast.success("Checked in")
+		} else {
+			offlineMode.value = true
+			checkInTime.value = ts
+			toast.info("Offline — this visit will sync when you're back online")
+		}
 		checkedIn.value = true
-		toast.success("Checked in")
 	} catch (e) {
-		toast.error(e?.messages?.[0] || "Could not check in")
+		// Network failure mid-call: continue in offline mode (visit syncs later).
+		offlineMode.value = true
+		checkInTime.value = checkInData.value.time || new Date().toISOString()
+		checkedIn.value = true
+		toast.info("Offline — this visit will sync later")
 	} finally {
 		busy.value = false
 	}
@@ -324,18 +341,26 @@ async function onPhoto(e) {
 	photoBusy.value = true
 	try {
 		const dataUrl = await resizeImageToDataURL(file, 1280, 0.8)
-		const pos = await getPosition()
-		await call("crm_app.field_visit.add_photo", {
-			name: visitName.value,
-			content_base64: dataUrl,
-			filename: "visit-" + Date.now() + ".jpg",
-			latitude: pos.latitude,
-			longitude: pos.longitude,
-		})
+		photoData.value.push(dataUrl) // kept for offline one-shot submit
 		photos.value.push({ thumb: dataUrl })
+		// Live-upload when we have an online visit; otherwise it rides along on sync.
+		if (!offlineMode.value && visitName.value && navigator.onLine) {
+			try {
+				const pos = await getPosition()
+				await call("crm_app.field_visit.add_photo", {
+					name: visitName.value,
+					content_base64: dataUrl,
+					filename: "visit-" + Date.now() + ".jpg",
+					latitude: pos.latitude,
+					longitude: pos.longitude,
+				})
+			} catch (err) {
+				/* keep base64 for offline sync */
+			}
+		}
 		toast.success("Photo added")
 	} catch (err) {
-		toast.error(err?.messages?.[0] || "Photo upload failed")
+		toast.error("Photo failed")
 	} finally {
 		photoBusy.value = false
 		e.target.value = ""
@@ -352,31 +377,64 @@ function addCompetitor() {
 async function save(checkout) {
 	busy.value = true
 	try {
-		await call("crm_app.field_visit.save_visit", {
-			name: visitName.value,
-			...partyParams(),
-			visit_purpose: purpose.value,
-			contact_name: contactName.value,
-			contact_phone: contactPhone.value,
-			notes: notes.value,
-			outcome: outcome.value,
-			next_action: nextAction.value,
-			next_visit_date: nextVisitDate.value || null,
-			order_items: JSON.stringify(orders.filter((o) => o.grade || o.quantity_mt || o.expected_value)),
-			competitors: JSON.stringify(competitors.filter((c) => c.competitor_brand)),
-		})
-		if (checkout) {
-			const pos = await getPosition()
-			await call("crm_app.field_visit.check_out", {
+		const cleanOrders = orders.filter((o) => o.grade || o.quantity_mt || o.expected_value)
+		const cleanComps = competitors.filter((c) => c.competitor_brand)
+
+		if (visitName.value && navigator.onLine) {
+			// ONLINE: update the already-created visit, then check out.
+			await call("crm_app.field_visit.save_visit", {
 				name: visitName.value,
-				latitude: pos.latitude,
-				longitude: pos.longitude,
+				...partyParams(),
+				visit_purpose: purpose.value,
+				contact_name: contactName.value,
+				contact_phone: contactPhone.value,
+				notes: notes.value,
+				outcome: outcome.value,
+				next_action: nextAction.value,
+				next_visit_date: nextVisitDate.value || null,
+				order_items: JSON.stringify(cleanOrders),
+				competitors: JSON.stringify(cleanComps),
 			})
-			toast.success("Visit completed")
+			if (checkout) {
+				const pos = await getPosition()
+				await call("crm_app.field_visit.check_out", {
+					name: visitName.value,
+					latitude: pos.latitude,
+					longitude: pos.longitude,
+				})
+				toast.success("Visit completed")
+			} else {
+				toast.success("Saved")
+			}
+			router.replace({ name: "VisitDetail", params: { name: visitName.value } })
 		} else {
-			toast.success("Saved")
+			// OFFLINE: queue the whole visit as a single submission (syncs later).
+			const pos = checkout ? await getPosition() : {}
+			const payload = {
+				client_ref: clientRef,
+				...partyParams(),
+				visit_purpose: purpose.value,
+				contact_name: contactName.value,
+				contact_phone: contactPhone.value,
+				visit_status: "Completed",
+				check_in_time: checkInTime.value || checkInData.value.time,
+				check_in_latitude: checkInData.value.lat,
+				check_in_longitude: checkInData.value.lng,
+				check_out_time: new Date().toISOString(),
+				check_out_latitude: pos.latitude,
+				check_out_longitude: pos.longitude,
+				notes: notes.value,
+				outcome: outcome.value,
+				next_action: nextAction.value,
+				next_visit_date: nextVisitDate.value || null,
+				order_items: cleanOrders,
+				competitors: cleanComps,
+				photos: photoData.value.map((b) => ({ content_base64: b })),
+			}
+			await enqueue("crm_app.field_visit.submit_full_visit", { payload: JSON.stringify(payload) }, "Visit: " + (selected.value?.label || ""))
+			toast.success("Saved offline — will sync automatically")
+			router.replace({ name: "Visits" })
 		}
-		router.replace({ name: "VisitDetail", params: { name: visitName.value } })
 	} catch (e) {
 		toast.error(e?.messages?.[0] || "Could not save")
 	} finally {
