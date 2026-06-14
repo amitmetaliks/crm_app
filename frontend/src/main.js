@@ -6,8 +6,10 @@ import "./index.css"
 import { applyStoredTheme } from "./utils/theme"
 import { initOffline } from "./data/offline"
 import { startTracking } from "./data/tracker"
+import { initLock } from "./data/lock"
 
 applyStoredTheme()
+initLock()
 initOffline()
 startTracking()
 

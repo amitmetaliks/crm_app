@@ -356,6 +356,26 @@ def verify9():
 	return out
 
 
+def verify10():
+	"""Exercise route optimization + smart insights."""
+	seed_phase3()
+	out = {}
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import beat, insights
+
+		opt = beat.optimize_beat(start_lat=22.57, start_lng=88.36)
+		out["opt_stops"] = len(opt["stops"])
+		out["opt_km"] = opt["total_km"]
+		out["churn"] = len(insights.churn_risk())
+		f = insights.sales_forecast()
+		out["forecast"] = f["forecast"]
+		out["hist_months"] = len(f["history"])
+	finally:
+		frappe.set_user("Administrator")
+	return out
+
+
 def verify_realdata():
 	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
 	out = {"customers_total": frappe.db.count("Customer")}

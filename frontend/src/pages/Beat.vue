@@ -36,6 +36,19 @@
 							<CheckCircle2 class="h-4 w-4" /> Done
 						</span>
 					</div>
+					<button @click="optimize" :disabled="optimizing" class="aa-card w-full text-center text-sm font-medium text-navy-700 dark:text-white">
+						{{ optimizing ? "Optimizing…" : "🧭 Optimize route" }}
+					</button>
+					<div v-if="optStops.length" class="aa-card">
+						<div class="mb-2 flex items-center justify-between">
+							<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Suggested order · {{ optTotal }} km</p>
+							<a v-if="optMaps" :href="optMaps" target="_blank" class="text-xs font-medium text-saffron">Maps</a>
+						</div>
+						<div v-for="s in optStops" :key="s.customer" class="flex items-center gap-2 py-1 text-sm">
+							<span class="flex h-6 w-6 items-center justify-center rounded-full bg-saffron/15 text-xs font-bold text-saffron">{{ s.seq }}</span>
+							<span class="truncate text-navy-700 dark:text-white">{{ s.party_name }}</span>
+						</div>
+					</div>
 					<button @click="startEdit" class="aa-card w-full text-center text-sm font-medium text-saffron">Edit beat</button>
 				</template>
 
@@ -83,6 +96,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { getPosition } from "../utils/geo"
 import { toast } from "../utils/toast"
 
 const date = ref(dayjs().format("YYYY-MM-DD"))
@@ -96,9 +110,35 @@ const stops = reactive([])
 const q = ref("")
 const results = ref([])
 const busy = ref(false)
+const optimizing = ref(false)
+const optStops = ref([])
+const optTotal = ref(0)
 let timer = null
 
 const pct = computed(() => (beat.value.planned ? Math.round((beat.value.visited / beat.value.planned) * 100) : 0))
+const optMaps = computed(() => {
+	const pts = optStops.value
+	if (!pts.length) return null
+	const coord = (s) => `${s.lat},${s.lng}`
+	if (pts.length === 1) return `https://www.google.com/maps?q=${coord(pts[0])}`
+	const way = pts.slice(1, -1).map(coord).join("|")
+	let u = `https://www.google.com/maps/dir/?api=1&origin=${coord(pts[0])}&destination=${coord(pts[pts.length - 1])}`
+	if (way) u += `&waypoints=${encodeURIComponent(way)}`
+	return u
+})
+
+async function optimize() {
+	optimizing.value = true
+	try {
+		const pos = await getPosition()
+		const res = await call("crm_app.beat.optimize_beat", { plan_date: date.value, start_lat: pos.latitude, start_lng: pos.longitude })
+		optStops.value = res.stops || []
+		optTotal.value = res.total_km || 0
+		if (!optStops.value.length) toast.info("Add dealer locations to optimize the route")
+	} catch (e) {
+		toast.error("Could not optimize")
+	} finally { optimizing.value = false }
+}
 
 async function load() {
 	loading.value = true

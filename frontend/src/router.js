@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router"
 import { session, refreshMe } from "./data/session"
+import { lock } from "./data/lock"
 
 const routes = [
 	{ path: "/", redirect: "/dashboard" },
@@ -24,6 +25,8 @@ const routes = [
 	{ path: "/kra", name: "Kra", component: () => import("./pages/Kra.vue") },
 	{ path: "/timeline", name: "Timeline", component: () => import("./pages/Timeline.vue") },
 	{ path: "/route", name: "Route", component: () => import("./pages/Route.vue") },
+	{ path: "/insights", name: "Insights", component: () => import("./pages/Insights.vue") },
+	{ path: "/lock", name: "Lock", component: () => import("./pages/Lock.vue"), meta: { public: true } },
 	{ path: "/notifications", name: "Notifications", component: () => import("./pages/Notifications.vue") },
 	{ path: "/more", name: "More", component: () => import("./pages/More.vue") },
 ]
@@ -34,6 +37,8 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+	// App lock takes precedence once the user is signed in.
+	if (lock.locked && session.isLoggedIn && to.name !== "Lock") return { name: "Lock" }
 	if (to.meta.public) {
 		if (to.name === "Login" && session.isLoggedIn) return { name: "Dashboard" }
 		return true

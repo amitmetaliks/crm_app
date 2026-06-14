@@ -9,9 +9,19 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import today
+from frappe.utils import flt, today
 
 from crm_app.api import get_current_employee, is_sales_manager
+
+
+def _haversine_km(a, b):
+	import math
+
+	R = 6371.0
+	p1, p2 = math.radians(a[0]), math.radians(b[0])
+	dp, dl = math.radians(b[0] - a[0]), math.radians(b[1] - a[1])
+	h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+	return 2 * R * math.asin(math.sqrt(h))
 
 
 def _parse(v):
@@ -131,6 +141,51 @@ def get_my_beat(plan_date=None):
 		"planned": planned,
 		"visited": visited,
 	}
+
+
+@frappe.whitelist()
+def optimize_beat(plan_date=None, start_lat=None, start_lng=None):
+	"""Nearest-neighbour ordering of today's beat stops (by dealer geo) from the
+	rep's current location. Straight-line heuristic (no external routing API)."""
+	employee = get_current_employee()
+	plan_date = plan_date or today()
+	name = frappe.db.get_value("CRM Beat Plan", {"sales_person": employee, "plan_date": plan_date}, "name")
+	if not name:
+		return {"stops": [], "total_km": 0, "without_geo": 0}
+	entries = frappe.get_all("CRM Beat Plan Entry", filters={"parent": name}, fields=["customer", "party_name"])
+	pts = []
+	for e in entries:
+		if not e.customer:
+			continue
+		g = frappe.db.get_value(
+			"Customer", e.customer, ["custom_geo_latitude", "custom_geo_longitude"], as_dict=True
+		)
+		if g and g.get("custom_geo_latitude") and g.get("custom_geo_longitude"):
+			pts.append(
+				{
+					"customer": e.customer,
+					"party_name": e.party_name or e.customer,
+					"lat": flt(g.custom_geo_latitude),
+					"lng": flt(g.custom_geo_longitude),
+				}
+			)
+	if not pts:
+		return {"stops": [], "total_km": 0, "without_geo": len(entries)}
+
+	if start_lat not in (None, "") and start_lng not in (None, ""):
+		cur = (flt(start_lat), flt(start_lng))
+	else:
+		cur = (pts[0]["lat"], pts[0]["lng"])
+	ordered, remaining, total = [], pts[:], 0.0
+	while remaining:
+		nxt = min(remaining, key=lambda p: _haversine_km(cur, (p["lat"], p["lng"])))
+		total += _haversine_km(cur, (nxt["lat"], nxt["lng"]))
+		ordered.append(nxt)
+		remaining.remove(nxt)
+		cur = (nxt["lat"], nxt["lng"])
+	for i, o in enumerate(ordered):
+		o["seq"] = i + 1
+	return {"stops": ordered, "total_km": flt(total, 2), "without_geo": len(entries) - len(pts)}
 
 
 @frappe.whitelist()

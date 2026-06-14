@@ -54,6 +54,22 @@
 				<router-link :to="{ name: 'Route' }" class="flex items-center gap-3 px-4 py-3.5">
 					<MapPin class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My route &amp; distance</span>
 				</router-link>
+				<router-link :to="{ name: 'Insights' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Sparkles class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Smart insights</span>
+				</router-link>
+			</div>
+
+			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Security</p>
+			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+				<button @click="setupPin" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+					<KeyRound class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ pinOn ? "Change app PIN" : "Set app PIN" }}</span>
+				</button>
+				<button v-if="pinOn" @click="removePin" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+					<KeyRound class="h-5 w-5 text-gray-400" /> <span class="text-sm text-gray-500">Remove app PIN</span>
+				</button>
+				<button v-if="pinOn && bioCan" @click="toggleBio" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+					<Fingerprint class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ bioOn ? "Disable biometric unlock" : "Enable biometric unlock" }}</span>
+				</button>
 			</div>
 
 			<div v-if="session.isSalesManager">
@@ -93,7 +109,9 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint } from "lucide-vue-next"
+import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
+import { toast } from "../utils/toast"
 import BottomNav from "../components/BottomNav.vue"
 import { session, logoutResource } from "../data/session"
 import { isDark, setDark } from "../utils/theme"
@@ -102,6 +120,32 @@ import wordmark from "../assets/logo-wordmark.png"
 const router = useRouter()
 const version = "0.1.0"
 const dark = ref(isDark())
+const pinOn = ref(hasPin())
+const bioOn = ref(bioEnabled())
+const bioCan = bioSupported()
+
+async function setupPin() {
+	const pin = window.prompt("Set a 4-digit app PIN:")
+	if (!pin) return
+	if (!/^\d{4}$/.test(pin)) { toast.error("PIN must be 4 digits"); return }
+	await setPin(pin)
+	pinOn.value = true
+	toast.success("App PIN set")
+}
+function removePin() {
+	clearLock()
+	pinOn.value = false
+	bioOn.value = false
+	toast.info("App PIN removed")
+}
+async function toggleBio() {
+	if (bioOn.value) { disableBio(); bioOn.value = false; toast.info("Biometric unlock off") }
+	else {
+		const ok = await enableBio()
+		bioOn.value = ok
+		toast[ok ? "success" : "error"](ok ? "Biometric unlock enabled" : "Couldn't enable biometric")
+	}
+}
 
 const initials = computed(() => {
 	const n = session.employeeName || session.user || "?"
