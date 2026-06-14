@@ -28,6 +28,16 @@
 						<div class="flex justify-between text-sm"><span class="text-gray-500">Pending approval</span><span class="font-semibold text-navy-700 dark:text-white">{{ d.expense_pending }} · ₹{{ fmt(d.expense_pending_amount) }}</span></div>
 					</div>
 
+					<div v-if="series.length" class="aa-card">
+						<p class="mb-3 text-sm font-semibold text-navy-600 dark:text-navy-200">My visits — last 7 days</p>
+						<BarChart :data="series" />
+					</div>
+
+					<div v-if="products.length" class="aa-card">
+						<p class="mb-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Top products (by order value, this month)</p>
+						<DonutChart :items="products" :center-top="String(products.length)" center-sub="products" />
+					</div>
+
 					<router-link :to="{ name: 'Team' }" class="aa-card block text-center text-sm font-medium text-saffron">View team activity →</router-link>
 				</template>
 			</template>
@@ -41,14 +51,22 @@ import { ref, onMounted } from "vue"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
+import DonutChart from "../components/DonutChart.vue"
+import BarChart from "../components/BarChart.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
 
 const d = ref({})
+const products = ref([])
+const series = ref([])
 const loading = ref(true)
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 onMounted(async () => {
 	if (!session.isSalesManager) { loading.value = false; return }
-	try { d.value = await call("crm_app.dashboards.get_analytics") } finally { loading.value = false }
+	try {
+		d.value = await call("crm_app.dashboards.get_analytics")
+		products.value = (await call("crm_app.sfa.get_top_products", { scope: "team" })).items || []
+		series.value = (await call("crm_app.sfa.get_productivity_series")).series || []
+	} finally { loading.value = false }
 })
 </script>

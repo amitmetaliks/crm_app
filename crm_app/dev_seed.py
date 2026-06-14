@@ -299,6 +299,38 @@ def verify7():
 	return out
 
 
+def verify8():
+	"""Exercise the SFA backend (home summary, KRA, timeline, top products, series)."""
+	seed_phase3()
+	emp = _ensure_user_employee()
+	tname = frappe.db.get_value("CRM Sales Target", {"sales_person": emp}, "name")
+	if tname:
+		frappe.db.set_value(
+			"CRM Sales Target",
+			tname,
+			{"target_visits": 40, "target_productive_calls": 25, "target_new_customers": 5, "collection_ratio_target": 95},
+		)
+	frappe.db.commit()
+
+	out = {}
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import sfa
+
+		h = sfa.get_home_summary()
+		out["home_keys"] = sorted(h.keys())
+		out["strike_rate"] = h["visits"]["strike_rate"]
+		out["order_value"] = h["order_summary"]["value"]
+		out["beat"] = h["beat"]
+		out["kra"] = [(k["label"], k["pct"]) for k in sfa.get_kra()]
+		out["timeline_items"] = len(sfa.get_activity_timeline()["items"])
+		out["top_products"] = len(sfa.get_top_products()["items"])
+		out["series_days"] = len(sfa.get_productivity_series()["series"])
+	finally:
+		frappe.set_user("Administrator")
+	return out
+
+
 def verify_realdata():
 	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
 	out = {"customers_total": frappe.db.count("Customer")}

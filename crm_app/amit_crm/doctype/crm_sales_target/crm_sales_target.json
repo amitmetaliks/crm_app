@@ -13,7 +13,11 @@
   "from_date",
   "to_date",
   "target_amount",
-  "target_qty_mt"
+  "target_qty_mt",
+  "target_visits",
+  "target_productive_calls",
+  "target_new_customers",
+  "collection_ratio_target"
  ],
  "fields": [
   {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1, "in_list_view": 1},
@@ -22,7 +26,11 @@
   {"fieldname": "from_date", "fieldtype": "Date", "label": "From Date", "reqd": 1, "in_list_view": 1},
   {"fieldname": "to_date", "fieldtype": "Date", "label": "To Date", "reqd": 1, "in_list_view": 1},
   {"fieldname": "target_amount", "fieldtype": "Currency", "label": "Target Amount", "in_list_view": 1},
-  {"fieldname": "target_qty_mt", "fieldtype": "Float", "label": "Target Qty (MT)", "precision": "3"}
+  {"fieldname": "target_qty_mt", "fieldtype": "Float", "label": "Target Qty (MT)", "precision": "3"},
+  {"fieldname": "target_visits", "fieldtype": "Int", "label": "Target Visits"},
+  {"fieldname": "target_productive_calls", "fieldtype": "Int", "label": "Target Productive Calls"},
+  {"fieldname": "target_new_customers", "fieldtype": "Int", "label": "Target New Customers"},
+  {"fieldname": "collection_ratio_target", "fieldtype": "Float", "label": "Collection Ratio Target (%)", "default": "95"}
  ],
  "links": [],
  "modified": "2026-06-14 00:00:00",

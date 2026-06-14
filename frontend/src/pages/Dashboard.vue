@@ -1,108 +1,102 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<!-- Header -->
-		<header class="bg-gradient-to-b from-navy-700 to-navy-600 px-5 pb-8 pt-6 text-white">
+		<header class="bg-gradient-to-b from-navy-700 to-navy-600 px-5 pb-6 pt-6 text-white">
 			<div class="flex items-center justify-between">
 				<div class="rounded-lg bg-white px-3 py-1.5 shadow-sm">
 					<img :src="wordmark" alt="TRIAM A+" class="h-6" />
 				</div>
-				<router-link :to="{ name: 'Notifications' }" class="rounded-full bg-white/10 p-2.5">
-					<Bell class="h-5 w-5" />
-				</router-link>
+				<router-link :to="{ name: 'Notifications' }" class="rounded-full bg-white/10 p-2.5"><Bell class="h-5 w-5" /></router-link>
 			</div>
 			<div class="mt-4">
-				<p class="text-sm text-navy-200">{{ greeting }}</p>
-				<h1 class="text-xl font-bold">{{ session.employeeName || "Field Sales" }}</h1>
+				<p class="text-sm text-navy-200">{{ greeting }},</p>
+				<h1 class="text-xl font-bold">{{ home.employee_name || session.employeeName || "Field Sales" }}</h1>
+			</div>
+			<!-- Week strip -->
+			<div class="mt-4 flex justify-between gap-1">
+				<div v-for="d in week" :key="d.iso" class="flex flex-1 flex-col items-center rounded-xl py-2"
+					:class="d.isToday ? 'bg-white text-navy-700' : 'text-navy-100'">
+					<span class="text-[10px]">{{ d.dow }}</span>
+					<span class="text-sm font-bold">{{ d.day }}</span>
+				</div>
 			</div>
 		</header>
 
-		<div class="mx-auto -mt-5 max-w-xl space-y-4 px-4">
-			<p
-				v-if="session.gateLoaded && !session.hasEmployee"
-				class="aa-card border border-amber-200 bg-amber-50 text-sm text-amber-800"
-			>
-				Your login isn't linked to an Employee record yet, so visits can't be saved. Please ask
-				your admin to link your account.
+		<div class="mx-auto -mt-3 max-w-xl space-y-4 px-4">
+			<p v-if="session.gateLoaded && !session.hasEmployee" class="aa-card border border-amber-200 bg-amber-50 text-sm text-amber-800">
+				Your login isn't linked to an Employee record yet, so data can't be saved. Please ask your admin to link your account.
 			</p>
 
-			<!-- Mark attendance -->
+			<!-- Attendance -->
 			<router-link :to="{ name: 'Attendance' }" class="aa-card flex items-center justify-between">
 				<div class="flex items-center gap-3">
-					<div class="flex h-10 w-10 items-center justify-center rounded-full bg-navy-100 text-navy-700"><CalendarCheck class="h-5 w-5" /></div>
+					<div class="flex h-10 w-10 items-center justify-center rounded-full" :class="home.attendance?.checked_in ? 'bg-green-100 text-green-600' : 'bg-navy-100 text-navy-700'">
+						<CalendarCheck class="h-5 w-5" />
+					</div>
 					<div>
-						<p class="font-semibold text-navy-700 dark:text-white">Mark attendance</p>
-						<p class="text-xs text-gray-400">Selfie + GPS check-in / out</p>
+						<p class="font-semibold text-navy-700 dark:text-white">{{ home.attendance?.checked_in ? "On duty" : "Mark attendance" }}</p>
+						<p class="text-xs text-gray-400">
+							In {{ fmtTime(home.attendance?.first_in) || "--:--" }} · Out {{ fmtTime(home.attendance?.last_out) || "--:--" }}
+						</p>
 					</div>
 				</div>
-				<ChevronRight class="h-5 w-5 text-gray-300" />
-			</router-link>
-
-			<!-- Resume in-progress visit -->
-			<router-link
-				v-if="inProgress"
-				:to="{ name: 'VisitDetail', params: { name: inProgress.name } }"
-				class="aa-card flex items-center justify-between border border-saffron/30 bg-saffron/5"
-			>
-				<div>
-					<p class="text-xs font-semibold uppercase tracking-wide text-saffron">Visit in progress</p>
-					<p class="font-semibold text-navy-700 dark:text-white">{{ inProgress.party_display }}</p>
-				</div>
-				<ChevronRight class="h-5 w-5 text-saffron" />
+				<span class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
 			</router-link>
 
 			<!-- Quick action -->
-			<router-link
-				:to="{ name: 'NewVisit' }"
-				class="flex items-center justify-center gap-2 rounded-2xl bg-saffron px-4 py-4 font-semibold text-white shadow-lg shadow-saffron/30 active:scale-[0.99]"
-			>
+			<router-link :to="{ name: 'NewVisit' }" class="flex items-center justify-center gap-2 rounded-2xl bg-saffron px-4 py-4 font-semibold text-white shadow-lg shadow-saffron/30 active:scale-[0.99]">
 				<MapPin class="h-5 w-5" /> Start a Visit
 			</router-link>
 
-			<!-- Stats -->
-			<div class="grid grid-cols-3 gap-3">
-				<div class="aa-card text-center">
-					<p class="text-2xl font-bold text-navy-700 dark:text-white">{{ stats.today }}</p>
-					<p class="text-xs text-gray-400">Today</p>
+			<!-- Today's beat + productivity -->
+			<div class="aa-card">
+				<div class="mb-3 flex items-center justify-between">
+					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Today</p>
+					<router-link :to="{ name: 'Beat' }" class="text-xs font-medium text-saffron">Beat: {{ home.beat?.visited || 0 }}/{{ home.beat?.planned || 0 }}</router-link>
 				</div>
-				<div class="aa-card text-center">
-					<p class="text-2xl font-bold text-navy-700 dark:text-white">{{ stats.week }}</p>
-					<p class="text-xs text-gray-400">This week</p>
-				</div>
-				<div class="aa-card text-center">
-					<p class="text-2xl font-bold text-navy-700 dark:text-white">{{ stats.completed }}</p>
-					<p class="text-xs text-gray-400">Completed</p>
+				<div class="grid grid-cols-4 gap-2 text-center">
+					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-[10px] text-gray-400">Visits</p></div>
+					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-[10px] text-gray-400">Productive</p></div>
+					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-[10px] text-gray-400">Zero order</p></div>
+					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-[10px] text-gray-400">Strike</p></div>
 				</div>
 			</div>
+
+			<!-- Order summary -->
+			<div class="grid grid-cols-2 gap-3">
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ o.orders || 0 }}</p><p class="text-xs text-gray-400">Orders today</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">₹{{ fmt(o.value) }}</p><p class="text-xs text-gray-400">Order value</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ fmt(o.qty) }} MT</p><p class="text-xs text-gray-400">Total qty</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ home.new_retailers || 0 }}</p><p class="text-xs text-gray-400">New retailers (mo)</p></div>
+			</div>
+
+			<!-- Sales target -->
+			<router-link :to="{ name: 'Targets' }" class="aa-card block">
+				<div class="mb-1 flex justify-between text-sm">
+					<span class="font-semibold text-navy-600 dark:text-navy-200">Sales target (month)</span>
+					<span class="text-gray-500">₹{{ fmt(home.sales_target?.achieved) }} / ₹{{ fmt(home.sales_target?.target) }}</span>
+				</div>
+				<div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700">
+					<div class="h-full rounded-full bg-saffron" :style="{ width: Math.min(100, home.sales_target?.pct || 0) + '%' }"></div>
+				</div>
+				<p class="mt-1 text-right text-xs text-gray-400">{{ home.sales_target?.pct || 0 }}%</p>
+			</router-link>
+
+			<!-- Expense -->
+			<router-link :to="{ name: 'Expense' }" class="aa-card flex items-center justify-between">
+				<div>
+					<p class="font-semibold text-navy-700 dark:text-white">Expenses</p>
+					<p class="text-xs text-gray-400">Today ₹{{ fmt(home.expense?.today) }} · Month ₹{{ fmt(home.expense?.month) }}</p>
+				</div>
+				<span class="rounded-lg bg-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-700">+ Add</span>
+			</router-link>
 
 			<!-- Quick access -->
-			<div class="grid grid-cols-3 gap-3">
-				<router-link :to="{ name: 'Beat' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
-					<Route class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Beat</span>
-				</router-link>
-				<router-link :to="{ name: 'Targets' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
-					<Target class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Targets</span>
-				</router-link>
-				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center">
-					<IndianRupee class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">Collect</span>
-				</router-link>
-			</div>
-
-			<!-- Recent visits -->
-			<div>
-				<div class="mb-2 flex items-center justify-between px-1">
-					<h2 class="text-sm font-semibold text-navy-600 dark:text-navy-200">Recent visits</h2>
-					<router-link :to="{ name: 'Visits' }" class="text-xs font-medium text-saffron">See all</router-link>
-				</div>
-
-				<Skeleton v-if="loading" :count="3" />
-				<EmptyState
-					v-else-if="!recent.length"
-					title="No visits yet"
-					subtitle="Tap “Start a Visit” to log your first dealer visit."
-				/>
-				<div v-else class="space-y-2">
-					<VisitRow v-for="v in recent" :key="v.name" :visit="v" />
-				</div>
+			<div class="grid grid-cols-4 gap-3">
+				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">KRA</span></router-link>
+				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Timeline</span></router-link>
+				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Collect</span></router-link>
+				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Dealers</span></router-link>
 			</div>
 		</div>
 
@@ -112,43 +106,35 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue"
-import { Bell, MapPin, ChevronRight, Route, Target, IndianRupee, CalendarCheck } from "lucide-vue-next"
+import { Bell, MapPin, CalendarCheck, Award, Clock, IndianRupee, Store } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
-import Skeleton from "../components/Skeleton.vue"
-import EmptyState from "../components/EmptyState.vue"
-import VisitRow from "../components/VisitRow.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
 import wordmark from "../assets/logo-wordmark.png"
 
-const loading = ref(true)
-const visits = ref([])
-const stats = reactive({ today: 0, week: 0, completed: 0 })
+const home = ref({})
+const v = computed(() => home.value.visits || {})
+const o = computed(() => home.value.order_summary || {})
 
 const greeting = computed(() => {
 	const h = new Date().getHours()
-	if (h < 12) return "Good morning"
-	if (h < 17) return "Good afternoon"
-	return "Good evening"
+	return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
 })
 
-const inProgress = computed(() => visits.value.find((v) => v.visit_status === "In Progress") || null)
-const recent = computed(() => visits.value.slice(0, 6))
+const week = computed(() => {
+	const today = dayjs()
+	const monday = today.subtract((today.day() + 6) % 7, "day")
+	return Array.from({ length: 7 }, (_, i) => {
+		const d = monday.add(i, "day")
+		return { iso: d.format("YYYY-MM-DD"), dow: d.format("dd")[0], day: d.format("D"), isToday: d.isSame(today, "day") }
+	})
+})
+
+function fmtTime(t) { return t ? dayjs(t).format("h:mm A") : "" }
+function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 
 onMounted(async () => {
-	try {
-		const rows = await call("crm_app.field_visit.get_my_visits", { scope: "mine", limit: 100 })
-		visits.value = rows || []
-		const today = dayjs().format("YYYY-MM-DD")
-		const weekStart = dayjs().startOf("week")
-		stats.today = visits.value.filter((v) => v.visit_date === today).length
-		stats.week = visits.value.filter((v) => dayjs(v.visit_date).isAfter(weekStart)).length
-		stats.completed = visits.value.filter((v) => v.visit_status === "Completed").length
-	} catch (e) {
-		/* surfaced via toast elsewhere */
-	} finally {
-		loading.value = false
-	}
+	try { home.value = await call("crm_app.sfa.get_home_summary") } catch (e) { /* */ }
 })
 </script>

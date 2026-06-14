@@ -7,7 +7,7 @@
 			</div>
 			<div v-if="beat.exists" class="mt-3">
 				<div class="flex items-center justify-between text-sm">
-					<span class="text-navy-100">{{ beat.title || "Beat plan" }}</span>
+					<span class="text-navy-100">{{ beat.title || "Beat plan" }}<span v-if="beat.beat_type" class="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">{{ beat.beat_type }}</span></span>
 					<span class="font-semibold">{{ beat.visited }}/{{ beat.planned }} visited</span>
 				</div>
 				<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/20">
@@ -46,7 +46,12 @@
 				<!-- editor -->
 				<template v-if="editing">
 					<div class="aa-card">
+						<div class="mb-2 flex gap-2">
+							<button @click="beatType = 'Primary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Primary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">Primary</button>
+							<button @click="beatType = 'Secondary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Secondary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">Secondary</button>
+						</div>
 						<input v-model="title" class="aa-input mb-2" placeholder="Beat title (e.g. North zone)" />
+						<input v-model="territory" class="aa-input mb-2" placeholder="Territory (e.g. West Bengal)" />
 						<input v-model="q" @input="onSearch" class="aa-input" placeholder="Add dealer…" />
 						<ul v-if="results.length" class="mt-2 divide-y divide-gray-100">
 							<li v-for="r in results" :key="r.id" @click="addStop(r)" class="flex cursor-pointer items-center justify-between py-2 text-sm">
@@ -85,6 +90,8 @@ const beat = ref({ exists: false, entries: [], planned: 0, visited: 0 })
 const loading = ref(true)
 const editing = ref(false)
 const title = ref("")
+const beatType = ref("Primary")
+const territory = ref("")
 const stops = reactive([])
 const q = ref("")
 const results = ref([])
@@ -104,6 +111,8 @@ async function load() {
 }
 function startEdit() {
 	title.value = beat.value.title || ""
+	beatType.value = beat.value.beat_type || "Primary"
+	territory.value = beat.value.territory || ""
 	stops.splice(0, stops.length)
 	;(beat.value.entries || []).forEach((e) =>
 		stops.push({ party_type: e.party_type, customer: e.customer, party_name: e.party_name || e.customer, area: e.area })
@@ -129,6 +138,8 @@ async function saveBeat() {
 			name: beat.value.name || undefined,
 			plan_date: date.value,
 			title: title.value,
+			beat_type: beatType.value,
+			territory: territory.value,
 			entries: JSON.stringify(stops),
 		})
 		toast.success("Beat saved")

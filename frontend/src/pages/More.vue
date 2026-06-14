@@ -45,6 +45,12 @@
 				<router-link :to="{ name: 'Salary' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Wallet class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Salary slips</span>
 				</router-link>
+				<router-link :to="{ name: 'Kra' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Award class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My KRA scorecard</span>
+				</router-link>
+				<router-link :to="{ name: 'Timeline' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Clock class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Activity timeline</span>
+				</router-link>
 			</div>
 
 			<div v-if="session.isSalesManager">
@@ -84,7 +90,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3 } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import { session, logoutResource } from "../data/session"
 import { isDark, setDark } from "../utils/theme"

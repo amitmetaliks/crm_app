@@ -34,7 +34,7 @@ def _require_access(name, employee):
 
 
 @frappe.whitelist()
-def save_beat(name=None, plan_date=None, title=None, entries=None, status="Active"):
+def save_beat(name=None, plan_date=None, title=None, entries=None, status="Active", beat_type="Primary", territory=None, week_of=None):
 	"""Create or replace a beat plan's stops for the session rep."""
 	employee = get_current_employee()
 	if name:
@@ -46,6 +46,9 @@ def save_beat(name=None, plan_date=None, title=None, entries=None, status="Activ
 
 	doc.plan_date = plan_date or today()
 	doc.title = title
+	doc.beat_type = beat_type or "Primary"
+	doc.territory = territory
+	doc.week_of = week_of or None
 	doc.status = status or "Active"
 	doc.entries = []
 	for row in _parse(entries):
@@ -122,6 +125,8 @@ def get_my_beat(plan_date=None):
 		"plan_date": plan_date,
 		"title": doc.title,
 		"status": doc.status,
+		"beat_type": doc.beat_type,
+		"territory": doc.territory,
 		"entries": rows,
 		"planned": planned,
 		"visited": visited,
