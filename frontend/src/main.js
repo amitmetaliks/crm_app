@@ -5,9 +5,11 @@ import App from "./App.vue"
 import "./index.css"
 import { applyStoredTheme } from "./utils/theme"
 import { initOffline } from "./data/offline"
+import { startTracking } from "./data/tracker"
 
 applyStoredTheme()
 initOffline()
+startTracking()
 
 // Route all frappe-ui resources through the Frappe request helper (cookie/session auth)
 setConfig("resourceFetcher", frappeRequest)

@@ -331,6 +331,31 @@ def verify8():
 	return out
 
 
+def verify9():
+	"""Exercise Phase 9: tracking/distance, credit, item search, geofence on check-in."""
+	seed_demo()
+	emp = _ensure_user_employee()
+	cust = frappe.db.get_value("Customer", {"custom_assigned_sales_person": emp}, "name") or frappe.db.get_value("Customer", {}, "name")
+	out = {}
+	frappe.set_user(TEST_USER)
+	try:
+		from crm_app import field_visit, orders, tracking
+
+		tracking.record_ping(22.5726, 88.3639, 10, "test")
+		tracking.record_ping(22.5958, 88.4042, 10, "test")
+		r = tracking.get_day_route()
+		out["distance_km"] = r["distance_km"]
+		out["route_stops"] = len(r["stops"])
+		out["credit"] = orders.get_credit_status(cust)
+		out["items_found"] = len(orders.search_items(""))
+		st = field_visit.start_visit(party_type="Customer", customer=cust, latitude=22.5726, longitude=88.3639)
+		out["geofence_within"] = st.get("within_geofence")
+		out["geofence_dist_m"] = st.get("distance_m")
+	finally:
+		frappe.set_user("Administrator")
+	return out
+
+
 def verify_realdata():
 	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
 	out = {"customers_total": frappe.db.count("Customer")}

@@ -24,10 +24,13 @@
 						₹{{ fmt(c.outstanding) }} · {{ c.invoices }} invoice(s)<span v-if="c.overdue > 0"> · ₹{{ fmt(c.overdue) }} overdue</span>
 					</p>
 				</div>
-				<router-link
-					:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: c.customer, label: c.customer_name, purpose: 'Payment Collection' } }"
-					class="shrink-0 rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
-				>Collect</router-link>
+				<div class="flex shrink-0 gap-2">
+					<button @click="remind(c)" class="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">Remind</button>
+					<router-link
+						:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: c.customer, label: c.customer_name, purpose: 'Payment Collection' } }"
+						class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
+					>Collect</router-link>
+				</div>
 			</div>
 		</div>
 		<BottomNav />
@@ -40,11 +43,16 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { openWhatsApp } from "../utils/wa"
 
 const data = ref({ total: 0, overdue: 0, customers: [] })
 const loading = ref(true)
 
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
+function remind(c) {
+	const msg = `Dear ${c.customer_name},\nA gentle reminder from *TRIAM A+*: ₹${fmt(c.outstanding)} is outstanding on your account${c.overdue > 0 ? ` (₹${fmt(c.overdue)} overdue)` : ""}. Kindly arrange payment. Thank you.`
+	openWhatsApp("", msg)
+}
 
 onMounted(async () => {
 	try {

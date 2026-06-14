@@ -55,6 +55,7 @@ import { call } from "../data/api"
 import { callOrQueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
+import { watermark } from "../utils/watermark"
 import { toast } from "../utils/toast"
 
 const ov = ref({ logs_today: [], next_action: "IN" })
@@ -76,9 +77,14 @@ async function onSelfie(e) {
 	if (!file) return
 	busy.value = true
 	try {
-		const selfie = await resizeImageToDataURL(file, 720, 0.8)
-		preview.value = selfie
 		const pos = await getPosition()
+		let selfie = await resizeImageToDataURL(file, 720, 0.8)
+		const stamp = [
+			dayjs().format("DD MMM YYYY, h:mm A"),
+			pos.latitude ? `GPS ${pos.latitude.toFixed(5)}, ${pos.longitude.toFixed(5)}` : "GPS unavailable",
+		]
+		selfie = await watermark(selfie, stamp)
+		preview.value = selfie
 		const res = await callOrQueue(
 			"crm_app.attendance.check_in_out",
 			{ latitude: pos.latitude, longitude: pos.longitude, selfie_base64: selfie },

@@ -1,0 +1,1 @@
+function o(e,n){let t=String(e||"").replace(/[^0-9]/g,"");return t.length===10&&(t="91"+t),t.length===11&&t.startsWith("0")&&(t="91"+t.slice(1)),`${t?`https://wa.me/${t}`:"https://wa.me/"}?text=${encodeURIComponent(n||"")}`}function p(e,n){window.open(o(e,n),"_blank")}export{p as o};

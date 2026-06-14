@@ -23,6 +23,9 @@
 					<p class="text-xs text-gray-400">Check-in</p>
 					<p class="font-medium text-navy-700 dark:text-white">{{ formatTime(v.check_in_time) }}</p>
 					<a v-if="inLink" :href="inLink" target="_blank" class="text-xs text-saffron">View on map</a>
+					<p v-if="v.within_geofence !== null && v.within_geofence !== undefined" class="mt-1 text-xs font-medium" :class="v.within_geofence ? 'text-green-600' : 'text-red-600'">
+						{{ v.within_geofence ? "✓ At dealer" : "⚠ Away from dealer" }}<span v-if="v.check_in_distance_m"> · {{ v.check_in_distance_m }}m</span>
+					</p>
 				</div>
 				<div>
 					<p class="text-xs text-gray-400">Check-out</p>
@@ -59,6 +62,45 @@
 				</div>
 			</div>
 
+			<!-- Book Sales Order (Customer visits) -->
+			<div v-if="v.party_type === 'Customer' && v.customer" class="aa-card">
+				<div class="flex items-center justify-between">
+					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Book Sales Order</p>
+					<button v-if="!showBook" @click="openBook" class="text-xs font-medium text-saffron">+ Book</button>
+				</div>
+				<p v-if="bookedSO" class="mt-1 text-sm font-medium text-green-600">Booked: {{ bookedSO }}</p>
+				<div v-if="showBook" class="mt-2 space-y-2">
+					<p v-if="credit.has_limit" class="rounded-lg px-2 py-1 text-xs" :class="credit.available > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'">
+						Credit available ₹{{ fmt(credit.available) }} (limit ₹{{ fmt(credit.credit_limit) }}, outstanding ₹{{ fmt(credit.outstanding) }})
+					</p>
+					<input v-model="itemQuery" @input="searchItems" class="aa-input" placeholder="Search catalog item…" />
+					<ul v-if="itemResults.length" class="divide-y divide-gray-100 rounded-lg border border-gray-100">
+						<li v-for="it in itemResults" :key="it.item_code" @click="addItem(it)" class="flex cursor-pointer items-center justify-between px-3 py-2 text-sm">
+							<span class="truncate text-navy-700 dark:text-white">{{ it.item_name }}</span>
+							<span class="text-xs text-gray-400">₹{{ fmt(it.rate) }}</span>
+						</li>
+					</ul>
+					<div v-for="(b, i) in bookItems" :key="i" class="rounded-xl bg-gray-50 p-2 dark:bg-navy-800">
+						<div class="mb-1 flex items-center justify-between">
+							<span class="truncate text-sm font-medium text-navy-700 dark:text-white">{{ b.item_name }}</span>
+							<button @click="bookItems.splice(i, 1)"><Trash2 class="h-4 w-4 text-gray-400" /></button>
+						</div>
+						<div class="grid grid-cols-2 gap-2">
+							<input v-model.number="b.qty" type="number" class="aa-input !py-1.5 text-sm" placeholder="Qty" />
+							<input v-model.number="b.rate" type="number" class="aa-input !py-1.5 text-sm" placeholder="Rate" />
+						</div>
+					</div>
+					<p v-if="bookItems.length" class="text-right text-sm font-semibold text-navy-700 dark:text-white">Total ₹{{ fmt(bookTotal) }}</p>
+					<button @click="book" :disabled="!bookItems.length || booking" class="w-full rounded-xl bg-navy-700 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+						{{ booking ? "Booking…" : "Book Sales Order" }}
+					</button>
+				</div>
+			</div>
+
+			<button @click="share" class="aa-card flex w-full items-center justify-center gap-2 text-sm font-semibold text-green-600">
+				<MessageCircle class="h-5 w-5" /> Share with dealer (WhatsApp)
+			</button>
+
 			<button
 				v-if="v.visit_status === 'In Progress'"
 				@click="checkout"
@@ -74,13 +116,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
-import { ChevronLeft } from "lucide-vue-next"
+import { ref, reactive, computed, onMounted } from "vue"
+import { ChevronLeft, MessageCircle, Trash2 } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
 import { getPosition, mapsLink } from "../utils/geo"
+import { openWhatsApp } from "../utils/wa"
 import { toast } from "../utils/toast"
 
 const props = defineProps({ name: { type: String, required: true } })
@@ -91,6 +134,17 @@ const orders = ref([])
 const competitors = ref([])
 const loading = ref(true)
 const busy = ref(false)
+
+// Sales Order booking
+const showBook = ref(false)
+const itemQuery = ref("")
+const itemResults = ref([])
+const bookItems = reactive([])
+const credit = ref({})
+const booking = ref(false)
+const bookedSO = ref("")
+let itemTimer = null
+const bookTotal = computed(() => bookItems.reduce((s, b) => s + (Number(b.qty) || 0) * (Number(b.rate) || 0), 0))
 
 const STATUS_CLASS = {
 	Planned: "bg-gray-100 text-gray-600",
@@ -119,6 +173,53 @@ async function load() {
 	} finally {
 		loading.value = false
 	}
+}
+
+async function openBook() {
+	showBook.value = true
+	try { credit.value = await call("crm_app.orders.get_credit_status", { customer: v.value.customer }) } catch (e) { credit.value = {} }
+}
+function searchItems() {
+	clearTimeout(itemTimer)
+	if (itemQuery.value.trim().length < 2) { itemResults.value = []; return }
+	itemTimer = setTimeout(async () => {
+		try { itemResults.value = (await call("crm_app.orders.search_items", { query: itemQuery.value })) || [] }
+		catch (e) { itemResults.value = [] }
+	}, 300)
+}
+function addItem(it) {
+	if (!bookItems.find((b) => b.item_code === it.item_code)) bookItems.push({ item_code: it.item_code, item_name: it.item_name, qty: 1, rate: it.rate })
+	itemQuery.value = ""
+	itemResults.value = []
+}
+async function book() {
+	booking.value = true
+	try {
+		const res = await call("crm_app.orders.book_order", {
+			customer: v.value.customer,
+			items: JSON.stringify(bookItems.map((b) => ({ item_code: b.item_code, qty: b.qty, rate: b.rate }))),
+			visit: props.name,
+		})
+		bookedSO.value = `${res.doctype} ${res.name}`
+		showBook.value = false
+		toast.success("Sales Order booked: " + res.name)
+		await load()
+	} catch (e) {
+		toast.error(e?.messages?.[0] || "Could not book")
+	} finally { booking.value = false }
+}
+function share() {
+	const lines = [
+		`*TRIAM A+* — visit summary`,
+		`Dealer: ${v.value.party_display}`,
+		`Purpose: ${v.value.visit_purpose}`,
+	]
+	if (orders.value.length) {
+		lines.push("Order:")
+		orders.value.forEach((o) => lines.push(`• ${o.grade || o.product || "Item"} — ${o.quantity_mt || 0} MT`))
+	}
+	if (bookedSO.value) lines.push(`Booked: ${bookedSO.value}`)
+	openWhatsApp(v.value.contact_phone, lines.join("\n"))
 }
 
 async function checkout() {

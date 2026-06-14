@@ -197,6 +197,7 @@ import { call } from "../data/api"
 import { enqueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
+import { watermark } from "../utils/watermark"
 import { toast } from "../utils/toast"
 
 const router = useRouter()
@@ -340,13 +341,19 @@ async function onPhoto(e) {
 	if (!file) return
 	photoBusy.value = true
 	try {
-		const dataUrl = await resizeImageToDataURL(file, 1280, 0.8)
+		const pos = await getPosition()
+		let dataUrl = await resizeImageToDataURL(file, 1280, 0.8)
+		const stamp = [
+			dayjs().format("DD MMM YYYY, h:mm A"),
+			pos.latitude ? `GPS ${pos.latitude.toFixed(5)}, ${pos.longitude.toFixed(5)}` : "GPS unavailable",
+			selected.value?.label || "",
+		].filter(Boolean)
+		dataUrl = await watermark(dataUrl, stamp)
 		photoData.value.push(dataUrl) // kept for offline one-shot submit
 		photos.value.push({ thumb: dataUrl })
 		// Live-upload when we have an online visit; otherwise it rides along on sync.
 		if (!offlineMode.value && visitName.value && navigator.onLine) {
 			try {
-				const pos = await getPosition()
 				await call("crm_app.field_visit.add_photo", {
 					name: visitName.value,
 					content_base64: dataUrl,

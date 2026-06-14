@@ -37,6 +37,8 @@ VISIT_FIELDS = [
 	"check_in_latitude",
 	"check_in_longitude",
 	"check_in_address",
+	"within_geofence",
+	"check_in_distance_m",
 	"check_out_time",
 	"check_out_latitude",
 	"check_out_longitude",
@@ -67,6 +69,29 @@ def _require_access(name: str, employee: str):
 		frappe.throw(_("Visit not found."), frappe.DoesNotExistError)
 	if owner_emp != employee and not is_sales_manager():
 		frappe.throw(_("You do not have access to this visit."), frappe.PermissionError)
+
+
+def _haversine_m(lat1, lng1, lat2, lng2):
+	import math
+
+	R = 6371000
+	p1, p2 = math.radians(lat1), math.radians(lat2)
+	dp, dl = math.radians(lat2 - lat1), math.radians(lng2 - lng1)
+	a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+	return 2 * R * math.asin(math.sqrt(a))
+
+
+def _geofence(party_type, customer, lat, lng, radius_m=300):
+	"""Return (within(0/1), distance_m) vs the dealer's saved geo, or (None, None)."""
+	if party_type != "Customer" or not customer or lat in (None, "") or lng in (None, ""):
+		return (None, None)
+	g = frappe.db.get_value(
+		"Customer", customer, ["custom_geo_latitude", "custom_geo_longitude"], as_dict=True
+	)
+	if not g or not g.get("custom_geo_latitude") or not g.get("custom_geo_longitude"):
+		return (None, None)
+	d = _haversine_m(flt(lat), flt(lng), flt(g.custom_geo_latitude), flt(g.custom_geo_longitude))
+	return (1 if d <= radius_m else 0, int(d))
 
 
 def _apply_party(doc, party_type, customer, crm_lead, crm_deal, prospect_name):
@@ -124,9 +149,19 @@ def start_visit(
 		doc.check_in_longitude = flt(longitude)
 	if address:
 		doc.check_in_address = address
+	within, dist = _geofence(doc.party_type, doc.customer, latitude, longitude)
+	if within is not None:
+		doc.within_geofence = within
+		doc.check_in_distance_m = dist
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
-	return {"name": doc.name, "visit_status": doc.visit_status, "check_in_time": doc.check_in_time}
+	return {
+		"name": doc.name,
+		"visit_status": doc.visit_status,
+		"check_in_time": doc.check_in_time,
+		"within_geofence": doc.within_geofence,
+		"distance_m": doc.check_in_distance_m,
+	}
 
 
 @frappe.whitelist()
@@ -383,6 +418,10 @@ def submit_full_visit(payload):
 		doc.check_in_time = data["check_in_time"]
 		doc.check_in_latitude = flt(data.get("check_in_latitude")) if data.get("check_in_latitude") not in (None, "") else None
 		doc.check_in_longitude = flt(data.get("check_in_longitude")) if data.get("check_in_longitude") not in (None, "") else None
+		within, dist = _geofence(doc.party_type, doc.customer, data.get("check_in_latitude"), data.get("check_in_longitude"))
+		if within is not None:
+			doc.within_geofence = within
+			doc.check_in_distance_m = dist
 	if data.get("check_out_time"):
 		doc.check_out_time = data["check_out_time"]
 		doc.check_out_latitude = flt(data.get("check_out_latitude")) if data.get("check_out_latitude") not in (None, "") else None

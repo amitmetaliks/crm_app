@@ -23,6 +23,7 @@ const routes = [
 	{ path: "/analytics", name: "Analytics", component: () => import("./pages/Analytics.vue") },
 	{ path: "/kra", name: "Kra", component: () => import("./pages/Kra.vue") },
 	{ path: "/timeline", name: "Timeline", component: () => import("./pages/Timeline.vue") },
+	{ path: "/route", name: "Route", component: () => import("./pages/Route.vue") },
 	{ path: "/notifications", name: "Notifications", component: () => import("./pages/Notifications.vue") },
 	{ path: "/more", name: "More", component: () => import("./pages/More.vue") },
 ]
