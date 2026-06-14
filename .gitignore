@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+
+# Node / frontend build
+node_modules/
+frontend/dist/
+crm_app/public/frontend/assets/
+
+# Editors / OS
+.DS_Store
+*.swp
+.vscode/

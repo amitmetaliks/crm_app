@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15264C" />
+    <title>Amit Alliance CRM</title>
+    <style>
+      :root { --navy: #15264C; --saffron: #E8541C; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+      body {
+        background: linear-gradient(160deg, #15264C 0%, #1d335f 60%, #233a6b 100%);
+        color: #fff; display: flex; align-items: center; justify-content: center; text-align: center;
+      }
+      .wrap { padding: 32px; max-width: 420px; }
+      .badge {
+        width: 84px; height: 84px; border-radius: 22px; margin: 0 auto 20px;
+        background: var(--saffron); display: flex; align-items: center; justify-content: center;
+        font-size: 34px; font-weight: 800; box-shadow: 0 10px 30px rgba(232,84,28,.4);
+      }
+      h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: .2px; }
+      p { margin: 4px 0; color: #c7d2e6; font-size: 14px; }
+      .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#5fd08a; margin-right:6px; vertical-align: middle; }
+      .status { margin-top: 22px; font-size: 13px; color: #9fb0cc; }
+      .pill { display:inline-block; margin-top:18px; padding:8px 14px; border-radius:999px; background: rgba(255,255,255,.08); font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="badge">A+</div>
+      <h1>Amit Alliance CRM</h1>
+      <p>Field-Visit CRM &middot; Partners in Progress</p>
+      <div class="status" id="status"><span class="dot"></span>Setting up&hellip;</div>
+      <div class="pill">crm_app shell &middot; /amit-crm</div>
+    </div>
+    <script>
+      // Phase 0 placeholder: confirms the SPA renderer + backend are wired.
+      // Replaced by the Vue PWA build in Phase 2.
+      fetch("/api/method/crm_app.api.ping", { headers: { "X-Frappe-CSRF-Token": window.csrf_token || "" } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var u = (d && d.message && d.message.user) || "unknown";
+          document.getElementById("status").innerHTML =
+            '<span class="dot"></span>Backend connected &middot; signed in as ' + u;
+        })
+        .catch(function () {
+          document.getElementById("status").innerHTML =
+            '<span class="dot" style="background:#e0a458"></span>Backend reachable (not signed in)';
+        });
+    </script>
+  </body>
+</html>

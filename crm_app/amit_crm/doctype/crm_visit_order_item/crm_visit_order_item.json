@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-06-14 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "order_type",
+  "product",
+  "grade",
+  "quantity_mt",
+  "rate_per_mt",
+  "expected_value",
+  "expected_close_date",
+  "remarks",
+  "sales_order"
+ ],
+ "fields": [
+  {"fieldname": "order_type", "fieldtype": "Select", "label": "Type", "options": "Inquiry\nFirm Order", "default": "Inquiry", "in_list_view": 1, "columns": 1, "reqd": 1},
+  {"fieldname": "product", "fieldtype": "Data", "label": "Product", "in_list_view": 1, "columns": 2},
+  {"fieldname": "grade", "fieldtype": "Select", "label": "TMT Grade", "options": "\nFe 415\nFe 500\nFe 500D\nFe 550\nFe 550D\nFe 600\nOther", "in_list_view": 1, "columns": 1},
+  {"fieldname": "quantity_mt", "fieldtype": "Float", "label": "Qty (MT)", "precision": "3", "in_list_view": 1, "columns": 1},
+  {"fieldname": "rate_per_mt", "fieldtype": "Currency", "label": "Rate / MT", "columns": 1},
+  {"fieldname": "expected_value", "fieldtype": "Currency", "label": "Expected Value", "in_list_view": 1, "columns": 2},
+  {"fieldname": "expected_close_date", "fieldtype": "Date", "label": "Expected Close"},
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks", "columns": 2},
+  {"fieldname": "sales_order", "fieldtype": "Link", "label": "Sales Order", "options": "Sales Order", "read_only": 1}
+ ],
+ "links": [],
+ "modified": "2026-06-14 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Visit Order Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
