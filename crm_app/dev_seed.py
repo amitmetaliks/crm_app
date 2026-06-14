@@ -223,6 +223,35 @@ def verify4():
 	return out
 
 
+def verify_realdata():
+	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
+	out = {"customers_total": frappe.db.count("Customer")}
+	for dt in ["CRM Visit", "CRM Beat Plan", "CRM Sales Target", "CRM Lead"]:
+		out["dt:" + dt] = 1 if frappe.db.exists("DocType", dt) else 0
+	out["custom_field_on_customer"] = 1 if frappe.db.exists("Custom Field", {"dt": "Customer", "fieldname": "custom_assigned_sales_person"}) else 0
+
+	emp = frappe.db.get_value(
+		"Employee",
+		{"status": "Active", "user_id": ["is", "set"]},
+		["name", "user_id"],
+		as_dict=True,
+		order_by="modified desc",
+	)
+	if emp:
+		frappe.set_user(emp.user_id)
+		try:
+			from crm_app import customers, field_visit
+
+			out["sample_employee"] = emp.user_id
+			out["search_parties_count"] = len(customers.search_parties(query="", limit=10))
+			out["my_visits_count"] = len(field_visit.get_my_visits())
+		except Exception as e:
+			out["error"] = str(e)
+		finally:
+			frappe.set_user("Administrator")
+	return out
+
+
 def verify3():
 	"""Exercise beat/targets/collections as the test rep."""
 	seed_phase3()
