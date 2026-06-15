@@ -1,0 +1,60 @@
+name: Build Android Release (AAB for Play Store)
+
+# Builds a release-signed AAB (for Play Store) + APK. Needs these repo secrets
+# (created via the "Create Android Keystore" workflow — see PLAY-STORE-SETUP.md):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+
+      - name: Build web + add Android
+        working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npx cap add android
+          npx cap sync android
+
+      - name: Add location permissions + version code
+        working-directory: frontend
+        run: |
+          MAN=android/app/src/main/AndroidManifest.xml
+          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>\n    $1#' "$MAN"
+          perl -0pi -e 's/versionCode \d+/versionCode '"${GITHUB_RUN_NUMBER}"'/' android/app/build.gradle
+
+      - name: Decode keystore
+        working-directory: frontend
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/triam-upload.jks
+
+      - name: Build signed AAB + APK
+        working-directory: frontend/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bundleRelease assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file=$(pwd)/triam-upload.jks \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_STORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      - name: Upload AAB + APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: triam-aplus-release
+          path: |
+            frontend/android/app/build/outputs/bundle/release/app-release.aab
+            frontend/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
