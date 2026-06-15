@@ -1,11 +1,10 @@
 {
   "appId": "com.amitalliance.triamcrm",
   "appName": "TRIAM A+",
-  "webDir": "../crm_app/public/frontend",
+  "webDir": "native-launcher",
   "server": {
-    "url": "https://hrdev.34-93-148-147.sslip.io/amit-crm",
-    "cleartext": false,
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": ["*"]
   },
   "plugins": {
     "BackgroundGeolocation": {}

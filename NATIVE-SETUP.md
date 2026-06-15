@@ -4,8 +4,11 @@ The PWA can't track location when closed. This native build (Capacitor) wraps th
 **same app** in an Android shell that runs **background GPS** (with a foreground-service
 notification) and reports **mock-location** attempts — solving the one PWA limit.
 
-It loads the live web app (`server.url` in `frontend/capacitor.config.json`) and adds the
-native `@capacitor-community/background-geolocation` plugin (wired in `src/data/native.js`).
+On first launch the app shows a **server-address screen** — the rep (or you) enters the
+TRIAM A+ URL once and it's saved on the device; the app then loads your live site inside the
+native shell with the `@capacitor-community/background-geolocation` plugin (wired in
+`src/data/native.js`). **The same APK works for any server** (dev, production, etc.) — no
+rebuild needed to change servers.
 
 ## Build the APK (no Android Studio needed — built in the cloud)
 
@@ -23,9 +26,10 @@ native `@capacitor-community/background-geolocation` plugin (wired in `src/data/
 
 ## Point it at production
 
-`frontend/capacitor.config.json` → `server.url` currently points at the dev URL. Before a
-real rollout, change it to your production URL (e.g. `https://amitalliance.dexciss.tech/amit-crm`)
-and rebuild.
+No rebuild needed. On first launch, just type the production URL (e.g.
+`https://amitalliance.dexciss.tech`) on the server-address screen. To switch servers later,
+clear the app's storage (Android Settings → Apps → TRIAM A+ → Storage → Clear) and it will
+ask again. (The dev URL is only pre-filled as a convenience.)
 
 ## Notes / future
 - This produces a **debug-signed** APK — perfect for internal sideloading. For Play Store
