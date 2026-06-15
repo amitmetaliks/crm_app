@@ -15,7 +15,7 @@
 				<div class="aa-card">
 					<div class="mb-2 flex items-center justify-between">
 						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Sales forecast (next month)</p>
-						<span class="text-lg font-bold text-saffron">₹{{ fmt(forecast.forecast) }}</span>
+						<span class="text-lg font-bold text-saffron">{{ inrShort(forecast.forecast) }}</span>
 					</div>
 					<BarChart v-if="histBars.length" :data="histBars" />
 					<p v-else class="text-xs text-gray-400">No sales history yet.</p>
@@ -53,6 +53,7 @@ import EmptyState from "../components/EmptyState.vue"
 import BarChart from "../components/BarChart.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
+import { inrShort } from "../utils/money"
 
 const scope = ref("mine")
 const churn = ref([])

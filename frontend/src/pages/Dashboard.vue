@@ -65,7 +65,7 @@
 			<!-- Order summary -->
 			<div class="grid grid-cols-2 gap-3">
 				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ o.orders || 0 }}</p><p class="text-xs text-gray-400">Orders today</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">₹{{ fmt(o.value) }}</p><p class="text-xs text-gray-400">Order value</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(o.value) }}</p><p class="text-xs text-gray-400">Order value</p></div>
 				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ fmt(o.qty) }} MT</p><p class="text-xs text-gray-400">Total qty</p></div>
 				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ home.new_retailers || 0 }}</p><p class="text-xs text-gray-400">New retailers (mo)</p></div>
 			</div>
@@ -74,7 +74,7 @@
 			<router-link :to="{ name: 'Targets' }" class="aa-card block">
 				<div class="mb-1 flex justify-between text-sm">
 					<span class="font-semibold text-navy-600 dark:text-navy-200">Sales target (month)</span>
-					<span class="text-gray-500">₹{{ fmt(home.sales_target?.achieved) }} / ₹{{ fmt(home.sales_target?.target) }}</span>
+					<span class="text-gray-500">{{ inrShort(home.sales_target?.achieved) }} / {{ inrShort(home.sales_target?.target) }}</span>
 				</div>
 				<div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700">
 					<div class="h-full rounded-full bg-saffron" :style="{ width: Math.min(100, home.sales_target?.pct || 0) + '%' }"></div>
@@ -86,7 +86,7 @@
 			<router-link :to="{ name: 'Expense' }" class="aa-card flex items-center justify-between">
 				<div>
 					<p class="font-semibold text-navy-700 dark:text-white">Expenses</p>
-					<p class="text-xs text-gray-400">Today ₹{{ fmt(home.expense?.today) }} · Month ₹{{ fmt(home.expense?.month) }}</p>
+					<p class="text-xs text-gray-400">Today {{ inrShort(home.expense?.today) }} · Month {{ inrShort(home.expense?.month) }}</p>
 				</div>
 				<span class="rounded-lg bg-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-700">+ Add</span>
 			</router-link>
@@ -111,6 +111,7 @@ import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
+import { inrShort } from "../utils/money"
 import wordmark from "../assets/logo-wordmark.png"
 
 const home = ref({})

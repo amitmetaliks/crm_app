@@ -5,11 +5,11 @@
 			<div v-if="!loading" class="mt-3 grid grid-cols-2 gap-3">
 				<div class="rounded-xl bg-white/10 p-3">
 					<p class="text-xs text-navy-200">Outstanding</p>
-					<p class="text-lg font-bold">₹{{ fmt(data.total) }}</p>
+					<p class="text-lg font-bold">{{ inrShort(data.total) }}</p>
 				</div>
 				<div class="rounded-xl bg-white/10 p-3">
 					<p class="text-xs text-navy-200">Overdue</p>
-					<p class="text-lg font-bold text-amber-300">₹{{ fmt(data.overdue) }}</p>
+					<p class="text-lg font-bold text-amber-300">{{ inrShort(data.overdue) }}</p>
 				</div>
 			</div>
 		</header>
@@ -45,6 +45,7 @@ import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
 import { openWhatsApp } from "../utils/wa"
 import { toast } from "../utils/toast"
+import { inrShort } from "../utils/money"
 
 const data = ref({ total: 0, overdue: 0, customers: [] })
 const loading = ref(true)

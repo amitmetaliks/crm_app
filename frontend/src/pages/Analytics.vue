@@ -19,13 +19,13 @@
 
 					<div class="aa-card">
 						<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Receivables</p>
-						<div class="flex justify-between text-sm"><span class="text-gray-500">Outstanding</span><span class="font-semibold text-navy-700 dark:text-white">₹{{ fmt(d.ar_total) }}</span></div>
-						<div class="flex justify-between text-sm"><span class="text-gray-500">Overdue</span><span class="font-semibold text-red-600">₹{{ fmt(d.ar_overdue) }}</span></div>
+						<div class="flex justify-between text-sm"><span class="text-gray-500">Outstanding</span><span class="font-semibold text-navy-700 dark:text-white">{{ inrShort(d.ar_total) }}</span></div>
+						<div class="flex justify-between text-sm"><span class="text-gray-500">Overdue</span><span class="font-semibold text-red-600">{{ inrShort(d.ar_overdue) }}</span></div>
 					</div>
 
 					<div class="aa-card">
 						<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Expense claims</p>
-						<div class="flex justify-between text-sm"><span class="text-gray-500">Pending approval</span><span class="font-semibold text-navy-700 dark:text-white">{{ d.expense_pending }} · ₹{{ fmt(d.expense_pending_amount) }}</span></div>
+						<div class="flex justify-between text-sm"><span class="text-gray-500">Pending approval</span><span class="font-semibold text-navy-700 dark:text-white">{{ d.expense_pending }} · {{ inrShort(d.expense_pending_amount) }}</span></div>
 					</div>
 
 					<div v-if="series.length" class="aa-card">
@@ -55,6 +55,7 @@ import DonutChart from "../components/DonutChart.vue"
 import BarChart from "../components/BarChart.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
+import { inrShort } from "../utils/money"
 
 const d = ref({})
 const products = ref([])

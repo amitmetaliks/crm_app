@@ -17,7 +17,7 @@
 				<div>
 					<div class="mb-1 flex justify-between text-sm">
 						<span class="text-gray-500">Value</span>
-						<span class="font-medium text-navy-700 dark:text-white">₹{{ fmt(t.achieved_amount) }} / ₹{{ fmt(t.target_amount) }}</span>
+						<span class="font-medium text-navy-700 dark:text-white">{{ inrShort(t.achieved_amount) }} / {{ inrShort(t.target_amount) }}</span>
 					</div>
 					<Bar :pct="t.amount_pct" />
 				</div>
@@ -43,6 +43,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { inrShort } from "../utils/money"
 
 const Bar = defineComponent({
 	props: { pct: { type: Number, default: 0 } },
