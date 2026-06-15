@@ -423,6 +423,84 @@ def verify_sales_fix(user_email="mukulmishra@amitmetaliks.com"):
 	return out
 
 
+def full_test(rep_user=None, mgr_user=None):
+	"""Sweep every endpoint as a real rep + a real manager. Returns pass/err per endpoint."""
+	results = {}
+
+	def run(label, fn):
+		try:
+			fn()
+			results[label] = "ok"
+		except Exception as e:
+			results[label] = "ERR: " + str(e)[:140]
+
+	if not rep_user:
+		rep_user = frappe.db.get_value(
+			"Employee", {"status": "Active", "user_id": ["is", "set"]}, "user_id", order_by="modified desc"
+		)
+	if not mgr_user:
+		for e in frappe.get_all("Employee", filters={"status": "Active", "user_id": ["is", "set"]}, fields=["user_id"], limit=300):
+			roles = frappe.get_roles(e.user_id)
+			if any(r in roles for r in ("Sales Manager", "Sales Master Manager", "System Manager")):
+				mgr_user = e.user_id
+				break
+	results["_rep_user"] = rep_user
+	results["_mgr_user"] = mgr_user
+
+	from crm_app import (
+		api, approvals, attendance, beat, collections, customers, dashboards, expense,
+		field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
+	)
+
+	if rep_user:
+		frappe.set_user(rep_user)
+		try:
+			run("api.whoami", lambda: api.whoami())
+			run("field_visit.get_my_visits", lambda: field_visit.get_my_visits())
+			run("customers.search_parties", lambda: customers.search_parties(query=""))
+			run("beat.get_my_beat", lambda: beat.get_my_beat())
+			run("beat.optimize_beat", lambda: beat.optimize_beat())
+			run("targets.get_my_targets", lambda: targets.get_my_targets())
+			run("collections.get_my_collections", lambda: collections.get_my_collections())
+			run("leads.get_leads", lambda: leads.get_leads())
+			run("leads.get_deals", lambda: leads.get_deals())
+			run("attendance.get_attendance_overview", lambda: attendance.get_attendance_overview())
+			run("expense.get_my_expenses", lambda: expense.get_my_expenses())
+			run("expense.get_expense_types", lambda: expense.get_expense_types())
+			run("leave.get_leave_types", lambda: leave.get_leave_types())
+			run("leave.get_leave_summary", lambda: leave.get_leave_summary())
+			run("leave.get_my_leaves", lambda: leave.get_my_leaves())
+			run("salary.get_my_salary_slips", lambda: salary.get_my_salary_slips())
+			run("holidays.get_holidays", lambda: holidays.get_holidays())
+			run("sfa.get_home_summary", lambda: sfa.get_home_summary())
+			run("sfa.get_kra", lambda: sfa.get_kra())
+			run("sfa.get_activity_timeline", lambda: sfa.get_activity_timeline())
+			run("sfa.get_top_products", lambda: sfa.get_top_products())
+			run("sfa.get_productivity_series", lambda: sfa.get_productivity_series())
+			run("insights.churn_risk", lambda: insights.churn_risk())
+			run("insights.sales_forecast", lambda: insights.sales_forecast())
+			run("tracking.get_day_route", lambda: tracking.get_day_route())
+			run("orders.search_items", lambda: orders.search_items(query=""))
+			run("pricing.get_schemes", lambda: pricing.get_schemes())
+			run("push.get_vapid_public_key", lambda: push.get_vapid_public_key())
+			run("whatsapp.is_configured", lambda: whatsapp.is_configured())
+		finally:
+			frappe.set_user("Administrator")
+
+	if mgr_user:
+		frappe.set_user(mgr_user)
+		try:
+			run("dashboards.get_team_overview", lambda: dashboards.get_team_overview())
+			run("dashboards.get_analytics", lambda: dashboards.get_analytics())
+			run("dashboards.get_live_team", lambda: dashboards.get_live_team())
+			run("approvals.get_pending_approvals", lambda: approvals.get_pending_approvals())
+		finally:
+			frappe.set_user("Administrator")
+
+	results["_errors"] = sorted([k for k, v in results.items() if str(v).startswith("ERR")])
+	return results
+
+
 def verify_realdata():
 	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
 	out = {"customers_total": frappe.db.count("Customer")}
