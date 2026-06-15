@@ -57,6 +57,9 @@
 				<router-link :to="{ name: 'Insights' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Sparkles class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Smart insights</span>
 				</router-link>
+				<router-link :to="{ name: 'Schemes' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Tag class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Active schemes</span>
+				</router-link>
 			</div>
 
 			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Security</p>
@@ -84,6 +87,9 @@
 					<router-link :to="{ name: 'Team' }" class="flex items-center gap-3 px-4 py-3.5">
 						<Users class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team activity</span>
 					</router-link>
+					<router-link :to="{ name: 'TeamMap' }" class="flex items-center gap-3 px-4 py-3.5">
+						<MapPin class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team live map</span>
+					</router-link>
 				</div>
 			</div>
 
@@ -109,7 +115,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag } from "lucide-vue-next"
 import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
 import { toast } from "../utils/toast"
 import BottomNav from "../components/BottomNav.vue"

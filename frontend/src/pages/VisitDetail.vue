@@ -66,7 +66,10 @@
 			<div v-if="v.party_type === 'Customer' && v.customer" class="aa-card">
 				<div class="flex items-center justify-between">
 					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Book Sales Order</p>
-					<button v-if="!showBook" @click="openBook" class="text-xs font-medium text-saffron">+ Book</button>
+					<div class="flex gap-3">
+						<router-link :to="{ name: 'Schemes' }" class="text-xs font-medium text-navy-600 dark:text-navy-200">Schemes</router-link>
+						<button v-if="!showBook" @click="openBook" class="text-xs font-medium text-saffron">+ Book</button>
+					</div>
 				</div>
 				<p v-if="bookedSO" class="mt-1 text-sm font-medium text-green-600">Booked: {{ bookedSO }}</p>
 				<div v-if="showBook" class="mt-2 space-y-2">

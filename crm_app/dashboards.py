@@ -69,6 +69,37 @@ def get_team_overview(date=None):
 
 
 @frappe.whitelist()
+def get_live_team(date=None):
+	"""Latest location of each rep today (for the live map). Managers only."""
+	_require_manager()
+	day = date or today()
+	pings = frappe.get_all(
+		"CRM Location Ping",
+		filters={"time": ["between", [f"{day} 00:00:00", f"{day} 23:59:59"]]},
+		fields=["sales_person", "time", "latitude", "longitude"],
+		order_by="time asc",
+		limit=50000,
+	)
+	latest = {}
+	for p in pings:
+		if p.latitude is None or p.longitude is None:
+			continue
+		latest[p.sales_person] = p  # ascending → last write is most recent
+	out = []
+	for emp, p in latest.items():
+		out.append(
+			{
+				"sales_person": emp,
+				"name": frappe.db.get_value("Employee", emp, "employee_name") or emp,
+				"lat": p.latitude,
+				"lng": p.longitude,
+				"time": str(p.time),
+			}
+		)
+	return {"date": day, "reps": out}
+
+
+@frappe.whitelist()
 def get_analytics() -> dict:
 	"""Leadership KPIs (this month): conversion, beat adherence, attendance, expense, AR."""
 	_require_manager()
