@@ -11,8 +11,14 @@ from crm_app.api import get_current_employee, is_sales_manager
 
 
 def _assigned(emp, scope):
-	flt_ = {} if (scope == "team" and is_sales_manager()) else {"custom_assigned_sales_person": emp}
-	return frappe.get_all("Customer", filters=flt_, fields=["name", "customer_name"], limit=5000)
+	if scope == "team" and is_sales_manager():
+		return frappe.get_all("Customer", fields=["name", "customer_name"], limit=20000)
+	from crm_app.sales_attr import rep_customers
+
+	names = rep_customers(emp)
+	if not names:
+		return []
+	return frappe.get_all("Customer", filters={"name": ["in", list(names)]}, fields=["name", "customer_name"], limit=20000)
 
 
 @frappe.whitelist()

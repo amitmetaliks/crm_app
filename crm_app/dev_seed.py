@@ -376,6 +376,53 @@ def verify10():
 	return out
 
 
+def diagnose_sales():
+	"""Read-only: how do Sales Orders attribute to a salesperson on this site?"""
+	out = {}
+	out["sales_orders_total"] = frappe.db.count("Sales Order", {"docstatus": ["<", 2]})
+	out["customers_total"] = frappe.db.count("Customer")
+	out["customers_with_assigned_rep"] = frappe.db.count("Customer", {"custom_assigned_sales_person": ["is", "set"]})
+
+	so = frappe.db.get_value("Sales Order", {"docstatus": ["<", 2]}, "name", order_by="modified desc")
+	if so:
+		d = frappe.get_doc("Sales Order", so)
+		m = d.meta
+		out["sample_so"] = so
+		out["so_customer"] = d.customer
+		out["so_owner"] = d.owner
+		out["so_territory"] = getattr(d, "territory", None) if m.has_field("territory") else None
+		out["so_has_sales_person_field"] = m.has_field("sales_person")
+		out["so_sales_person_field"] = getattr(d, "sales_person", None) if m.has_field("sales_person") else None
+		team = []
+		if m.has_field("sales_team"):
+			for r in d.get("sales_team") or []:
+				team.append(r.sales_person)
+		out["so_sales_team"] = team
+		# what the SO's customer has for our field
+		out["so_customer_assigned_rep"] = frappe.db.get_value("Customer", d.customer, "custom_assigned_sales_person")
+
+	out["has_sales_person_doctype"] = bool(frappe.db.exists("DocType", "Sales Person"))
+	if out["has_sales_person_doctype"]:
+		out["sales_person_count"] = frappe.db.count("Sales Person")
+		spm = frappe.get_meta("Sales Person")
+		out["sales_person_has_employee_field"] = spm.has_field("employee")
+		fields = ["name"] + (["employee"] if spm.has_field("employee") else [])
+		out["sample_sales_persons"] = frappe.get_all("Sales Person", fields=fields, limit=5)
+	return out
+
+
+def verify_sales_fix(user_email="mukulmishra@amitmetaliks.com"):
+	"""Confirm real Sales Orders now attribute to a rep (by owner/sales-team/assigned)."""
+	from crm_app.sales_attr import rep_customers, rep_sales
+
+	emp = frappe.db.get_value("Employee", {"user_id": user_email}, "name")
+	out = {"user": user_email, "employee": emp}
+	if emp:
+		out["rep_sales_FY"] = rep_sales(emp, "2025-04-01", "2027-03-31")
+		out["rep_customers"] = len(rep_customers(emp))
+	return out
+
+
 def verify_realdata():
 	"""Read-only smoke test against a real-data site (e.g. realtest). Safe — no writes."""
 	out = {"customers_total": frappe.db.count("Customer")}

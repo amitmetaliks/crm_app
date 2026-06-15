@@ -48,22 +48,9 @@ def _order_agg(names):
 
 
 def _achievement(emp, frm, to):
-	if not _hrms("Sales Order"):
-		return {"amount": 0.0, "qty": 0.0, "orders": 0}
-	custs = frappe.get_all("Customer", filters={"custom_assigned_sales_person": emp}, pluck="name")
-	if not custs:
-		return {"amount": 0.0, "qty": 0.0, "orders": 0}
-	rows = frappe.get_all(
-		"Sales Order",
-		filters={"customer": ["in", custs], "transaction_date": ["between", [frm, to]], "docstatus": ["<", 2]},
-		fields=["base_net_total", "total_qty"],
-		limit=5000,
-	)
-	return {
-		"amount": flt(sum(flt(r.base_net_total) for r in rows), 2),
-		"qty": flt(sum(flt(r.total_qty) for r in rows), 3),
-		"orders": len(rows),
-	}
+	from crm_app.sales_attr import rep_sales
+
+	return rep_sales(emp, frm, to)
 
 
 def _attendance_state(emp, day):

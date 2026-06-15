@@ -16,29 +16,11 @@ def _exists(dt):
 
 
 def _achievement(employee, from_date, to_date):
-	"""Sum of submitted/draft Sales Orders in [from,to] for the rep's dealers."""
-	if not _exists("Sales Order"):
-		return {"amount": 0.0, "qty_mt": 0.0, "orders": 0}
-	customers = frappe.get_all(
-		"Customer", filters={"custom_assigned_sales_person": employee}, pluck="name"
-	)
-	if not customers:
-		return {"amount": 0.0, "qty_mt": 0.0, "orders": 0}
-	rows = frappe.get_all(
-		"Sales Order",
-		filters={
-			"customer": ["in", customers],
-			"transaction_date": ["between", [from_date, to_date]],
-			"docstatus": ["<", 2],
-		},
-		fields=["base_net_total", "total_qty"],
-		limit=5000,
-	)
-	return {
-		"amount": flt(sum(flt(r.base_net_total) for r in rows), 2),
-		"qty_mt": flt(sum(flt(r.total_qty) for r in rows), 3),
-		"orders": len(rows),
-	}
+	"""Sum of Sales Orders attributed to the rep (Sales Team / owner / assigned dealer)."""
+	from crm_app.sales_attr import rep_sales
+
+	r = rep_sales(employee, from_date, to_date)
+	return {"amount": r["amount"], "qty_mt": r["qty"], "orders": r["orders"]}
 
 
 @frappe.whitelist()
