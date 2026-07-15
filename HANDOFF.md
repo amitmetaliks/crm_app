@@ -10,21 +10,37 @@ An **internal field-sales CRM + workforce app** built as a custom Frappe app on 
 - **Frappe Framework v16**, **ERPNext v16**
 - **Frappe HR (`hrms`) v16** — required for attendance, expense, leave, salary
   (writes to Employee Checkin / Expense Claim / Leave Application / Salary Slip).
-  *(amitalliance.dexciss.tech already has hrms.)*
 - **Frappe CRM** — `frappe/crm`, branch **`main`** (v1.x; supports v16)
 - Python package **`pywebpush`** (declared in `crm_app/pyproject.toml`; auto-installed)
 
+### Status on `amitalliance.dexciss.tech` (verified 2026-06-19)
+
+**All prerequisites are already installed on production — only `crm_app` remains.**
+
+| Dependency | Prod status | Evidence |
+|---|---|---|
+| frappe / erpnext | ✅ installed | assets serve `200` |
+| **hrms** (Frappe HR) | ✅ installed | `/hr/dashboard` → `200` |
+| **Frappe CRM** | ✅ **installed** | `/crm` + `/crm/leads` → `403` (route exists, login required); `/assets/crm/frontend/index.html` → `200` |
+| **crm_app** (TRIAM A+) | ❌ not yet | `/amit-crm` + `/assets/crm_app/...` → `404` |
+
+Dev reference build runs **Frappe CRM 1.73.2** (= latest upstream release, 11 Jun 2026).
+
 ## Install
 
+Since `crm` and `hrms` are already installed on production, **only steps 2 and 4 below are needed there**
+(steps 1 and 3a are for a fresh bench).
+
 ```bash
-# 1. Frappe CRM (if not already installed)
+# 1. Frappe CRM — ALREADY INSTALLED on amitalliance.dexciss.tech; skip there.
 bench get-app crm --branch main
 
 # 2. This app
 bench get-app crm_app https://github.com/amitmetaliks/crm_app.git --branch main
 
-# 3. Install on the site (crm before crm_app; hrms should already be installed)
+# 3a. Install crm on the site — ALREADY DONE on amitalliance.dexciss.tech; skip there.
 bench --site <site> install-app crm
+# 3b. Install this app (crm + hrms must already be installed)
 bench --site <site> install-app crm_app
 
 # 4. Migrate + build + restart  (migrate creates all doctypes + custom fields)
