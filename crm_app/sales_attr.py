@@ -39,7 +39,21 @@ def _attributes_so(so, employee, user, assigned_customers, team_sos):
 
 
 def rep_sales(employee, frm, to):
-	"""{amount, qty, orders} of Sales Orders attributed to the rep in [frm, to]."""
+	"""{amount, qty, orders} attributed to the rep in [frm, to].
+
+	**Prefers the SAP Sales Register**, because that is where the business actually
+	invoices: ₹219 crore of real invoices against ~₹22 lakh of ERPNext Sales Orders on
+	their site, and SAP carries the rep's employee code on every line, so attribution is
+	read rather than inferred. The ERPNext path below stays as the fallback for sites
+	without the SAP feed (crm-dev, a fresh install) and for the day orders are raised here.
+	"""
+	from crm_app import sap_sales
+
+	if employee and sap_sales.available():
+		sap = sap_sales.rep_sales(employee, frm, to)
+		if sap["invoices"]:
+			return {"amount": sap["amount"], "qty": sap["qty"], "orders": sap["invoices"], "source": "sap"}
+
 	if not employee or not frappe.db.exists("DocType", "Sales Order"):
 		return {"amount": 0.0, "qty": 0.0, "orders": 0}
 	user = frappe.db.get_value("Employee", employee, "user_id")
@@ -62,8 +76,12 @@ def rep_sales(employee, frm, to):
 
 
 def rep_customers(employee):
-	"""Set of Customer names attributed to the rep (assigned field + their order customers)."""
+	"""Set of Customer names attributed to the rep (SAP invoices + assigned + orders)."""
+	from crm_app import sap_sales
+
 	custs = set(frappe.get_all("Customer", filters={"custom_assigned_sales_person": employee}, pluck="name"))
+	# Whoever he actually invoiced in SAP is the strongest signal of "his" dealer.
+	custs.update(sap_sales.rep_customers(employee))
 	if not frappe.db.exists("DocType", "Sales Order"):
 		return custs
 	user = frappe.db.get_value("Employee", employee, "user_id")

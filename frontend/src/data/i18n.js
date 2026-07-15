@@ -325,6 +325,7 @@ const hi = {
 	"Locations appear once reps open the app today.": "रेप के ऐप खोलते ही लोकेशन दिखेंगी।",
 
 	// ---- DMS / PJP ----
+	"Recent dispatches": "हाल की डिलीवरी",
 	"Stock check": "स्टॉक जांच",
 	"Stock recorded": "स्टॉक दर्ज हुआ",
 	Closing: "बचा स्टॉक",
@@ -674,6 +675,7 @@ const bn = {
 	"Locations appear once reps open the app today.": "রেপরা অ্যাপ খুললেই লোকেশন দেখাবে।",
 
 	// ---- DMS / PJP ----
+	"Recent dispatches": "সাম্প্রতিক ডেলিভারি",
 	"Stock check": "স্টক পরীক্ষা",
 	"Stock recorded": "স্টক রেকর্ড হয়েছে",
 	Closing: "অবশিষ্ট স্টক",

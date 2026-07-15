@@ -53,9 +53,21 @@ def _from_custom(names):
 	return out
 
 
+def _address_has_geo() -> bool:
+	"""Address.latitude/longitude are CUSTOM fields on their site — not stock ERPNext.
+
+	Without this guard the SQL below dies with "Unknown column 'a.latitude'" on any site
+	that lacks them (a fresh install, CI, crm-dev), taking Customer 360 down with it.
+	"""
+	if not frappe.db.exists("DocType", "Address"):
+		return False
+	meta = frappe.get_meta("Address")
+	return meta.has_field("latitude") and meta.has_field("longitude")
+
+
 def _from_address(names):
 	"""{customer: coords} from the linked ERPNext Address (where the real data lives)."""
-	if not frappe.db.exists("DocType", "Address"):
+	if not _address_has_geo():
 		return {}
 	rows = frappe.db.sql(_ADDR_SQL, {"names": tuple(names)}, as_dict=True)
 	out = {}

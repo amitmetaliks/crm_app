@@ -92,8 +92,27 @@
 				</div>
 			</div>
 
+			<!-- Dispatch: "where is my truck" — the question asked at every counter -->
+			<div v-if="d.dispatches?.length">
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent dispatches") }}</h2>
+				<div class="aa-card space-y-3">
+					<div v-for="dp in d.dispatches" :key="dp.invoice_number" class="border-b border-gray-100 pb-2 last:border-0 last:pb-0 dark:border-navy-700">
+						<div class="flex items-center justify-between text-sm">
+							<span class="font-medium text-navy-700 dark:text-white">{{ dp.invoice_number }}</span>
+							<span class="text-gray-500">{{ inrShort(dp.amount) }} · {{ num(dp.qty) }} MT</span>
+						</div>
+						<p class="text-xs text-gray-400">
+							{{ formatDate(dp.invoice_date) }}
+							<template v-if="dp.truck_no"> · 🚚 {{ dp.truck_no }}</template>
+							<template v-if="dp.lr_number"> · LR {{ dp.lr_number }}</template>
+						</p>
+						<p v-if="dp.transporter" class="truncate text-xs text-gray-400">{{ dp.transporter }}</p>
+					</div>
+				</div>
+			</div>
+
 			<!-- Recent orders -->
-			<div v-if="d.recent_orders?.length">
+			<div v-if="d.recent_orders?.length && !d.dispatches?.length">
 				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent orders") }}</h2>
 				<div class="aa-card space-y-2">
 					<div v-for="o in d.recent_orders" :key="o.name" class="flex items-center justify-between text-sm">

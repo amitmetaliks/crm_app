@@ -153,11 +153,39 @@ def get_customer_360(name):
 	"""
 	get_current_employee()
 	base = get_customer(name)
+	from crm_app import sap_sales
 
 	# --- trade history (all reps, not just the caller: it is the dealer's history) ---
 	orders = {"count": 0, "value": 0.0, "qty_mt": 0.0, "last_date": None}
-	top_products, recent_orders = [], []
-	if _exists("Sales Order"):
+	top_products, recent_orders, dispatches = [], [], []
+
+	# Prefer SAP: it is where this dealer is actually invoiced. ERPNext Sales Orders are
+	# a near-empty table on their site, so reading only those showed every dealer as
+	# having done no business.
+	sap = sap_sales.customer_sales(name) if sap_sales.available() else None
+	if sap and sap["invoices"]:
+		orders = {
+			"count": sap["invoices"],
+			"value": sap["amount"],
+			"qty_mt": sap["qty"],
+			"last_date": sap["last_date"],
+			"source": "sap",
+		}
+		top_products = [
+			{"item": p["item"], "qty": p["qty"], "amount": p["amount"]}
+			for p in sap_sales.customer_top_products(name)
+		]
+		dispatches = sap_sales.customer_invoices(name, limit=5)
+		recent_orders = [
+			{
+				"name": d["invoice_number"],
+				"date": str(d["invoice_date"]),
+				"amount": d["amount"],
+				"qty": d["qty"],
+			}
+			for d in dispatches
+		]
+	elif _exists("Sales Order"):
 		rows = frappe.get_all(
 			"Sales Order",
 			filters={"customer": name, "docstatus": 1},
@@ -221,6 +249,9 @@ def get_customer_360(name):
 		"orders": orders,
 		"recent_orders": recent_orders,
 		"top_products": top_products,
+		# "Where is my truck?" — the question a dealer asks at every visit, answerable
+		# now that the SAP register carries LR number, truck and transporter.
+		"dispatches": dispatches,
 		"overdue": overdue,
 		"credit_limit": credit_limit,
 		"visit_count": frappe.db.count("CRM Visit", {"party_type": "Customer", "customer": name}),
