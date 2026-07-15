@@ -57,6 +57,7 @@ import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
 import { watermark } from "../utils/watermark"
 import { toast } from "../utils/toast"
+import { startDutyTracking, stopDutyTracking } from "../data/native"
 
 const ov = ref({ logs_today: [], next_action: "IN" })
 const busy = ref(false)
@@ -92,6 +93,11 @@ async function onSelfie(e) {
 		)
 		if (res?.queued) toast.success("Saved offline — will sync when online")
 		else toast.success(`Checked ${res.log_type} at ${fmtTime(res.time)}`)
+		// Route recording (native app) runs only between check-IN and check-OUT.
+		// On the web/PWA these are no-ops.
+		const action = res?.log_type || (res?.queued ? nextAction.value : null)
+		if (action === "IN") startDutyTracking()
+		else if (action === "OUT") stopDutyTracking()
 		await load()
 	} catch (err) {
 		toast.error(err?.messages?.[0] || err?.message || "Could not record attendance")

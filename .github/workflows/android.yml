@@ -32,19 +32,19 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Add location permissions to manifest
+      - name: Patch manifest (foreground service, no background location)
         working-directory: frontend
-        run: |
-          MAN=android/app/src/main/AndroidManifest.xml
-          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    $1#' "$MAN"
-          echo "--- manifest permissions ---"; grep uses-permission "$MAN" || true
-          if grep -q ACCESS_BACKGROUND_LOCATION "$MAN"; then echo "ERROR: background location present"; exit 1; fi
+        run: bash scripts/patch-android-manifest.sh
 
       - name: Assemble debug APK
         working-directory: frontend/android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
+
+      - name: Verify merged manifest permissions
+        working-directory: frontend
+        run: bash scripts/verify-android-manifest.sh
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

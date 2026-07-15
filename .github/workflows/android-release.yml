@@ -29,17 +29,12 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      # Foreground location only. ACCESS_BACKGROUND_LOCATION is deliberately NOT
-      # requested: it triggers Google's Permissions Declaration review (form + video
-      # + justification) and is a common rejection cause. Location is captured while
-      # the app is open and at every check-in/check-out, which is all the app needs.
-      - name: Add location permissions + version code
+      # Foreground-service location only — see frontend/scripts/patch-android-manifest.sh
+      # for why ACCESS_BACKGROUND_LOCATION must never ship.
+      - name: Patch manifest (foreground service, no background location) + version code
         working-directory: frontend
         run: |
-          MAN=android/app/src/main/AndroidManifest.xml
-          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    $1#' "$MAN"
-          echo "--- manifest permissions ---"; grep uses-permission "$MAN" || true
-          if grep -q ACCESS_BACKGROUND_LOCATION "$MAN"; then echo "ERROR: background location present"; exit 1; fi
+          bash scripts/patch-android-manifest.sh
           perl -0pi -e 's/versionCode \d+/versionCode '"${GITHUB_RUN_NUMBER}"'/' android/app/build.gradle
 
       - name: Decode keystore
@@ -55,6 +50,12 @@ jobs:
             -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_STORE_PASSWORD }}" \
             -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
             -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      # Verify the MERGED manifest (the library contributes permissions of its own).
+      # Fails the build rather than shipping an AAB that Play would flag.
+      - name: Verify merged manifest permissions
+        working-directory: frontend
+        run: bash scripts/verify-android-manifest.sh
 
       - name: Upload AAB + APK
         uses: actions/upload-artifact@v4

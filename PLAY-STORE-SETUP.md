@@ -7,14 +7,21 @@ best — fast, no full public review, up to 100 testers via a link — then prom
 
 Everything technical is already built: two GitHub Actions workflows + a privacy page.
 
-> **Foreground location only — by design.** The app does **not** request
-> `ACCESS_BACKGROUND_LOCATION`. That permission triggers Google's Permissions Declaration
-> review (form + video demo + written justification) and is one of the most common rejection
-> causes, especially for workforce-tracking apps. Location is captured while the app is open
-> and at every check-in/check-out, which covers the field-visit use case. Both Android
-> workflows **fail the build** if background location ever reappears in the manifest.
-> Trade-off accepted: no tracking while the phone is pocketed with the app closed, and no
-> native mock-location (fake GPS) detection — geofencing and photo watermarking still apply.
+> **Foreground SERVICE location — by design; no background-location permission.**
+> The app records the rep's route **with the screen off** using a location **foreground
+> service** with a permanent notification ("TRIAM A+ — on duty"), started at attendance
+> check-in and stopped at check-out. Android grants this with only `ACCESS_FINE_LOCATION`:
+> *"Your app is running a foreground service... Your app retains access when it's placed in
+> the background, such as when the user ... turns their device's display off."*
+> ([Android docs](https://developer.android.com/develop/sensors-and-location/location/permissions))
+>
+> So the app does **not** request `ACCESS_BACKGROUND_LOCATION`, which would trigger Google's
+> Permissions Declaration review (form + video demo + justification) — a common rejection
+> cause for workforce apps, **with no exemption for private/enterprise or testing tracks**.
+> The `background-geolocation` library declares that permission itself, so
+> `scripts/patch-android-manifest.sh` strips it with `tools:node="remove"`, and
+> `scripts/verify-android-manifest.sh` **fails the build** if it survives into the *merged*
+> manifest.
 
 ## Step 1 — Create the signing keystore (once)
 1. GitHub → **Actions → "Create Android Keystore" → Run workflow**. Enter a keystore
@@ -54,6 +61,14 @@ Download the **`triam-aplus-release`** artifact → it contains **`app-release.a
   | Can users request deletion? | **Yes** — via their employer/HR (internal app) |
 - **Background location**: **not applicable — we do not request it.** No declaration form,
   no video demo needed. This is the main reason review should be routine.
+- **Foreground service declaration** (apps targeting Android 14+): Play asks you to declare
+  each foreground service type. Declare **Location**, with this use case:
+  > *"Internal field-sales app. While a sales representative is on duty (between their
+  > attendance check-in and check-out), the app records their dealer-visit route to verify
+  > visits and compute travel distance for reimbursement. A permanent notification is shown
+  > for the whole time recording is active. Recording stops at check-out."*
+  This is a lighter declaration than background location and is normally approved for
+  workforce/route apps. Play may ask for a short screen recording of the flow.
 - Content rating questionnaire + target audience (adults / business).
 
 ## Notes
