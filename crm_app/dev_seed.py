@@ -449,7 +449,7 @@ def full_test(rep_user=None, mgr_user=None):
 
 	from crm_app import (
 		api, approvals, attendance, beat, collections, customers, dashboards, expense,
-		field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
+		conveyance, field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
 	)
 
 	if rep_user:
@@ -480,6 +480,7 @@ def full_test(rep_user=None, mgr_user=None):
 			run("insights.churn_risk", lambda: insights.churn_risk())
 			run("insights.sales_forecast", lambda: insights.sales_forecast())
 			run("tracking.get_day_route", lambda: tracking.get_day_route())
+			run("conveyance.get_today_conveyance", lambda: conveyance.get_today_conveyance())
 			run("orders.search_items", lambda: orders.search_items(query=""))
 			run("pricing.get_schemes", lambda: pricing.get_schemes())
 			run("push.get_vapid_public_key", lambda: push.get_vapid_public_key())

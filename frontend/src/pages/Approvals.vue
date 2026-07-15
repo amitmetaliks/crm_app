@@ -15,6 +15,25 @@
 					<div v-for="e in data.expenses" :key="e.name" class="aa-card">
 						<p class="font-semibold text-navy-700 dark:text-white">{{ e.employee_name }} · ₹{{ fmt(e.total_claimed_amount || e.grand_total) }}</p>
 						<p class="text-xs text-gray-400">{{ fmtDate(e.posting_date) }} · {{ e.name }}</p>
+
+						<!-- Auto-conveyance: show what GPS measured vs what the rep claimed. -->
+						<div
+							v-if="e.conveyance"
+							class="mt-2 rounded-lg p-2 text-xs"
+							:class="e.conveyance.corrected ? 'bg-amber-50 text-amber-900' : 'bg-gray-50 text-gray-600 dark:bg-navy-800 dark:text-gray-300'"
+						>
+							<div class="flex items-center justify-between font-medium">
+								<span>GPS recorded <strong>{{ e.conveyance.gps_km }} km</strong></span>
+								<span v-if="e.conveyance.corrected" class="flex items-center gap-1">
+									<AlertTriangle class="h-3.5 w-3.5" /> Rep claims <strong>{{ e.conveyance.claimed_km }} km</strong>
+								</span>
+								<span v-else class="text-green-600">✓ matches GPS</span>
+							</div>
+							<p v-if="e.conveyance.corrected" class="mt-1">
+								<strong>+{{ e.conveyance.extra_km }} km</strong> above GPS. {{ e.conveyance.description }}
+							</p>
+						</div>
+
 						<div class="mt-2 flex gap-2">
 							<button @click="act('Expense Claim', e.name, 'reject')" class="flex-1 rounded-lg bg-red-50 py-2 text-sm font-medium text-red-600">Reject</button>
 							<button @click="act('Expense Claim', e.name, 'approve')" class="flex-1 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white">Approve</button>
@@ -52,6 +71,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue"
+import { AlertTriangle } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"

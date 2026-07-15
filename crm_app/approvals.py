@@ -7,13 +7,54 @@ guarded status change. Notifies the employee (in-app + push).
 
 import frappe
 from frappe import _
-from frappe.utils import now_datetime
+from frappe.utils import flt, now_datetime
 
 from crm_app.api import get_current_employee, is_sales_manager
 
 
 def _hrms_ready() -> bool:
 	return bool(frappe.db.exists("DocType", "Leave Application"))
+
+
+def _add_conveyance_context(expenses):
+	"""Attach GPS-vs-claimed distance to auto-conveyance claims, so the approver can see
+	at a glance whether the rep overrode the measured route (and why).
+
+	Only rows written by crm_app carry ``custom_distance_source``; note that
+	``custom_gps_distance_km`` is 0 (not NULL) on every pre-existing row, so it must
+	never be used to detect our rows. See conveyance.py.
+	"""
+	if not expenses:
+		return
+	meta = frappe.get_meta("Expense Claim Detail")
+	if not meta.has_field("custom_distance_source"):
+		return
+	rows = frappe.get_all(
+		"Expense Claim Detail",
+		filters={"parent": ["in", [e.name for e in expenses]], "custom_distance_source": ["!=", ""]},
+		fields=[
+			"parent", "amount", "description", "custom_gps_distance_km",
+			"custom_distance_travelled", "custom_distance_source",
+		],
+	)
+	by_parent = {r.parent: r for r in rows}
+	for e in expenses:
+		r = by_parent.get(e.name)
+		if not r:
+			continue
+		gps = flt(r.custom_gps_distance_km)
+		try:
+			claimed = flt(r.custom_distance_travelled)
+		except (TypeError, ValueError):
+			claimed = gps
+		e["conveyance"] = {
+			"gps_km": gps,
+			"claimed_km": claimed,
+			"source": r.custom_distance_source,
+			"corrected": r.custom_distance_source == "Rep corrected",
+			"extra_km": flt(claimed - gps, 2),
+			"description": r.description,
+		}
 
 
 @frappe.whitelist()
@@ -35,6 +76,7 @@ def get_pending_approvals() -> dict:
 			fields=["name", "employee_name", "posting_date", "grand_total", "total_claimed_amount"],
 			order_by="posting_date asc",
 		)
+		_add_conveyance_context(expenses)
 
 	visits = []
 	if is_sales_manager():
