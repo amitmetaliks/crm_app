@@ -7,7 +7,7 @@ versions even if a field is renamed or absent.
 
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate
+from frappe.utils import flt, getdate, now_datetime
 
 from crm_app.api import get_current_employee, is_sales_manager
 
@@ -230,6 +230,46 @@ def get_customer_360(name):
 		# Same rule of thumb the insights module uses: quiet for a quarter = at risk.
 		"at_risk": bool(days_since_order is not None and days_since_order > 90),
 	}
+
+
+@frappe.whitelist()
+def pin_shop(customer, latitude, longitude):
+	"""Save a dealer's real shop location from the rep's GPS, standing at the shop.
+
+	This fills the ~6% of dealers whose Address carries no coordinates, and a pinned
+	location outranks the billing address in geo_resolve (the shop door beats the
+	accounts desk).
+
+	Guard: a rep may pin only a dealer we CANNOT already locate. Pinning moves the
+	geofence, so letting a rep re-pin an existing shop would let him relocate it to his
+	own doorstep and pass every geofence check from home. Managers may re-pin.
+	"""
+	employee = get_current_employee()
+	if not frappe.db.exists("Customer", customer):
+		frappe.throw(_("Customer not found."), frappe.DoesNotExistError)
+	lat, lng = flt(latitude), flt(longitude)
+	if not lat or not lng:
+		frappe.throw(_("Could not read your location. Try again with GPS on."))
+	if not _has("Customer", "custom_geo_latitude"):
+		frappe.throw(_("Location fields are not installed on this site."))
+
+	from crm_app.geo_resolve import customer_coords
+
+	if customer_coords(customer) and not is_sales_manager():
+		frappe.throw(
+			_("This shop already has a location. Ask your manager to change it."),
+			frappe.PermissionError,
+		)
+
+	doc = frappe.get_doc("Customer", customer)
+	doc.db_set("custom_geo_latitude", lat, update_modified=False)
+	doc.db_set("custom_geo_longitude", lng, update_modified=False)
+	if _has("Customer", "custom_geo_pinned_by"):
+		doc.db_set("custom_geo_pinned_by", employee, update_modified=False)
+	if _has("Customer", "custom_geo_pinned_on"):
+		doc.db_set("custom_geo_pinned_on", now_datetime(), update_modified=False)
+	frappe.db.commit()
+	return {"ok": True, "lat": lat, "lng": lng, "source": "pinned"}
 
 
 def _customer_outstanding(customer: str) -> float:

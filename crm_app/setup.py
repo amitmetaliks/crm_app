@@ -61,6 +61,23 @@ def _install_custom_fields():
 			"read_only": 1,
 			"insert_after": "custom_assigned_sales_person",
 		},
+		# Audit for a rep-pinned shop location. Pinning moves the geofence, so it must be
+		# attributable — otherwise a rep could quietly relocate a dealer to his doorstep.
+		{
+			"fieldname": "custom_geo_pinned_by",
+			"fieldtype": "Link",
+			"label": "Shop Pinned By",
+			"options": "Employee",
+			"read_only": 1,
+			"insert_after": "custom_last_visit_date",
+		},
+		{
+			"fieldname": "custom_geo_pinned_on",
+			"fieldtype": "Datetime",
+			"label": "Shop Pinned On",
+			"read_only": 1,
+			"insert_after": "custom_geo_pinned_by",
+		},
 	]
 
 	# Selfie + address on Employee Checkin (field attendance). Only applied where

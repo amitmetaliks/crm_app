@@ -26,8 +26,15 @@
 					<a v-if="c.mobile_no" :href="`tel:${c.mobile_no}`" class="chip"><Phone class="h-3.5 w-3.5" /> Call</a>
 					<button v-if="c.mobile_no" class="chip" @click="wa"><MessageCircle class="h-3.5 w-3.5" /> WhatsApp</button>
 					<button v-if="d.geo" class="chip chip-primary" @click="navigate"><Navigation class="h-3.5 w-3.5" /> Navigate</button>
-					<span v-else class="chip opacity-50"><MapPinOff class="h-3.5 w-3.5" /> No location</span>
+					<button v-if="canPin" class="chip" :disabled="pinning" @click="pin">
+						<MapPin class="h-3.5 w-3.5" /> {{ pinning ? "Getting GPS…" : d.geo ? "Re-pin shop" : "Pin this shop" }}
+					</button>
+					<span v-else-if="!d.geo" class="chip opacity-50"><MapPinOff class="h-3.5 w-3.5" /> No location</span>
 				</div>
+				<p v-if="!d.geo" class="pt-1 text-xs text-gray-400">
+					No location on record. Stand at the shop and tap <strong>Pin this shop</strong> — it enables
+					navigation and visit verification for everyone.
+				</p>
 			</div>
 
 			<!-- The numbers that matter at the door -->
@@ -116,13 +123,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
-import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff } from "lucide-vue-next"
+import { ref, computed, onMounted } from "vue"
+import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
 import { openWhatsApp } from "../utils/wa"
+import { getPosition } from "../utils/geo"
+import { toast } from "../utils/toast"
 import { inrShort, num } from "../utils/money"
 
 const props = defineProps({ name: { type: String, required: true } })
@@ -130,6 +139,12 @@ const c = ref(null)
 const d = ref({})
 const visits = ref([])
 const loading = ref(true)
+const pinning = ref(false)
+const isManager = ref(false)
+
+// Reps may pin only shops we cannot locate yet; re-pinning moves the geofence, so it
+// stays a manager action (see customers.pin_shop).
+const canPin = computed(() => !d.value.geo || isManager.value)
 
 function formatDate(x) { return x ? dayjs(x).format("DD MMM YYYY") : "" }
 function ago(days) {
@@ -150,12 +165,39 @@ function wa() {
 	openWhatsApp(c.value.mobile_no, `Dear ${c.value.customer_name},`)
 }
 
+async function pin() {
+	pinning.value = true
+	try {
+		const pos = await getPosition()
+		await call("crm_app.customers.pin_shop", {
+			customer: props.name,
+			latitude: pos.latitude,
+			longitude: pos.longitude,
+		})
+		toast.success("Shop location saved")
+		await load()
+	} catch (err) {
+		toast.error(err?.messages?.[0] || err?.message || "Could not save the location")
+	} finally {
+		pinning.value = false
+	}
+}
+
+async function load() {
+	const res = await call("crm_app.customers.get_customer_360", { name: props.name })
+	d.value = res
+	c.value = res.customer
+	visits.value = res.visits || []
+}
+
 onMounted(async () => {
 	try {
-		const res = await call("crm_app.customers.get_customer_360", { name: props.name })
-		d.value = res
-		c.value = res.customer
-		visits.value = res.visits || []
+		await load()
+		try {
+			isManager.value = !!(await call("crm_app.api.whoami"))?.is_sales_manager
+		} catch (e) {
+			/* non-fatal: just hides the re-pin action */
+		}
 	} catch (e) {
 		c.value = null
 	} finally {
