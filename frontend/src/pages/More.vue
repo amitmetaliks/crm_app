@@ -18,13 +18,13 @@
 		<div class="mx-auto -mt-4 max-w-xl space-y-3 px-4">
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<router-link :to="{ name: 'Beat' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Route class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Beat plan</span>
+					<Route class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Beat plan") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Targets' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Target class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My targets</span>
+					<Target class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("My targets") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Collections' }" class="flex items-center gap-3 px-4 py-3.5">
-					<IndianRupee class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Collections</span>
+					<IndianRupee class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Collections") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Leads' }" class="flex items-center gap-3 px-4 py-3.5">
 					<UserPlus class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Leads &amp; Deals</span>
@@ -34,34 +34,34 @@
 			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">My workplace</p>
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<router-link :to="{ name: 'Attendance' }" class="flex items-center gap-3 px-4 py-3.5">
-					<CalendarCheck class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Attendance</span>
+					<CalendarCheck class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Attendance") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Conveyance' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Fuel class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Conveyance (auto)</span>
 				</router-link>
 				<router-link :to="{ name: 'Expense' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Receipt class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Expense claims</span>
+					<Receipt class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Expense claims") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Leave' }" class="flex items-center gap-3 px-4 py-3.5">
-					<CalendarOff class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Leave</span>
+					<CalendarOff class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Leave") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Salary' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Wallet class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Salary slips</span>
+					<Wallet class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Salary slips") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Kra' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Award class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My KRA scorecard</span>
+					<Award class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("My KRA scorecard") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Timeline' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Clock class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Activity timeline</span>
+					<Clock class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Activity timeline") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Route' }" class="flex items-center gap-3 px-4 py-3.5">
 					<MapPin class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">My route &amp; distance</span>
 				</router-link>
 				<router-link :to="{ name: 'Insights' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Sparkles class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Smart insights</span>
+					<Sparkles class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Smart insights") }}</span>
 				</router-link>
 				<router-link :to="{ name: 'Schemes' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Tag class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Active schemes</span>
+					<Tag class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Active schemes") }}</span>
 				</router-link>
 			</div>
 
@@ -82,27 +82,40 @@
 				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Manager</p>
 				<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 					<router-link :to="{ name: 'Approvals' }" class="flex items-center gap-3 px-4 py-3.5">
-						<CheckSquare class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Approvals</span>
+						<CheckSquare class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Approvals") }}</span>
 					</router-link>
 					<router-link :to="{ name: 'Analytics' }" class="flex items-center gap-3 px-4 py-3.5">
-						<BarChart3 class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Analytics</span>
+						<BarChart3 class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Analytics") }}</span>
 					</router-link>
 					<router-link :to="{ name: 'Team' }" class="flex items-center gap-3 px-4 py-3.5">
-						<Users class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team activity</span>
+						<Users class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Team activity") }}</span>
 					</router-link>
 					<router-link :to="{ name: 'TeamMap' }" class="flex items-center gap-3 px-4 py-3.5">
-						<MapPin class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Team live map</span>
+						<MapPin class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Team live map") }}</span>
 					</router-link>
 				</div>
 			</div>
 
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<router-link :to="{ name: 'Notifications' }" class="flex items-center gap-3 px-4 py-3.5">
-					<Bell class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Notifications</span>
+					<Bell class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Notifications") }}</span>
 				</router-link>
 				<button @click="toggleTheme" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
 					<Moon class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ dark ? "Light mode" : "Dark mode" }}</span>
 				</button>
+				<div class="flex items-center gap-3 px-4 py-3.5">
+					<Languages class="h-5 w-5 shrink-0 text-saffron" />
+					<span class="text-sm text-navy-700 dark:text-white">{{ $t("Language") }}</span>
+					<div class="ml-auto flex gap-1">
+						<button
+							v-for="l in LANGS"
+							:key="l.code"
+							class="rounded-lg px-2.5 py-1 text-xs font-semibold"
+							:class="locale === l.code ? 'bg-saffron text-white' : 'bg-gray-100 text-navy-700 dark:bg-navy-700 dark:text-white'"
+							@click="setLocale(l.code)"
+						>{{ l.label }}</button>
+					</div>
+				</div>
 			</div>
 
 			<button @click="onLogout" class="aa-card flex w-full items-center gap-3 text-left text-sm font-medium text-red-600">
@@ -118,7 +131,8 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages } from "lucide-vue-next"
+import { LANGS, locale, setLocale } from "../data/i18n"
 import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
 import { toast } from "../utils/toast"
 import BottomNav from "../components/BottomNav.vue"

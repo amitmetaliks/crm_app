@@ -8,6 +8,7 @@ import { initOffline } from "./data/offline"
 import { startTracking } from "./data/tracker"
 import { initLock } from "./data/lock"
 import { resumeDutyTracking } from "./data/native"
+import { t } from "./data/i18n"
 
 applyStoredTheme()
 initLock()
@@ -19,6 +20,8 @@ resumeDutyTracking()
 setConfig("resourceFetcher", frappeRequest)
 
 const app = createApp(App)
+// $t reads the locale ref during render, so switching language re-renders in place.
+app.config.globalProperties.$t = t
 app.use(router)
 app.use(resourcesPlugin)
 app.mount("#app")

@@ -12,7 +12,7 @@
 				:class="isActive(item.name) ? 'text-saffron' : 'text-gray-400'"
 			>
 				<component :is="item.icon" class="h-6 w-6" :stroke-width="isActive(item.name) ? 2.4 : 1.8" />
-				<span :class="isActive(item.name) ? 'font-semibold' : ''">{{ item.label }}</span>
+				<span :class="isActive(item.name) ? 'font-semibold' : ''">{{ t(item.label) }}</span>
 			</router-link>
 		</div>
 	</nav>
@@ -21,6 +21,7 @@
 <script setup>
 import { useRoute } from "vue-router"
 import { Home, ClipboardList, PlusCircle, Store, Menu } from "lucide-vue-next"
+import { t } from "../data/i18n"
 
 const route = useRoute()
 const items = [
