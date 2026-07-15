@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-15 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "item_code",
+  "item_name",
+  "brand_type",
+  "closing_qty_mt",
+  "sold_qty_mt",
+  "implied_sold_mt",
+  "rate_per_mt",
+  "remarks"
+ ],
+ "fields": [
+  {"fieldname": "item_code", "fieldtype": "Data", "label": "Item / Grade", "in_list_view": 1, "columns": 2, "reqd": 1},
+  {"fieldname": "item_name", "fieldtype": "Data", "label": "Item Name"},
+  {"fieldname": "brand_type", "fieldtype": "Select", "label": "Brand", "options": "Ours\nCompetitor", "default": "Ours", "in_list_view": 1, "columns": 1},
+  {"fieldname": "closing_qty_mt", "fieldtype": "Float", "label": "Closing Stock (MT)", "precision": "3", "in_list_view": 1, "columns": 2},
+  {"fieldname": "sold_qty_mt", "fieldtype": "Float", "label": "Sold Since Last (MT)", "precision": "3", "in_list_view": 1, "columns": 2, "description": "What the dealer sold onward (secondary), as told by the dealer."},
+  {"fieldname": "implied_sold_mt", "fieldtype": "Float", "label": "Implied Sold (MT)", "precision": "3", "read_only": 1, "description": "Computed: previous closing + primary purchased since + current closing. Compare against what the dealer says."},
+  {"fieldname": "rate_per_mt", "fieldtype": "Currency", "label": "Selling Rate / MT", "columns": 1},
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks"}
+ ],
+ "links": [],
+ "modified": "2026-07-15 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Dealer Stock Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

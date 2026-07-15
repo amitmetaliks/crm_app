@@ -1,0 +1,44 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:PJP-{#####}",
+ "creation": "2026-07-15 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "title",
+  "sales_person",
+  "sales_person_name",
+  "cycle_weeks",
+  "cycle_start_date",
+  "status",
+  "section_entries",
+  "entries"
+ ],
+ "fields": [
+  {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1, "in_list_view": 1},
+  {"fieldname": "sales_person_name", "fieldtype": "Data", "label": "Sales Person Name", "fetch_from": "sales_person.employee_name", "read_only": 1},
+  {"fieldname": "cycle_weeks", "fieldtype": "Select", "label": "Cycle", "options": "1\n2\n4", "default": "1", "reqd": 1, "in_list_view": 1, "description": "1 = weekly, 2 = fortnightly, 4 = monthly rotation."},
+  {"fieldname": "cycle_start_date", "fieldtype": "Date", "label": "Cycle Start Date", "reqd": 1, "description": "Anchor date the rotation counts from."},
+  {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nInactive", "default": "Active", "in_standard_filter": 1, "in_list_view": 1},
+  {"fieldname": "section_entries", "fieldtype": "Section Break", "label": "Journey Plan"},
+  {"fieldname": "entries", "fieldtype": "Table", "label": "Entries", "options": "CRM PJP Entry"}
+ ],
+ "links": [],
+ "modified": "2026-07-15 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM PJP",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales User", "read": 1, "report": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

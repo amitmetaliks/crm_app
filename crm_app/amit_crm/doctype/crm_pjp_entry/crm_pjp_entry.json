@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-15 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "customer",
+  "customer_name",
+  "week_no",
+  "weekday",
+  "beat_type",
+  "area",
+  "remarks"
+ ],
+ "fields": [
+  {"fieldname": "customer", "fieldtype": "Link", "label": "Dealer", "options": "Customer", "reqd": 1, "in_list_view": 1, "columns": 3},
+  {"fieldname": "customer_name", "fieldtype": "Data", "label": "Dealer Name", "fetch_from": "customer.customer_name", "read_only": 1, "in_list_view": 1, "columns": 2},
+  {"fieldname": "week_no", "fieldtype": "Int", "label": "Week of Cycle", "default": "1", "in_list_view": 1, "columns": 1, "description": "1 for a weekly cycle; 1-2 fortnightly; 1-4 monthly."},
+  {"fieldname": "weekday", "fieldtype": "Select", "label": "Day", "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday", "reqd": 1, "in_list_view": 1, "columns": 2},
+  {"fieldname": "beat_type", "fieldtype": "Select", "label": "Type", "options": "Primary\nSecondary", "default": "Primary", "in_list_view": 1, "columns": 1},
+  {"fieldname": "area", "fieldtype": "Data", "label": "Area", "columns": 2},
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks"}
+ ],
+ "links": [],
+ "modified": "2026-07-15 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM PJP Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

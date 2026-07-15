@@ -20,6 +20,12 @@
 				<router-link :to="{ name: 'Beat' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Route class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Beat plan") }}</span>
 				</router-link>
+				<router-link :to="{ name: 'Pjp' }" class="flex items-center gap-3 px-4 py-3.5">
+					<CalendarRange class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Journey plan") }}</span>
+				</router-link>
+				<router-link :to="{ name: 'Secondary' }" class="flex items-center gap-3 px-4 py-3.5">
+					<Boxes class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Secondary sales") }}</span>
+				</router-link>
 				<router-link :to="{ name: 'Targets' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Target class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("My targets") }}</span>
 				</router-link>
@@ -130,7 +136,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages, CalendarRange, Boxes } from "lucide-vue-next"
 import { LANGS, locale, setLocale } from "../data/i18n"
 import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
 import { toast } from "../utils/toast"

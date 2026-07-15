@@ -26,6 +26,9 @@ permission_query_conditions = {
 # Scheduled background tasks: daily beat/follow-up reminders + missed-visit flags.
 scheduler_events = {
 	"daily": [
+		# Build today's beat from each rep's PJP first, so the reminder that follows has
+		# something to talk about.
+		"crm_app.pjp.auto_generate_daily_beats",
 		"crm_app.tasks.send_beat_reminders",
 		"crm_app.tasks.send_followup_reminders",
 		"crm_app.tasks.flag_missed_visits",

@@ -454,7 +454,7 @@ def full_test(rep_user=None, mgr_user=None):
 
 	from crm_app import (
 		api, approvals, attendance, beat, collections, customers, dashboards, expense,
-		conveyance, customers, field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
+		conveyance, customers, dms, field_visit, holidays, insights, leads, leave, orders, pjp, pricing, push, salary, sfa, targets, tracking, whatsapp,
 	)
 
 	if rep_user:
@@ -488,6 +488,10 @@ def full_test(rep_user=None, mgr_user=None):
 			run("conveyance.get_today_conveyance", lambda: conveyance.get_today_conveyance())
 			run("collections.get_payment_modes", lambda: collections.get_payment_modes())
 			run("collections.get_my_receipts", lambda: collections.get_my_receipts())
+			run("dms.get_my_stock_checks", lambda: dms.get_my_stock_checks())
+			run("dms.get_secondary_summary", lambda: dms.get_secondary_summary())
+			run("pjp.get_my_pjp", lambda: pjp.get_my_pjp())
+			run("pjp.get_coverage", lambda: pjp.get_coverage())
 			run("customers.get_customer_360", lambda: customers.get_customer_360(_any_customer()) if _any_customer() else "skip")
 			run("orders.search_items", lambda: orders.search_items(query=""))
 			run("pricing.get_schemes", lambda: pricing.get_schemes())

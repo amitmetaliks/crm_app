@@ -72,6 +72,10 @@
 					class="aa-btn-primary flex-1 text-center"
 				>{{ $t("Start visit") }}</router-link>
 				<router-link
+					:to="{ name: 'StockCheck', query: { customer: name, label: c.customer_name } }"
+					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-navy-700 py-2.5 text-center text-sm font-semibold text-white dark:bg-navy-600"
+				><Boxes class="h-4 w-4" /> {{ $t("Stock") }}</router-link>
+				<router-link
 					:to="{ name: 'Collect', query: { customer: name, label: c.customer_name, phone: c.mobile_no || '' } }"
 					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-2.5 text-center text-sm font-semibold text-white"
 				><IndianRupee class="h-4 w-4" /> {{ $t("Collect") }}</router-link>
@@ -129,7 +133,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue"
-import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin, IndianRupee } from "lucide-vue-next"
+import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin, IndianRupee, Boxes } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
