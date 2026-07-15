@@ -39,18 +39,35 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          # Frappe's `version-16` branch is a rolling development branch, not
+          # a frozen release — as of this writing `frappe==16.27.0`'s own
+          # package metadata declares `Python>=3.14,<3.15` (and before that,
+          # PEP 695 `type X = ...` syntax already required 3.12+). If this
+          # drifts again, the failing "Init bench + apps" step's `uv pip
+          # install` error names the required range directly — read it from
+          # the log, don't guess (see hr_app's CI history for the exact
+          # sequence this was discovered in).
+          python-version: "3.14"
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # frappe's version-16 branch also bumped its own package.json
+          # "engines.node" to >=24 — this Node is used to `yarn install`
+          # frappe's own assets during bench init, unrelated to crm_app's own
+          # (pre-built, committed) frontend.
+          node-version: "24"
 
       - name: Install bench
         run: pip install frappe-bench
 
       - name: Init bench + apps (frappe v16, erpnext, crm, crm_app)
         run: |
+          # bench init shells out to `yarn install --check-files` to build
+          # frappe's own JS assets — not guaranteed present/on PATH just
+          # because actions/setup-node ran. Install it explicitly.
+          npm install -g yarn
+          yarn --version
           bench init --skip-redis-config-generation --frappe-branch version-16 ~/frappe-bench
           cd ~/frappe-bench
           bench set-config -g db_host 127.0.0.1
