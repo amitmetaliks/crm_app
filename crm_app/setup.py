@@ -123,11 +123,43 @@ def _install_custom_fields():
 		},
 	]
 
+	# Field-collection audit on the receipt: who took the money and where they stood.
+	# custom_collected_by is a Link (NULL on every pre-existing Payment Entry), which is
+	# what lets us identify app-created receipts — a Float would backfill to 0 and match
+	# the entire table. See conveyance.py.
+	payment_fields = [
+		{
+			"fieldname": "custom_collected_by",
+			"fieldtype": "Link",
+			"label": "Collected By (Field)",
+			"options": "Employee",
+			"read_only": 1,
+			"insert_after": "mode_of_payment",
+		},
+		{
+			"fieldname": "custom_collected_lat",
+			"fieldtype": "Float",
+			"label": "Collected Latitude",
+			"precision": "6",
+			"read_only": 1,
+			"insert_after": "custom_collected_by",
+		},
+		{
+			"fieldname": "custom_collected_lng",
+			"fieldtype": "Float",
+			"label": "Collected Longitude",
+			"precision": "6",
+			"read_only": 1,
+			"insert_after": "custom_collected_lat",
+		},
+	]
+
 	custom_fields: dict[str, list[dict]] = {
 		"Customer": geo_fields,
 		"CRM Lead": geo_fields,
 		"Employee Checkin": checkin_fields,
 		"Expense Claim Detail": expense_detail_fields,
+		"Payment Entry": payment_fields,
 	}
 
 	to_install = {dt: fields for dt, fields in custom_fields.items() if frappe.db.exists("DocType", dt)}

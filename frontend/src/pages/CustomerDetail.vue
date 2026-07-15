@@ -67,10 +67,16 @@
 				</div>
 			</div>
 
-			<router-link
-				:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: name, label: c.customer_name } }"
-				class="aa-btn-primary block w-full text-center"
-			>Start visit</router-link>
+			<div class="flex gap-2">
+				<router-link
+					:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: name, label: c.customer_name } }"
+					class="aa-btn-primary flex-1 text-center"
+				>Start visit</router-link>
+				<router-link
+					:to="{ name: 'Collect', query: { customer: name, label: c.customer_name, phone: c.mobile_no || '' } }"
+					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-2.5 text-center text-sm font-semibold text-white"
+				><IndianRupee class="h-4 w-4" /> Collect</router-link>
+			</div>
 
 			<!-- What he buys -->
 			<div v-if="d.top_products?.length">
@@ -124,7 +130,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue"
-import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin } from "lucide-vue-next"
+import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin, IndianRupee } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"

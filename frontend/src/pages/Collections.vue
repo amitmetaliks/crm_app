@@ -16,7 +16,11 @@
 
 		<div class="mx-auto max-w-xl space-y-2 p-4">
 			<Skeleton v-if="loading" :count="5" />
-			<EmptyState v-else-if="!data.customers.length" title="Nothing outstanding" subtitle="No pending payments for your dealers." />
+			<EmptyState
+				v-else-if="!data.customers.length"
+				title="Nothing outstanding"
+				subtitle="No unpaid invoices found for your dealers. To collect money anyway, open the dealer and tap Collect."
+			/>
 			<div v-for="c in data.customers" v-else :key="c.customer" class="aa-card flex items-center justify-between">
 				<div class="min-w-0">
 					<p class="truncate font-semibold text-navy-700 dark:text-white">{{ c.customer_name }}</p>
@@ -27,7 +31,7 @@
 				<div class="flex shrink-0 gap-2">
 					<button @click="remind(c)" class="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">Remind</button>
 					<router-link
-						:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: c.customer, label: c.customer_name, purpose: 'Payment Collection' } }"
+						:to="{ name: 'Collect', query: { customer: c.customer, label: c.customer_name } }"
 						class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
 					>Collect</router-link>
 				</div>

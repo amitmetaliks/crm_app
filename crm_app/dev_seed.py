@@ -486,6 +486,8 @@ def full_test(rep_user=None, mgr_user=None):
 			run("insights.sales_forecast", lambda: insights.sales_forecast())
 			run("tracking.get_day_route", lambda: tracking.get_day_route())
 			run("conveyance.get_today_conveyance", lambda: conveyance.get_today_conveyance())
+			run("collections.get_payment_modes", lambda: collections.get_payment_modes())
+			run("collections.get_my_receipts", lambda: collections.get_my_receipts())
 			run("customers.get_customer_360", lambda: customers.get_customer_360(_any_customer()) if _any_customer() else "skip")
 			run("orders.search_items", lambda: orders.search_items(query=""))
 			run("pricing.get_schemes", lambda: pricing.get_schemes())
