@@ -1,8 +1,8 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-6 pt-6 text-white">
-			<button @click="$router.back()" class="mb-2 flex items-center gap-1 text-sm text-navy-200"><ChevronLeft class="h-5 w-5" /> Back</button>
-			<h1 class="text-xl font-bold">Attendance</h1>
+			<button @click="$router.back()" class="mb-2 flex items-center gap-1 text-sm text-navy-200"><ChevronLeft class="h-5 w-5" /> {{ $t("Back") }}</button>
+			<h1 class="text-xl font-bold">{{ $t("Attendance") }}</h1>
 			<p class="text-sm text-navy-200">{{ todayLabel }}</p>
 		</header>
 
@@ -13,7 +13,7 @@
 				</p>
 				<div class="mt-2 flex justify-center gap-6 text-sm">
 					<div><p class="text-xs text-gray-400">In</p><p class="font-semibold text-navy-700 dark:text-white">{{ fmtTime(ov.first_in) || "—" }}</p></div>
-					<div><p class="text-xs text-gray-400">Out</p><p class="font-semibold text-navy-700 dark:text-white">{{ fmtTime(ov.last_out) || "—" }}</p></div>
+					<div><p class="text-xs text-gray-400">{{ $t("Out") }}</p><p class="font-semibold text-navy-700 dark:text-white">{{ fmtTime(ov.last_out) || "—" }}</p></div>
 				</div>
 
 				<img v-if="preview" :src="preview" class="mx-auto mt-3 h-28 w-28 rounded-xl object-cover ring-2 ring-saffron/30" />
@@ -31,8 +31,8 @@
 			</div>
 
 			<div>
-				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Today's punches</h2>
-				<EmptyState v-if="!ov.logs_today || !ov.logs_today.length" title="No punches yet today" />
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Today's punches") }}</h2>
+				<EmptyState v-if="!ov.logs_today || !ov.logs_today.length" :title='$t("No punches yet today")' />
 				<div v-else class="space-y-2">
 					<div v-for="(l, i) in ov.logs_today" :key="i" class="aa-card flex items-center justify-between">
 						<span class="flex items-center gap-2 text-sm font-medium" :class="l.log_type === 'IN' ? 'text-green-600' : 'text-navy-700 dark:text-white'">

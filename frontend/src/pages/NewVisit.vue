@@ -8,14 +8,14 @@
 		<div class="mx-auto max-w-xl space-y-4 p-4">
 			<!-- STEP 1: choose party (locked once checked in) -->
 			<div class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Who are you visiting?</p>
+				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Who are you visiting?") }}</p>
 
 				<div v-if="selected" class="flex items-center justify-between rounded-xl bg-saffron/5 p-3">
 					<div class="min-w-0">
 						<p class="truncate font-semibold text-navy-700 dark:text-white">{{ selected.label }}</p>
 						<p class="text-xs text-gray-400">{{ selected.party_type }}{{ selected.sub ? " · " + selected.sub : "" }}</p>
 					</div>
-					<button v-if="!checkedIn" @click="clearSelected" class="text-xs font-medium text-saffron">Change</button>
+					<button v-if="!checkedIn" @click="clearSelected" class="text-xs font-medium text-saffron">{{ $t("Change") }}</button>
 				</div>
 
 				<div v-else>
@@ -24,7 +24,7 @@
 							v-model="query"
 							@input="onSearch"
 							class="aa-input"
-							placeholder="Search dealer / customer / lead…"
+							:placeholder='$t("Search dealer / customer / lead…")'
 						/>
 						<div v-if="searching" class="py-3 text-center text-xs text-gray-400">Searching…</div>
 						<ul v-else-if="results.length" class="mt-2 divide-y divide-gray-100">
@@ -41,16 +41,16 @@
 								<ChevronRight class="h-4 w-4 text-gray-300" />
 							</li>
 						</ul>
-						<p v-else-if="query.length > 1" class="py-3 text-center text-xs text-gray-400">No matches</p>
+						<p v-else-if="query.length > 1" class="py-3 text-center text-xs text-gray-400">{{ $t("No matches") }}</p>
 						<button @click="prospectMode = true" class="mt-3 text-xs font-medium text-saffron">
 							+ New prospect (not in system)
 						</button>
 					</div>
 					<div v-else>
-						<input v-model="prospectName" class="aa-input" placeholder="Prospect / shop name" />
+						<input v-model="prospectName" class="aa-input" :placeholder='$t("Prospect / shop name")' />
 						<div class="mt-2 flex gap-2">
-							<button @click="confirmProspect" class="aa-btn-primary !py-2 text-sm">Use this</button>
-							<button @click="prospectMode = false" class="text-xs text-gray-400">Cancel</button>
+							<button @click="confirmProspect" class="aa-btn-primary !py-2 text-sm">{{ $t("Use this") }}</button>
+							<button @click="prospectMode = false" class="text-xs text-gray-400">{{ $t("Cancel") }}</button>
 						</div>
 					</div>
 				</div>
@@ -59,14 +59,14 @@
 			<!-- STEP 2: purpose + contact (before check-in) -->
 			<div v-if="!checkedIn" class="aa-card space-y-3">
 				<div>
-					<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">Purpose</label>
+					<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">{{ $t("Purpose") }}</label>
 					<select v-model="purpose" class="aa-input">
 						<option v-for="p in PURPOSES" :key="p">{{ p }}</option>
 					</select>
 				</div>
 				<div class="grid grid-cols-2 gap-2">
-					<input v-model="contactName" class="aa-input" placeholder="Contact name" />
-					<input v-model="contactPhone" class="aa-input" type="tel" placeholder="Phone" />
+					<input v-model="contactName" class="aa-input" :placeholder='$t("Contact name")' />
+					<input v-model="contactPhone" class="aa-input" type="tel" :placeholder='$t("Phone")' />
 				</div>
 			</div>
 
@@ -88,14 +88,14 @@
 
 				<!-- Photos -->
 				<div class="aa-card">
-					<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Photos</p>
+					<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Photos") }}</p>
 					<div class="flex flex-wrap gap-2">
 						<div v-for="(p, i) in photos" :key="i" class="relative">
 							<img :src="p.thumb" class="h-20 w-20 rounded-lg object-cover" />
 						</div>
 						<label class="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400">
 							<Camera class="h-6 w-6" />
-							<span class="mt-1 text-[10px]">Add</span>
+							<span class="mt-1 text-[10px]">{{ $t("Add") }}</span>
 							<input type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
 						</label>
 					</div>
@@ -105,81 +105,77 @@
 				<!-- Orders / inquiries -->
 				<div class="aa-card">
 					<div class="mb-2 flex items-center justify-between">
-						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Orders / Inquiries</p>
+						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Orders / Inquiries") }}</p>
 						<button @click="addOrder" class="text-xs font-medium text-saffron">+ Add</button>
 					</div>
 					<div v-for="(o, i) in orders" :key="i" class="mb-3 rounded-xl bg-gray-50 p-3 dark:bg-navy-800">
 						<div class="mb-2 flex items-center justify-between">
 							<select v-model="o.order_type" class="aa-input !w-auto !py-1 text-sm">
-								<option>Inquiry</option>
-								<option>Firm Order</option>
+								<option>{{ $t("Inquiry") }}</option>
+								<option>{{ $t("Firm Order") }}</option>
 							</select>
 							<button @click="orders.splice(i, 1)"><Trash2 class="h-4 w-4 text-gray-400" /></button>
 						</div>
 						<div class="grid grid-cols-2 gap-2">
 							<select v-model="o.grade" class="aa-input !py-1.5 text-sm">
-								<option value="">Grade</option>
+								<option value="">{{ $t("Grade") }}</option>
 								<option v-for="g in GRADES" :key="g">{{ g }}</option>
 							</select>
-							<input v-model.number="o.quantity_mt" type="number" class="aa-input !py-1.5 text-sm" placeholder="Qty (MT)" />
-							<input v-model.number="o.rate_per_mt" type="number" class="aa-input !py-1.5 text-sm" placeholder="Rate/MT" />
-							<input v-model.number="o.expected_value" type="number" class="aa-input !py-1.5 text-sm" placeholder="Value ₹" />
+							<input v-model.number="o.quantity_mt" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Qty (MT)")' />
+							<input v-model.number="o.rate_per_mt" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Rate/MT")' />
+							<input v-model.number="o.expected_value" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Value ₹")' />
 						</div>
 					</div>
-					<p v-if="!orders.length" class="text-xs text-gray-400">No orders/inquiries added.</p>
+					<p v-if="!orders.length" class="text-xs text-gray-400">{{ $t("No orders/inquiries added.") }}</p>
 				</div>
 
 				<!-- Competitors -->
 				<div class="aa-card">
 					<div class="mb-2 flex items-center justify-between">
-						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Competitor info</p>
+						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Competitor info") }}</p>
 						<button @click="addCompetitor" class="text-xs font-medium text-saffron">+ Add</button>
 					</div>
 					<div v-for="(c, i) in competitors" :key="i" class="mb-3 rounded-xl bg-gray-50 p-3 dark:bg-navy-800">
 						<div class="mb-2 flex items-center justify-between">
-							<input v-model="c.competitor_brand" class="aa-input !py-1 text-sm" placeholder="Brand" />
+							<input v-model="c.competitor_brand" class="aa-input !py-1 text-sm" :placeholder='$t("Brand")' />
 							<button @click="competitors.splice(i, 1)" class="ml-2"><Trash2 class="h-4 w-4 text-gray-400" /></button>
 						</div>
 						<div class="grid grid-cols-2 gap-2">
-							<input v-model.number="c.price_per_mt" type="number" class="aa-input !py-1.5 text-sm" placeholder="Price/MT" />
+							<input v-model.number="c.price_per_mt" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Price/MT")' />
 							<select v-model="c.stock_status" class="aa-input !py-1.5 text-sm">
-								<option value="">Stock</option>
-								<option>In Stock</option>
-								<option>Low Stock</option>
-								<option>Out of Stock</option>
+								<option value="">{{ $t("Stock") }}</option>
+								<option>{{ $t("In Stock") }}</option>
+								<option>{{ $t("Low Stock") }}</option>
+								<option>{{ $t("Out of Stock") }}</option>
 							</select>
 						</div>
 					</div>
-					<p v-if="!competitors.length" class="text-xs text-gray-400">No competitor info added.</p>
+					<p v-if="!competitors.length" class="text-xs text-gray-400">{{ $t("No competitor info added.") }}</p>
 				</div>
 
 				<!-- Notes + outcome -->
 				<div class="aa-card space-y-3">
 					<div>
-						<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">Notes</label>
-						<textarea v-model="notes" rows="3" class="aa-input" placeholder="What happened on this visit?"></textarea>
+						<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">{{ $t("Notes") }}</label>
+						<textarea v-model="notes" rows="3" class="aa-input" :placeholder='$t("What happened on this visit?")'></textarea>
 					</div>
 					<div class="grid grid-cols-2 gap-2">
 						<select v-model="outcome" class="aa-input">
 							<option value="">Outcome…</option>
-							<option>Positive</option>
-							<option>Neutral</option>
-							<option>Negative</option>
-							<option>Order Received</option>
-							<option>No Interest</option>
+							<option>{{ $t("Positive") }}</option>
+							<option>{{ $t("Neutral") }}</option>
+							<option>{{ $t("Negative") }}</option>
+							<option>{{ $t("Order Received") }}</option>
+							<option>{{ $t("No Interest") }}</option>
 						</select>
 						<input v-model="nextVisitDate" type="date" class="aa-input" />
 					</div>
-					<input v-model="nextAction" class="aa-input" placeholder="Next action" />
+					<input v-model="nextAction" class="aa-input" :placeholder='$t("Next action")' />
 				</div>
 
 				<div class="flex gap-3">
-					<button @click="save(false)" :disabled="busy" class="flex-1 rounded-2xl bg-navy-700 px-4 py-3.5 font-semibold text-white disabled:opacity-50">
-						Save
-					</button>
-					<button @click="save(true)" :disabled="busy" class="flex-1 rounded-2xl bg-saffron px-4 py-3.5 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50">
-						Check out
-					</button>
+					<button @click="save(false)" :disabled="busy" class="flex-1 rounded-2xl bg-navy-700 px-4 py-3.5 font-semibold text-white disabled:opacity-50"> {{ $t("Save") }} </button>
+					<button @click="save(true)" :disabled="busy" class="flex-1 rounded-2xl bg-saffron px-4 py-3.5 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50"> {{ $t("Check out") }} </button>
 				</div>
 			</template>
 		</div>

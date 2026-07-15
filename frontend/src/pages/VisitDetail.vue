@@ -20,34 +20,34 @@
 
 			<div class="aa-card grid grid-cols-2 gap-3 text-sm">
 				<div>
-					<p class="text-xs text-gray-400">Check-in</p>
+					<p class="text-xs text-gray-400">{{ $t("Check-in") }}</p>
 					<p class="font-medium text-navy-700 dark:text-white">{{ formatTime(v.check_in_time) }}</p>
-					<a v-if="inLink" :href="inLink" target="_blank" class="text-xs text-saffron">View on map</a>
+					<a v-if="inLink" :href="inLink" target="_blank" class="text-xs text-saffron">{{ $t("View on map") }}</a>
 					<p v-if="v.within_geofence !== null && v.within_geofence !== undefined" class="mt-1 text-xs font-medium" :class="v.within_geofence ? 'text-green-600' : 'text-red-600'">
 						{{ v.within_geofence ? "✓ At dealer" : "⚠ Away from dealer" }}<span v-if="v.check_in_distance_m"> · {{ v.check_in_distance_m }}m</span>
 					</p>
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Check-out</p>
+					<p class="text-xs text-gray-400">{{ $t("Check-out") }}</p>
 					<p class="font-medium text-navy-700 dark:text-white">{{ formatTime(v.check_out_time) || "—" }}</p>
 					<p v-if="v.duration_minutes" class="text-xs text-gray-400">{{ v.duration_minutes }} min</p>
 				</div>
 			</div>
 
 			<div v-if="v.notes || v.next_action" class="aa-card space-y-2 text-sm">
-				<div v-if="v.notes"><p class="text-xs text-gray-400">Notes</p><p class="text-navy-700 dark:text-white">{{ v.notes }}</p></div>
-				<div v-if="v.next_action"><p class="text-xs text-gray-400">Next action</p><p class="text-navy-700 dark:text-white">{{ v.next_action }}{{ v.next_visit_date ? " (" + formatDate(v.next_visit_date) + ")" : "" }}</p></div>
+				<div v-if="v.notes"><p class="text-xs text-gray-400">{{ $t("Notes") }}</p><p class="text-navy-700 dark:text-white">{{ v.notes }}</p></div>
+				<div v-if="v.next_action"><p class="text-xs text-gray-400">{{ $t("Next action") }}</p><p class="text-navy-700 dark:text-white">{{ v.next_action }}{{ v.next_visit_date ? " (" + formatDate(v.next_visit_date) + ")" : "" }}</p></div>
 			</div>
 
 			<div v-if="photos.length" class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Photos</p>
+				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Photos") }}</p>
 				<div class="flex flex-wrap gap-2">
 					<img v-for="(p, i) in photos" :key="i" :src="p.image" class="h-24 w-24 rounded-lg object-cover" />
 				</div>
 			</div>
 
 			<div v-if="orders.length" class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Orders / Inquiries</p>
+				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Orders / Inquiries") }}</p>
 				<div v-for="(o, i) in orders" :key="i" class="flex items-center justify-between border-b border-gray-50 py-1.5 text-sm last:border-0">
 					<span class="text-navy-700 dark:text-white">{{ o.grade || o.product || "Item" }} <span class="text-xs text-gray-400">{{ o.order_type }}</span></span>
 					<span class="text-gray-500">{{ o.quantity_mt }} MT<span v-if="o.expected_value"> · ₹{{ fmt(o.expected_value) }}</span></span>
@@ -55,7 +55,7 @@
 			</div>
 
 			<div v-if="competitors.length" class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Competitor info</p>
+				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Competitor info") }}</p>
 				<div v-for="(c, i) in competitors" :key="i" class="flex items-center justify-between border-b border-gray-50 py-1.5 text-sm last:border-0">
 					<span class="text-navy-700 dark:text-white">{{ c.competitor_brand }}</span>
 					<span class="text-gray-500">{{ c.price_per_mt ? "₹" + fmt(c.price_per_mt) + "/MT" : "" }} {{ c.stock_status }}</span>
@@ -65,9 +65,9 @@
 			<!-- Book Sales Order (Customer visits) -->
 			<div v-if="v.party_type === 'Customer' && v.customer" class="aa-card">
 				<div class="flex items-center justify-between">
-					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Book Sales Order</p>
+					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Book Sales Order") }}</p>
 					<div class="flex gap-3">
-						<router-link :to="{ name: 'Schemes' }" class="text-xs font-medium text-navy-600 dark:text-navy-200">Schemes</router-link>
+						<router-link :to="{ name: 'Schemes' }" class="text-xs font-medium text-navy-600 dark:text-navy-200">{{ $t("Schemes") }}</router-link>
 						<button v-if="!showBook" @click="openBook" class="text-xs font-medium text-saffron">+ Book</button>
 					</div>
 				</div>
@@ -76,7 +76,7 @@
 					<p v-if="credit.has_limit" class="rounded-lg px-2 py-1 text-xs" :class="credit.available > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'">
 						Credit available ₹{{ fmt(credit.available) }} (limit ₹{{ fmt(credit.credit_limit) }}, outstanding ₹{{ fmt(credit.outstanding) }})
 					</p>
-					<input v-model="itemQuery" @input="searchItems" class="aa-input" placeholder="Search catalog item…" />
+					<input v-model="itemQuery" @input="searchItems" class="aa-input" :placeholder='$t("Search catalog item…")' />
 					<ul v-if="itemResults.length" class="divide-y divide-gray-100 rounded-lg border border-gray-100">
 						<li v-for="it in itemResults" :key="it.item_code" @click="addItem(it)" class="flex cursor-pointer items-center justify-between px-3 py-2 text-sm">
 							<span class="truncate text-navy-700 dark:text-white">{{ it.item_name }}</span>
@@ -89,8 +89,8 @@
 							<button @click="bookItems.splice(i, 1)"><Trash2 class="h-4 w-4 text-gray-400" /></button>
 						</div>
 						<div class="grid grid-cols-2 gap-2">
-							<input v-model.number="b.qty" type="number" class="aa-input !py-1.5 text-sm" placeholder="Qty" />
-							<input v-model.number="b.rate" type="number" class="aa-input !py-1.5 text-sm" placeholder="Rate" />
+							<input v-model.number="b.qty" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Qty")' />
+							<input v-model.number="b.rate" type="number" class="aa-input !py-1.5 text-sm" :placeholder='$t("Rate")' />
 						</div>
 					</div>
 					<p v-if="bookItems.length" class="text-right text-sm font-semibold text-navy-700 dark:text-white">Total ₹{{ fmt(bookTotal) }}</p>
@@ -101,20 +101,17 @@
 			</div>
 
 			<button @click="share" class="aa-card flex w-full items-center justify-center gap-2 text-sm font-semibold text-green-600">
-				<MessageCircle class="h-5 w-5" /> Share with dealer (WhatsApp)
-			</button>
+				<MessageCircle class="h-5 w-5" /> {{ $t("Share with dealer (WhatsApp)") }} </button>
 
 			<button
 				v-if="v.visit_status === 'In Progress'"
 				@click="checkout"
 				:disabled="busy"
 				class="w-full rounded-2xl bg-saffron px-4 py-3.5 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50"
-			>
-				Check out now
-			</button>
+			> {{ $t("Check out now") }} </button>
 		</div>
 
-		<EmptyState v-else class="m-4" title="Visit not found" />
+		<EmptyState v-else class="m-4" :title='$t("Visit not found")' />
 	</div>
 </template>
 

@@ -2,7 +2,7 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
 			<div class="flex items-center justify-between">
-				<h1 class="text-xl font-bold">Today's Beat</h1>
+				<h1 class="text-xl font-bold">{{ $t("Today's Beat") }}</h1>
 				<input type="date" v-model="date" @change="load" class="rounded-lg px-2 py-1 text-sm text-navy-700" />
 			</div>
 			<div v-if="beat.exists" class="mt-3">
@@ -31,10 +31,9 @@
 							v-if="!e.visited"
 							:to="{ name: 'NewVisit', query: { ptype: e.party_type, id: e.customer, label: e.party_name || e.customer } }"
 							class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
-						>Visit</router-link>
+						>{{ $t("Visit") }}</router-link>
 						<span v-else class="flex items-center gap-1 text-xs font-semibold text-green-600">
-							<CheckCircle2 class="h-4 w-4" /> Done
-						</span>
+							<CheckCircle2 class="h-4 w-4" /> {{ $t("Done") }} </span>
 					</div>
 					<button @click="optimize" :disabled="optimizing" class="aa-card w-full text-center text-sm font-medium text-navy-700 dark:text-white">
 						{{ optimizing ? "Optimizing…" : "🧭 Optimize route" }}
@@ -42,30 +41,30 @@
 					<div v-if="optStops.length" class="aa-card">
 						<div class="mb-2 flex items-center justify-between">
 							<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Suggested order · {{ optTotal }} km</p>
-							<a v-if="optMaps" :href="optMaps" target="_blank" class="text-xs font-medium text-saffron">Maps</a>
+							<a v-if="optMaps" :href="optMaps" target="_blank" class="text-xs font-medium text-saffron">{{ $t("Maps") }}</a>
 						</div>
 						<div v-for="s in optStops" :key="s.customer" class="flex items-center gap-2 py-1 text-sm">
 							<span class="flex h-6 w-6 items-center justify-center rounded-full bg-saffron/15 text-xs font-bold text-saffron">{{ s.seq }}</span>
 							<span class="truncate text-navy-700 dark:text-white">{{ s.party_name }}</span>
 						</div>
 					</div>
-					<button @click="startEdit" class="aa-card w-full text-center text-sm font-medium text-saffron">Edit beat</button>
+					<button @click="startEdit" class="aa-card w-full text-center text-sm font-medium text-saffron">{{ $t("Edit beat") }}</button>
 				</template>
 
-				<EmptyState v-else-if="!beat.exists && !editing" title="No beat planned" subtitle="Plan the dealers you'll visit today.">
-					<button @click="startEdit" class="aa-btn-primary !py-2 text-sm">Plan beat</button>
+				<EmptyState v-else-if="!beat.exists && !editing" :title='$t("No beat planned")' :subtitle='$t("Plan the dealers you&#39;ll visit today.")'>
+					<button @click="startEdit" class="aa-btn-primary !py-2 text-sm">{{ $t("Plan beat") }}</button>
 				</EmptyState>
 
 				<!-- editor -->
 				<template v-if="editing">
 					<div class="aa-card">
 						<div class="mb-2 flex gap-2">
-							<button @click="beatType = 'Primary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Primary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">Primary</button>
-							<button @click="beatType = 'Secondary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Secondary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">Secondary</button>
+							<button @click="beatType = 'Primary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Primary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Primary") }}</button>
+							<button @click="beatType = 'Secondary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Secondary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Secondary") }}</button>
 						</div>
-						<input v-model="title" class="aa-input mb-2" placeholder="Beat title (e.g. North zone)" />
-						<input v-model="territory" class="aa-input mb-2" placeholder="Territory (e.g. West Bengal)" />
-						<input v-model="q" @input="onSearch" class="aa-input" placeholder="Add dealer…" />
+						<input v-model="title" class="aa-input mb-2" :placeholder='$t("Beat title (e.g. North zone)")' />
+						<input v-model="territory" class="aa-input mb-2" :placeholder='$t("Territory (e.g. West Bengal)")' />
+						<input v-model="q" @input="onSearch" class="aa-input" :placeholder='$t("Add dealer…")' />
 						<ul v-if="results.length" class="mt-2 divide-y divide-gray-100">
 							<li v-for="r in results" :key="r.id" @click="addStop(r)" class="flex cursor-pointer items-center justify-between py-2 text-sm">
 								<span class="text-navy-700 dark:text-white">{{ r.label }}</span>
@@ -78,8 +77,8 @@
 						<button @click="stops.splice(i, 1)"><Trash2 class="h-4 w-4 text-gray-400" /></button>
 					</div>
 					<div class="flex gap-2">
-						<button @click="editing = false" class="flex-1 rounded-xl bg-gray-200 py-3 text-sm font-medium text-gray-600">Cancel</button>
-						<button @click="saveBeat" :disabled="busy" class="flex-1 rounded-xl bg-saffron py-3 text-sm font-semibold text-white disabled:opacity-50">Save beat</button>
+						<button @click="editing = false" class="flex-1 rounded-xl bg-gray-200 py-3 text-sm font-medium text-gray-600">{{ $t("Cancel") }}</button>
+						<button @click="saveBeat" :disabled="busy" class="flex-1 rounded-xl bg-saffron py-3 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Save beat") }}</button>
 					</div>
 				</template>
 			</template>

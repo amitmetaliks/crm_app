@@ -5,11 +5,11 @@
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-lg font-semibold">Team — Live</h1>
 			</div>
-			<button @click="load" class="rounded-lg bg-white/10 px-3 py-1.5 text-xs">Refresh</button>
+			<button @click="load" class="rounded-lg bg-white/10 px-3 py-1.5 text-xs">{{ $t("Refresh") }}</button>
 		</header>
 
 		<div class="mx-auto max-w-xl p-4">
-			<EmptyState v-if="!session.isSalesManager" title="Managers only" />
+			<EmptyState v-if="!session.isSalesManager" :title='$t("Managers only")' />
 			<template v-else>
 				<div ref="mapEl" class="h-72 w-full overflow-hidden rounded-2xl border border-gray-200"></div>
 				<p class="mt-2 px-1 text-xs text-gray-400">Latest known location today ({{ reps.length }} rep(s) reporting). Updates when reps' app is open.</p>
@@ -19,9 +19,9 @@
 							<p class="text-sm font-medium text-navy-700 dark:text-white">{{ r.name }}</p>
 							<p class="text-xs text-gray-400">Last seen {{ fmtTime(r.time) }}</p>
 						</div>
-						<a :href="`https://www.google.com/maps?q=${r.lat},${r.lng}`" target="_blank" class="text-xs font-medium text-saffron">Map</a>
+						<a :href="`https://www.google.com/maps?q=${r.lat},${r.lng}`" target="_blank" class="text-xs font-medium text-saffron">{{ $t("Map") }}</a>
 					</div>
-					<EmptyState v-if="!loading && !reps.length" title="No reps reporting yet" subtitle="Locations appear once reps open the app today." />
+					<EmptyState v-if="!loading && !reps.length" :title='$t("No reps reporting yet")' :subtitle='$t("Locations appear once reps open the app today.")' />
 				</div>
 			</template>
 		</div>

@@ -1,12 +1,12 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
-			<h1 class="text-xl font-bold">Team Activity</h1>
+			<h1 class="text-xl font-bold">{{ $t("Team Activity") }}</h1>
 			<p class="text-sm text-navy-200">{{ today }}</p>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-4 p-4">
-			<EmptyState v-if="!session.isSalesManager" title="Managers only" subtitle="This view is for sales managers." />
+			<EmptyState v-if="!session.isSalesManager" :title='$t("Managers only")' :subtitle='$t("This view is for sales managers.")' />
 
 			<template v-else>
 				<Skeleton v-if="loading" :count="4" />
@@ -17,8 +17,8 @@
 					</div>
 
 					<div>
-						<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Today's coverage</h2>
-						<EmptyState v-if="!data.coverage.length" title="No visits yet today" />
+						<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Today's coverage") }}</h2>
+						<EmptyState v-if="!data.coverage.length" :title='$t("No visits yet today")' />
 						<div v-else class="space-y-2">
 							<div v-for="(r, i) in data.coverage" :key="i" class="aa-card flex items-center justify-between">
 								<span class="text-sm font-medium text-navy-700 dark:text-white">{{ r.sales_person_name }}</span>
@@ -41,7 +41,7 @@
 					</div>
 
 					<div>
-						<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Recent team visits</h2>
+						<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent team visits") }}</h2>
 						<div class="space-y-2">
 							<router-link v-for="v in data.recent" :key="v.name" :to="{ name: 'VisitDetail', params: { name: v.name } }" class="aa-card flex items-center justify-between">
 								<div class="min-w-0">

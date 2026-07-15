@@ -45,35 +45,34 @@
 
 			<!-- Quick action -->
 			<router-link :to="{ name: 'NewVisit' }" class="flex items-center justify-center gap-2 rounded-2xl bg-saffron px-4 py-4 font-semibold text-white shadow-lg shadow-saffron/30 active:scale-[0.99]">
-				<MapPin class="h-5 w-5" /> Start a Visit
-			</router-link>
+				<MapPin class="h-5 w-5" /> {{ $t("Start a Visit") }} </router-link>
 
 			<!-- Today's beat + productivity -->
 			<div class="aa-card">
 				<div class="mb-3 flex items-center justify-between">
-					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Today</p>
+					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Today") }}</p>
 					<router-link :to="{ name: 'Beat' }" class="text-xs font-medium text-saffron">Beat: {{ home.beat?.visited || 0 }}/{{ home.beat?.planned || 0 }}</router-link>
 				</div>
 				<div class="grid grid-cols-4 gap-2 text-center">
-					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-[10px] text-gray-400">Visits</p></div>
-					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-[10px] text-gray-400">Productive</p></div>
-					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-[10px] text-gray-400">Zero order</p></div>
-					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-[10px] text-gray-400">Strike</p></div>
+					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Visits") }}</p></div>
+					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Productive") }}</p></div>
+					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Zero order") }}</p></div>
+					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-[10px] text-gray-400">{{ $t("Strike") }}</p></div>
 				</div>
 			</div>
 
 			<!-- Order summary -->
 			<div class="grid grid-cols-2 gap-3">
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ o.orders || 0 }}</p><p class="text-xs text-gray-400">Orders today</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(o.value) }}</p><p class="text-xs text-gray-400">Order value</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ fmt(o.qty) }} MT</p><p class="text-xs text-gray-400">Total qty</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ home.new_retailers || 0 }}</p><p class="text-xs text-gray-400">New retailers (mo)</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ o.orders || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Orders today") }}</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(o.value) }}</p><p class="text-xs text-gray-400">{{ $t("Order value") }}</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ fmt(o.qty) }} MT</p><p class="text-xs text-gray-400">{{ $t("Total qty") }}</p></div>
+				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ home.new_retailers || 0 }}</p><p class="text-xs text-gray-400">{{ $t("New retailers (mo)") }}</p></div>
 			</div>
 
 			<!-- Sales target -->
 			<router-link :to="{ name: 'Targets' }" class="aa-card block">
 				<div class="mb-1 flex justify-between text-sm">
-					<span class="font-semibold text-navy-600 dark:text-navy-200">Sales target (month)</span>
+					<span class="font-semibold text-navy-600 dark:text-navy-200">{{ $t("Sales target (month)") }}</span>
 					<span class="text-gray-500">{{ inrShort(home.sales_target?.achieved) }} / {{ inrShort(home.sales_target?.target) }}</span>
 				</div>
 				<div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700">
@@ -85,7 +84,7 @@
 			<!-- Expense -->
 			<router-link :to="{ name: 'Expense' }" class="aa-card flex items-center justify-between">
 				<div>
-					<p class="font-semibold text-navy-700 dark:text-white">Expenses</p>
+					<p class="font-semibold text-navy-700 dark:text-white">{{ $t("Expenses") }}</p>
 					<p class="text-xs text-gray-400">Today {{ inrShort(home.expense?.today) }} · Month {{ inrShort(home.expense?.month) }}</p>
 				</div>
 				<span class="rounded-lg bg-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-700">+ Add</span>
@@ -93,10 +92,10 @@
 
 			<!-- Quick access -->
 			<div class="grid grid-cols-4 gap-3">
-				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">KRA</span></router-link>
-				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Timeline</span></router-link>
-				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Collect</span></router-link>
-				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">Dealers</span></router-link>
+				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("KRA") }}</span></router-link>
+				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Timeline") }}</span></router-link>
+				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Collect") }}</span></router-link>
+				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Dealers") }}</span></router-link>
 			</div>
 		</div>
 

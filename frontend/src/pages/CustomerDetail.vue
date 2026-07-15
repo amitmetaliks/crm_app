@@ -18,21 +18,20 @@
 						</p>
 						<p v-if="d.geo?.city" class="text-xs text-gray-400">{{ d.geo.city }}</p>
 					</div>
-					<span v-if="d.at_risk" class="shrink-0 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">At risk</span>
+					<span v-if="d.at_risk" class="shrink-0 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">{{ $t("At risk") }}</span>
 				</div>
 
 				<!-- Quick actions -->
 				<div class="flex flex-wrap gap-2 pt-2">
-					<a v-if="c.mobile_no" :href="`tel:${c.mobile_no}`" class="chip"><Phone class="h-3.5 w-3.5" /> Call</a>
-					<button v-if="c.mobile_no" class="chip" @click="wa"><MessageCircle class="h-3.5 w-3.5" /> WhatsApp</button>
-					<button v-if="d.geo" class="chip chip-primary" @click="navigate"><Navigation class="h-3.5 w-3.5" /> Navigate</button>
+					<a v-if="c.mobile_no" :href="`tel:${c.mobile_no}`" class="chip"><Phone class="h-3.5 w-3.5" /> {{ $t("Call") }}</a>
+					<button v-if="c.mobile_no" class="chip" @click="wa"><MessageCircle class="h-3.5 w-3.5" /> {{ $t("WhatsApp") }}</button>
+					<button v-if="d.geo" class="chip chip-primary" @click="navigate"><Navigation class="h-3.5 w-3.5" /> {{ $t("Navigate") }}</button>
 					<button v-if="canPin" class="chip" :disabled="pinning" @click="pin">
 						<MapPin class="h-3.5 w-3.5" /> {{ pinning ? "Getting GPS…" : d.geo ? "Re-pin shop" : "Pin this shop" }}
 					</button>
-					<span v-else-if="!d.geo" class="chip opacity-50"><MapPinOff class="h-3.5 w-3.5" /> No location</span>
+					<span v-else-if="!d.geo" class="chip opacity-50"><MapPinOff class="h-3.5 w-3.5" /> {{ $t("No location") }}</span>
 				</div>
-				<p v-if="!d.geo" class="pt-1 text-xs text-gray-400">
-					No location on record. Stand at the shop and tap <strong>Pin this shop</strong> — it enables
+				<p v-if="!d.geo" class="pt-1 text-xs text-gray-400"> {{ $t("No location on record. Stand at the shop and tap") }} <strong>{{ $t("Pin this shop") }}</strong> — it enables
 					navigation and visit verification for everyone.
 				</p>
 			</div>
@@ -40,12 +39,12 @@
 			<!-- The numbers that matter at the door -->
 			<div class="grid grid-cols-2 gap-3">
 				<div class="aa-card">
-					<p class="text-xs text-gray-400">Outstanding</p>
+					<p class="text-xs text-gray-400">{{ $t("Outstanding") }}</p>
 					<p class="text-xl font-bold" :class="d.outstanding > 0 ? 'text-red-600' : 'text-green-600'">{{ inrShort(d.outstanding) }}</p>
 					<p v-if="d.overdue > 0" class="text-xs font-medium text-red-500">{{ inrShort(d.overdue) }} overdue</p>
 				</div>
 				<div class="aa-card">
-					<p class="text-xs text-gray-400">Business done</p>
+					<p class="text-xs text-gray-400">{{ $t("Business done") }}</p>
 					<p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(d.orders?.value) }}</p>
 					<p class="text-xs text-gray-400">{{ d.orders?.count || 0 }} orders · {{ num(d.orders?.qty_mt) }} MT</p>
 				</div>
@@ -54,15 +53,15 @@
 			<!-- Relationship pulse -->
 			<div class="aa-card grid grid-cols-3 gap-2 text-center">
 				<div>
-					<p class="text-xs text-gray-400">Last visit</p>
+					<p class="text-xs text-gray-400">{{ $t("Last visit") }}</p>
 					<p class="text-sm font-semibold text-navy-700 dark:text-white">{{ ago(d.days_since_visit) }}</p>
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Last order</p>
+					<p class="text-xs text-gray-400">{{ $t("Last order") }}</p>
 					<p class="text-sm font-semibold" :class="d.at_risk ? 'text-red-600' : 'text-navy-700 dark:text-white'">{{ ago(d.days_since_order) }}</p>
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Visits</p>
+					<p class="text-xs text-gray-400">{{ $t("Visits") }}</p>
 					<p class="text-sm font-semibold text-navy-700 dark:text-white">{{ d.visit_count || 0 }}</p>
 				</div>
 			</div>
@@ -71,16 +70,16 @@
 				<router-link
 					:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: name, label: c.customer_name } }"
 					class="aa-btn-primary flex-1 text-center"
-				>Start visit</router-link>
+				>{{ $t("Start visit") }}</router-link>
 				<router-link
 					:to="{ name: 'Collect', query: { customer: name, label: c.customer_name, phone: c.mobile_no || '' } }"
 					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-2.5 text-center text-sm font-semibold text-white"
-				><IndianRupee class="h-4 w-4" /> Collect</router-link>
+				><IndianRupee class="h-4 w-4" /> {{ $t("Collect") }}</router-link>
 			</div>
 
 			<!-- What he buys -->
 			<div v-if="d.top_products?.length">
-				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Buys most</h2>
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Buys most") }}</h2>
 				<div class="aa-card space-y-2">
 					<div v-for="p in d.top_products" :key="p.item" class="flex items-center justify-between text-sm">
 						<span class="min-w-0 truncate text-navy-700 dark:text-white">{{ p.item }}</span>
@@ -91,7 +90,7 @@
 
 			<!-- Recent orders -->
 			<div v-if="d.recent_orders?.length">
-				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Recent orders</h2>
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent orders") }}</h2>
 				<div class="aa-card space-y-2">
 					<div v-for="o in d.recent_orders" :key="o.name" class="flex items-center justify-between text-sm">
 						<div class="min-w-0">
@@ -105,8 +104,8 @@
 
 			<!-- Visit history -->
 			<div>
-				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Visit history</h2>
-				<EmptyState v-if="!visits.length" title="No visits yet" />
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Visit history") }}</h2>
+				<EmptyState v-if="!visits.length" :title='$t("No visits yet")' />
 				<div v-else class="space-y-2">
 					<router-link
 						v-for="vi in visits"
@@ -124,7 +123,7 @@
 			</div>
 		</div>
 
-		<EmptyState v-else class="m-4" title="Customer not found" />
+		<EmptyState v-else class="m-4" :title='$t("Customer not found")' />
 	</div>
 </template>
 

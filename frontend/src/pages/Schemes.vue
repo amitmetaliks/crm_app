@@ -2,12 +2,12 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">Active Schemes</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Active Schemes") }}</h1>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-2 p-4">
 			<Skeleton v-if="loading" :count="5" />
-			<EmptyState v-else-if="!rows.length" title="No active schemes" subtitle="No current offers/discounts are running." />
+			<EmptyState v-else-if="!rows.length" :title='$t("No active schemes")' :subtitle='$t("No current offers/discounts are running.")' />
 			<div v-for="s in rows" v-else :key="s.name" class="aa-card">
 				<div class="flex items-center justify-between">
 					<p class="font-semibold text-navy-700 dark:text-white">{{ s.title }}</p>

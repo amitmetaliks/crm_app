@@ -31,7 +31,7 @@
 				</router-link>
 			</div>
 
-			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">My workplace</p>
+			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("My workplace") }}</p>
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<router-link :to="{ name: 'Attendance' }" class="flex items-center gap-3 px-4 py-3.5">
 					<CalendarCheck class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Attendance") }}</span>
@@ -65,7 +65,7 @@
 				</router-link>
 			</div>
 
-			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Security</p>
+			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("Security") }}</p>
 			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 				<button @click="setupPin" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
 					<KeyRound class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ pinOn ? "Change app PIN" : "Set app PIN" }}</span>
@@ -79,7 +79,7 @@
 			</div>
 
 			<div v-if="session.isSalesManager">
-				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Manager</p>
+				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("Manager") }}</p>
 				<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
 					<router-link :to="{ name: 'Approvals' }" class="flex items-center gap-3 px-4 py-3.5">
 						<CheckSquare class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Approvals") }}</span>
@@ -119,8 +119,7 @@
 			</div>
 
 			<button @click="onLogout" class="aa-card flex w-full items-center gap-3 text-left text-sm font-medium text-red-600">
-				<LogOut class="h-5 w-5" /> Sign out
-			</button>
+				<LogOut class="h-5 w-5" /> {{ $t("Sign out") }} </button>
 
 			<p class="pt-2 text-center text-xs text-gray-400">TRIAM A+ · Field Sales · v{{ version }}</p>
 		</div>

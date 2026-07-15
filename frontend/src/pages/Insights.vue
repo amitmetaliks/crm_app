@@ -1,10 +1,10 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-4 pb-4 pt-5 text-white">
-			<h1 class="text-lg font-semibold">Smart Insights</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Smart Insights") }}</h1>
 			<div v-if="session.isSalesManager" class="mt-2 flex gap-2">
-				<button @click="setScope('mine')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron text-white' : 'bg-white/10'">Mine</button>
-				<button @click="setScope('team')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron text-white' : 'bg-white/10'">Team</button>
+				<button @click="setScope('mine')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron text-white' : 'bg-white/10'">{{ $t("Mine") }}</button>
+				<button @click="setScope('team')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron text-white' : 'bg-white/10'">{{ $t("Team") }}</button>
 			</div>
 		</header>
 
@@ -14,18 +14,18 @@
 				<!-- Forecast -->
 				<div class="aa-card">
 					<div class="mb-2 flex items-center justify-between">
-						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">Sales forecast (next month)</p>
+						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Sales forecast (next month)") }}</p>
 						<span class="text-lg font-bold text-saffron">{{ inrShort(forecast.forecast) }}</span>
 					</div>
 					<BarChart v-if="histBars.length" :data="histBars" />
-					<p v-else class="text-xs text-gray-400">No sales history yet.</p>
-					<p class="mt-2 text-[11px] text-gray-400">Based on the average of recent months' booked orders.</p>
+					<p v-else class="text-xs text-gray-400">{{ $t("No sales history yet.") }}</p>
+					<p class="mt-2 text-[11px] text-gray-400">{{ $t("Based on the average of recent months' booked orders.") }}</p>
 				</div>
 
 				<!-- Churn risk -->
 				<div>
 					<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">At-risk dealers (no activity 30+ days)</h2>
-					<EmptyState v-if="!churn.length" title="All dealers active" subtitle="No dealers are slipping — nice work." />
+					<EmptyState v-if="!churn.length" :title='$t("All dealers active")' :subtitle='$t("No dealers are slipping — nice work.")' />
 					<div v-else class="space-y-2">
 						<router-link v-for="c in churn" :key="c.customer" :to="{ name: 'CustomerDetail', params: { name: c.customer } }" class="aa-card flex items-center justify-between">
 							<div class="min-w-0">

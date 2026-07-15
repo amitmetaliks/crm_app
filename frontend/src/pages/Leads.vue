@@ -1,10 +1,10 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-3 pt-6 text-white">
-			<h1 class="text-xl font-bold">Leads & Deals</h1>
+			<h1 class="text-xl font-bold">{{ $t("Leads & Deals") }}</h1>
 			<div class="mt-3 flex gap-2">
-				<button @click="tab = 'leads'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">Leads</button>
-				<button @click="tab = 'deals'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">Deals</button>
+				<button @click="tab = 'leads'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">{{ $t("Leads") }}</button>
+				<button @click="tab = 'deals'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">{{ $t("Deals") }}</button>
 			</div>
 		</header>
 
@@ -12,18 +12,17 @@
 			<!-- Create lead -->
 			<div v-if="tab === 'leads'" class="aa-card">
 				<button v-if="!adding" @click="adding = true" class="flex w-full items-center justify-center gap-2 text-sm font-semibold text-saffron">
-					<Plus class="h-4 w-4" /> New lead
-				</button>
+					<Plus class="h-4 w-4" /> {{ $t("New lead") }} </button>
 				<div v-else class="space-y-2">
-					<input v-model="form.lead_name" class="aa-input" placeholder="Name / Shop / Firm *" />
+					<input v-model="form.lead_name" class="aa-input" :placeholder='$t("Name / Shop / Firm *")' />
 					<div class="grid grid-cols-2 gap-2">
-						<input v-model="form.mobile_no" class="aa-input" type="tel" placeholder="Mobile" />
-						<input v-model="form.email" class="aa-input" type="email" placeholder="Email" />
+						<input v-model="form.mobile_no" class="aa-input" type="tel" :placeholder='$t("Mobile")' />
+						<input v-model="form.email" class="aa-input" type="email" :placeholder='$t("Email")' />
 					</div>
-					<input v-model="form.territory" class="aa-input" placeholder="Area / Territory" />
+					<input v-model="form.territory" class="aa-input" :placeholder='$t("Area / Territory")' />
 					<div class="flex gap-2">
-						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">Cancel</button>
-						<button @click="createLead" :disabled="busy || !form.lead_name" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save</button>
+						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">{{ $t("Cancel") }}</button>
+						<button @click="createLead" :disabled="busy || !form.lead_name" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Save") }}</button>
 					</div>
 				</div>
 			</div>

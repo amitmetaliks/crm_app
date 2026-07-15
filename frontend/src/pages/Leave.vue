@@ -2,12 +2,12 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">Leave</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Leave") }}</h1>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-3 p-4">
 			<div v-if="balanceRows.length" class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">Balance</p>
+				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Balance") }}</p>
 				<div class="grid grid-cols-2 gap-2">
 					<div v-for="b in balanceRows" :key="b.type" class="rounded-xl bg-gray-50 p-2.5 text-center dark:bg-navy-800">
 						<p class="text-lg font-bold text-navy-700 dark:text-white">{{ b.value }}</p>
@@ -18,8 +18,7 @@
 
 			<div class="aa-card">
 				<button v-if="!adding" @click="adding = true" class="flex w-full items-center justify-center gap-2 text-sm font-semibold text-saffron">
-					<Plus class="h-4 w-4" /> Apply for leave
-				</button>
+					<Plus class="h-4 w-4" /> {{ $t("Apply for leave") }} </button>
 				<div v-else class="space-y-2">
 					<select v-model="form.leave_type" class="aa-input">
 						<option value="">Leave type…</option>
@@ -29,10 +28,10 @@
 						<input v-model="form.from_date" type="date" class="aa-input" />
 						<input v-model="form.to_date" type="date" class="aa-input" />
 					</div>
-					<input v-model="form.description" class="aa-input" placeholder="Reason" />
+					<input v-model="form.description" class="aa-input" :placeholder='$t("Reason")' />
 					<div class="flex gap-2">
-						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">Cancel</button>
-						<button @click="apply" :disabled="busy || !form.leave_type || !form.from_date || !form.to_date" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">Apply</button>
+						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">{{ $t("Cancel") }}</button>
+						<button @click="apply" :disabled="busy || !form.leave_type || !form.from_date || !form.to_date" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Apply") }}</button>
 					</div>
 				</div>
 			</div>

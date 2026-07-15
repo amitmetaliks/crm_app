@@ -1,7 +1,7 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-4 pt-6 text-white">
-			<h1 class="text-xl font-bold">Visits</h1>
+			<h1 class="text-xl font-bold">{{ $t("Visits") }}</h1>
 			<div class="mt-3 flex gap-2 overflow-x-auto pb-1">
 				<button
 					v-for="f in filters"
@@ -14,13 +14,12 @@
 				</button>
 			</div>
 			<label v-if="session.isSalesManager" class="mt-2 flex items-center gap-2 text-xs text-navy-100">
-				<input type="checkbox" v-model="teamScope" @change="load" /> Show whole team
-			</label>
+				<input type="checkbox" v-model="teamScope" @change="load" /> {{ $t("Show whole team") }} </label>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-2 p-4">
 			<Skeleton v-if="loading" :count="5" />
-			<EmptyState v-else-if="!visits.length" title="No visits found" :subtitle="emptyMsg" />
+			<EmptyState v-else-if="!visits.length" :title='$t("No visits found")' :subtitle="emptyMsg" />
 			<VisitRow v-for="v in visits" v-else :key="v.name" :visit="v" />
 		</div>
 

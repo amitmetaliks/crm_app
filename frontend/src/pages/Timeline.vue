@@ -1,7 +1,7 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-4 pb-4 pt-5 text-white">
-			<h1 class="text-lg font-semibold">Activity Timeline</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Activity Timeline") }}</h1>
 			<div class="mt-3 flex items-center justify-between">
 				<button @click="shift(-1)" class="rounded-lg bg-white/10 px-3 py-1"><ChevronLeft class="h-5 w-5" /></button>
 				<span class="text-sm font-medium">{{ fmtDay(date) }}</span>
@@ -11,7 +11,7 @@
 
 		<div class="mx-auto max-w-xl p-4">
 			<Skeleton v-if="loading" :count="4" />
-			<EmptyState v-else-if="!items.length" title="No activity" subtitle="No activity recorded for this date." />
+			<EmptyState v-else-if="!items.length" :title='$t("No activity")' :subtitle='$t("No activity recorded for this date.")' />
 			<div v-else class="space-y-0">
 				<div v-for="(it, i) in items" :key="i" class="flex gap-3">
 					<div class="flex flex-col items-center">

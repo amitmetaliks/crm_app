@@ -1,18 +1,18 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-4 pt-6 text-white">
-			<h1 class="text-xl font-bold">Dealers & Customers</h1>
+			<h1 class="text-xl font-bold">{{ $t("Dealers & Customers") }}</h1>
 			<input
 				v-model="query"
 				@input="onSearch"
 				class="mt-3 w-full rounded-xl border-0 px-4 py-2.5 text-sm text-navy-700"
-				placeholder="Search dealers, leads…"
+				:placeholder='$t("Search dealers, leads…")'
 			/>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-2 p-4">
 			<Skeleton v-if="loading" :count="6" />
-			<EmptyState v-else-if="!rows.length" title="No matches" subtitle="Try another name." />
+			<EmptyState v-else-if="!rows.length" :title='$t("No matches")' :subtitle='$t("Try another name.")' />
 			<router-link
 				v-for="r in rows"
 				v-else

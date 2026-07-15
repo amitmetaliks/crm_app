@@ -2,12 +2,12 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">Salary Slips</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Salary Slips") }}</h1>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-3 p-4">
 			<Skeleton v-if="loading" :count="4" />
-			<EmptyState v-else-if="!rows.length" title="No salary slips" subtitle="Your payslips will appear here." />
+			<EmptyState v-else-if="!rows.length" :title='$t("No salary slips")' :subtitle='$t("Your payslips will appear here.")' />
 			<div v-for="r in rows" v-else :key="r.name" class="aa-card">
 				<div class="flex items-center justify-between" @click="toggle(r.name)">
 					<div>
@@ -21,7 +21,7 @@
 						<div v-for="(e, i) in detail.earnings" :key="'e'+i" class="flex justify-between"><span class="text-gray-500">{{ e.component }}</span><span class="text-green-700">+₹{{ fmt(e.amount) }}</span></div>
 						<div v-for="(d, i) in detail.deductions" :key="'d'+i" class="flex justify-between"><span class="text-gray-500">{{ d.component }}</span><span class="text-red-600">−₹{{ fmt(d.amount) }}</span></div>
 					</div>
-					<div class="mt-2 flex justify-between border-t border-gray-100 pt-2 font-semibold text-navy-700 dark:text-white"><span>Net Pay</span><span>₹{{ fmt(detail.net_pay) }}</span></div>
+					<div class="mt-2 flex justify-between border-t border-gray-100 pt-2 font-semibold text-navy-700 dark:text-white"><span>{{ $t("Net Pay") }}</span><span>₹{{ fmt(detail.net_pay) }}</span></div>
 					<button @click="downloadPdf(r.name)" :disabled="dl" class="mt-3 w-full rounded-xl bg-navy-700 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ dl ? "Preparing…" : "Download PDF" }}</button>
 				</div>
 			</div>

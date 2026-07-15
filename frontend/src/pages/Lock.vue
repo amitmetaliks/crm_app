@@ -1,13 +1,13 @@
 <template>
 	<div class="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-navy-700 to-navy-900 px-6 text-white">
 		<div class="mb-6 rounded-2xl bg-white px-5 py-3 shadow-lg"><img :src="wordmark" alt="TRIAM A+" class="h-7" /></div>
-		<p class="mb-1 text-lg font-semibold">App locked</p>
-		<p class="mb-6 text-sm text-navy-200">Enter your PIN to continue</p>
+		<p class="mb-1 text-lg font-semibold">{{ $t("App locked") }}</p>
+		<p class="mb-6 text-sm text-navy-200">{{ $t("Enter your PIN to continue") }}</p>
 
 		<div class="mb-5 flex gap-3">
 			<span v-for="i in 4" :key="i" class="h-4 w-4 rounded-full" :class="entry.length >= i ? 'bg-saffron' : 'bg-white/25'"></span>
 		</div>
-		<p v-if="error" class="mb-3 text-sm font-medium text-red-300">Wrong PIN, try again</p>
+		<p v-if="error" class="mb-3 text-sm font-medium text-red-300">{{ $t("Wrong PIN, try again") }}</p>
 
 		<div class="grid w-full max-w-[260px] grid-cols-3 gap-3">
 			<button v-for="n in 9" :key="n" @click="press(n)" class="rounded-full bg-white/10 py-4 text-xl font-semibold active:bg-white/20">{{ n }}</button>

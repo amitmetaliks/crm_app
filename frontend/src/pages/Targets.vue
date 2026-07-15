@@ -1,13 +1,13 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
-			<h1 class="text-xl font-bold">My Targets</h1>
-			<p class="text-sm text-navy-200">Target vs achievement</p>
+			<h1 class="text-xl font-bold">{{ $t("My Targets") }}</h1>
+			<p class="text-sm text-navy-200">{{ $t("Target vs achievement") }}</p>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-3 p-4">
 			<Skeleton v-if="loading" :count="3" />
-			<EmptyState v-else-if="!targets.length" title="No targets set" subtitle="Your manager hasn't assigned targets yet." />
+			<EmptyState v-else-if="!targets.length" :title='$t("No targets set")' :subtitle='$t("Your manager hasn&#39;t assigned targets yet.")' />
 			<div v-for="t in targets" v-else :key="t.name" class="aa-card space-y-3">
 				<div class="flex items-center justify-between">
 					<p class="font-semibold text-navy-700 dark:text-white">{{ t.period_label }}</p>
@@ -16,7 +16,7 @@
 
 				<div>
 					<div class="mb-1 flex justify-between text-sm">
-						<span class="text-gray-500">Value</span>
+						<span class="text-gray-500">{{ $t("Value") }}</span>
 						<span class="font-medium text-navy-700 dark:text-white">{{ inrShort(t.achieved_amount) }} / {{ inrShort(t.target_amount) }}</span>
 					</div>
 					<Bar :pct="t.amount_pct" />
@@ -24,7 +24,7 @@
 
 				<div>
 					<div class="mb-1 flex justify-between text-sm">
-						<span class="text-gray-500">Quantity</span>
+						<span class="text-gray-500">{{ $t("Quantity") }}</span>
 						<span class="font-medium text-navy-700 dark:text-white">{{ fmt(t.achieved_qty_mt) }} / {{ fmt(t.target_qty_mt) }} MT</span>
 					</div>
 					<Bar :pct="t.qty_pct" />

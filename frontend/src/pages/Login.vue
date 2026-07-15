@@ -8,17 +8,17 @@
 				<div class="mx-auto mb-4 rounded-2xl bg-white px-5 py-4 shadow-lg">
 					<img :src="logoUrl" alt="TRIAM A+ — New-Age Rebars" class="mx-auto w-full max-w-[230px]" />
 				</div>
-				<p class="mt-1 text-sm font-medium text-navy-200">Field Sales</p>
+				<p class="mt-1 text-sm font-medium text-navy-200">{{ $t("Field Sales") }}</p>
 			</div>
 
 			<!-- Form -->
 			<div class="rounded-2xl bg-white p-6 shadow-xl">
-				<h2 class="mb-1 text-lg font-semibold text-navy-700">Sign in</h2>
-				<p class="mb-5 text-sm text-gray-400">Use your company login</p>
+				<h2 class="mb-1 text-lg font-semibold text-navy-700">{{ $t("Sign in") }}</h2>
+				<p class="mb-5 text-sm text-gray-400">{{ $t("Use your company login") }}</p>
 
 				<form @submit.prevent="onSubmit" class="space-y-4">
 					<div>
-						<label class="mb-1 block text-sm font-medium text-navy-600">Email / Username</label>
+						<label class="mb-1 block text-sm font-medium text-navy-600">{{ $t("Email / Username") }}</label>
 						<input
 							v-model="email"
 							type="text"
@@ -29,7 +29,7 @@
 						/>
 					</div>
 					<div>
-						<label class="mb-1 block text-sm font-medium text-navy-600">Password</label>
+						<label class="mb-1 block text-sm font-medium text-navy-600">{{ $t("Password") }}</label>
 						<input
 							v-model="password"
 							type="password"
@@ -44,7 +44,7 @@
 
 					<button type="submit" class="aa-btn-primary" :disabled="loading">
 						<span v-if="loading">Signing in…</span>
-						<span v-else>Sign in</span>
+						<span v-else>{{ $t("Sign in") }}</span>
 					</button>
 				</form>
 			</div>

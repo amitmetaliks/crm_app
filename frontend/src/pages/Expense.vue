@@ -2,38 +2,37 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">Expense Claims</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Expense Claims") }}</h1>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-3 p-4">
 			<div class="aa-card">
 				<button v-if="!adding" @click="adding = true" class="flex w-full items-center justify-center gap-2 text-sm font-semibold text-saffron">
-					<Plus class="h-4 w-4" /> New claim
-				</button>
+					<Plus class="h-4 w-4" /> {{ $t("New claim") }} </button>
 				<div v-else class="space-y-2">
 					<select v-model="form.expense_type" class="aa-input">
 						<option value="">Expense type…</option>
 						<option v-for="t in types" :key="t.name">{{ t.name }}</option>
 					</select>
 					<div class="grid grid-cols-2 gap-2">
-						<input v-model.number="form.amount" type="number" class="aa-input" placeholder="Amount ₹" />
+						<input v-model.number="form.amount" type="number" class="aa-input" :placeholder='$t("Amount ₹")' />
 						<input v-model="form.expense_date" type="date" class="aa-input" />
 					</div>
-					<input v-model="form.description" class="aa-input" placeholder="Description (e.g. fuel Kolkata-Durgapur)" />
+					<input v-model="form.description" class="aa-input" :placeholder='$t("Description (e.g. fuel Kolkata-Durgapur)")' />
 					<label class="flex items-center gap-2 text-sm text-gray-500">
 						<Camera class="h-5 w-5 text-saffron" />
 						<span>{{ receiptName || "Attach receipt photo" }}</span>
 						<input type="file" accept="image/*" capture="environment" class="hidden" @change="onReceipt" />
 					</label>
 					<div class="flex gap-2">
-						<button @click="cancel" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">Cancel</button>
-						<button @click="submit" :disabled="busy || !form.expense_type || !form.amount" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">Submit</button>
+						<button @click="cancel" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">{{ $t("Cancel") }}</button>
+						<button @click="submit" :disabled="busy || !form.expense_type || !form.amount" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Submit") }}</button>
 					</div>
 				</div>
 			</div>
 
 			<Skeleton v-if="loading" :count="4" />
-			<EmptyState v-else-if="!rows.length" title="No claims yet" subtitle="Submit your first expense claim." />
+			<EmptyState v-else-if="!rows.length" :title='$t("No claims yet")' :subtitle='$t("Submit your first expense claim.")' />
 			<div v-for="r in rows" v-else :key="r.name" class="aa-card flex items-center justify-between">
 				<div>
 					<p class="font-semibold text-navy-700 dark:text-white">₹{{ fmt(r.total_claimed_amount || r.grand_total) }}</p>

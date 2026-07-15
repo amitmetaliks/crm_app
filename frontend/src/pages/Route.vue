@@ -1,7 +1,7 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="bg-navy-700 px-4 pb-4 pt-5 text-white">
-			<h1 class="text-lg font-semibold">My Route</h1>
+			<h1 class="text-lg font-semibold">{{ $t("My Route") }}</h1>
 			<div class="mt-3 flex items-center justify-between">
 				<button @click="shift(-1)" class="rounded-lg bg-white/10 px-3 py-1"><ChevronLeft class="h-5 w-5" /></button>
 				<span class="text-sm font-medium">{{ fmtDay(date) }}</span>
@@ -18,12 +18,11 @@
 				</div>
 
 				<a v-if="mapsUrl" :href="mapsUrl" target="_blank" class="aa-card flex items-center justify-center gap-2 text-sm font-semibold text-saffron">
-					<MapPin class="h-5 w-5" /> Open route in Google Maps
-				</a>
+					<MapPin class="h-5 w-5" /> {{ $t("Open route in Google Maps") }} </a>
 
 				<div>
 					<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">Stops ({{ (route.stops || []).length }})</h2>
-					<EmptyState v-if="!route.stops || !route.stops.length" title="No visits this day" />
+					<EmptyState v-if="!route.stops || !route.stops.length" :title='$t("No visits this day")' />
 					<div v-else class="space-y-2">
 						<router-link v-for="(s, i) in route.stops" :key="i" :to="{ name: 'VisitDetail', params: { name: s.name } }" class="aa-card flex items-center gap-3">
 							<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-700">{{ i + 1 }}</span>

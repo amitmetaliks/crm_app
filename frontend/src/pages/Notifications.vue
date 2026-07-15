@@ -2,13 +2,13 @@
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">Notifications</h1>
+			<h1 class="text-lg font-semibold">{{ $t("Notifications") }}</h1>
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-4 p-4">
 			<div class="aa-card flex items-center justify-between">
 				<div class="pr-4">
-					<p class="font-semibold text-navy-700 dark:text-white">Push notifications</p>
+					<p class="font-semibold text-navy-700 dark:text-white">{{ $t("Push notifications") }}</p>
 					<p class="text-xs text-gray-400">Get alerts for visit reminders & follow-ups, even when the app is closed.</p>
 				</div>
 				<button
@@ -21,9 +21,7 @@
 				</button>
 			</div>
 
-			<button @click="test" class="aa-card w-full text-left text-sm font-medium text-saffron">
-				Send a test notification
-			</button>
+			<button @click="test" class="aa-card w-full text-left text-sm font-medium text-saffron"> {{ $t("Send a test notification") }} </button>
 
 			<p class="px-1 text-xs text-gray-400">
 				If notifications don't appear, allow them for your browser in your phone settings (Settings →

@@ -3,7 +3,7 @@
 		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-				<h1 class="text-xl font-bold">Collect payment</h1>
+				<h1 class="text-xl font-bold">{{ $t("Collect payment") }}</h1>
 			</div>
 			<p v-if="label" class="mt-1 truncate text-sm text-navy-200">{{ label }}</p>
 		</header>
@@ -16,20 +16,20 @@
 				<p class="text-sm text-gray-500">{{ done.mode }} · {{ done.name }}</p>
 				<p class="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{{ done.status }}</p>
 				<div class="mt-3 flex gap-2">
-					<button class="aa-btn-primary flex-1" @click="sendReceipt">Send receipt on WhatsApp</button>
-					<router-link to="/collections" class="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-navy-700 dark:border-navy-700 dark:text-white">Done</router-link>
+					<button class="aa-btn-primary flex-1" @click="sendReceipt">{{ $t("Send receipt on WhatsApp") }}</button>
+					<router-link to="/collections" class="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-navy-700 dark:border-navy-700 dark:text-white">{{ $t("Done") }}</router-link>
 				</div>
 			</div>
 
 			<template v-else>
 				<div class="aa-card space-y-3">
 					<div>
-						<label class="text-xs text-gray-500">Amount collected <span class="text-red-500">*</span></label>
+						<label class="text-xs text-gray-500">{{ $t("Amount collected") }} <span class="text-red-500">*</span></label>
 						<input v-model.number="amount" type="number" min="1" step="1" inputmode="numeric" class="aa-input w-full text-2xl font-bold" placeholder="0" />
 					</div>
 
 					<div>
-						<label class="text-xs text-gray-500">Mode</label>
+						<label class="text-xs text-gray-500">{{ $t("Mode") }}</label>
 						<div class="mt-1 flex flex-wrap gap-2">
 							<button
 								v-for="m in modes"
@@ -49,12 +49,12 @@
 					</div>
 
 					<div>
-						<label class="text-xs text-gray-500">Remarks</label>
-						<input v-model="remarks" class="aa-input w-full" placeholder="Optional" />
+						<label class="text-xs text-gray-500">{{ $t("Remarks") }}</label>
+						<input v-model="remarks" class="aa-input w-full" :placeholder='$t("Optional")' />
 					</div>
 
 					<div>
-						<label class="text-xs text-gray-500">Photo (cash / cheque / slip)</label>
+						<label class="text-xs text-gray-500">{{ $t("Photo (cash / cheque / slip)") }}</label>
 						<input ref="cam" type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
 						<button
 							class="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-navy-700 dark:border-navy-700 dark:text-white"
