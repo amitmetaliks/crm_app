@@ -153,20 +153,21 @@ def optimize_beat(plan_date=None, start_lat=None, start_lng=None):
 	if not name:
 		return {"stops": [], "total_km": 0, "without_geo": 0}
 	entries = frappe.get_all("CRM Beat Plan Entry", filters={"parent": name}, fields=["customer", "party_name"])
+	# One batched lookup instead of a query per stop; also reads the linked Address, where
+	# the real dealer coordinates live (our custom field is empty on every real customer).
+	from crm_app.geo_resolve import coords_for
+
+	resolved = coords_for([e.customer for e in entries if e.customer])
 	pts = []
 	for e in entries:
-		if not e.customer:
-			continue
-		g = frappe.db.get_value(
-			"Customer", e.customer, ["custom_geo_latitude", "custom_geo_longitude"], as_dict=True
-		)
-		if g and g.get("custom_geo_latitude") and g.get("custom_geo_longitude"):
+		g = resolved.get(e.customer) if e.customer else None
+		if g:
 			pts.append(
 				{
 					"customer": e.customer,
 					"party_name": e.party_name or e.customer,
-					"lat": flt(g.custom_geo_latitude),
-					"lng": flt(g.custom_geo_longitude),
+					"lat": g["lat"],
+					"lng": g["lng"],
 				}
 			)
 	if not pts:

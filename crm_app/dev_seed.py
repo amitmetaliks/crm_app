@@ -423,6 +423,11 @@ def verify_sales_fix(user_email="mukulmishra@amitmetaliks.com"):
 	return out
 
 
+def _any_customer():
+	"""Any customer name, for endpoints that need a party to exercise."""
+	return frappe.db.get_value("Customer", {}, "name")
+
+
 def full_test(rep_user=None, mgr_user=None):
 	"""Sweep every endpoint as a real rep + a real manager. Returns pass/err per endpoint."""
 	results = {}
@@ -449,7 +454,7 @@ def full_test(rep_user=None, mgr_user=None):
 
 	from crm_app import (
 		api, approvals, attendance, beat, collections, customers, dashboards, expense,
-		conveyance, field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
+		conveyance, customers, field_visit, holidays, insights, leads, leave, orders, pricing, push, salary, sfa, targets, tracking, whatsapp,
 	)
 
 	if rep_user:
@@ -481,6 +486,7 @@ def full_test(rep_user=None, mgr_user=None):
 			run("insights.sales_forecast", lambda: insights.sales_forecast())
 			run("tracking.get_day_route", lambda: tracking.get_day_route())
 			run("conveyance.get_today_conveyance", lambda: conveyance.get_today_conveyance())
+			run("customers.get_customer_360", lambda: customers.get_customer_360(_any_customer()) if _any_customer() else "skip")
 			run("orders.search_items", lambda: orders.search_items(query=""))
 			run("pricing.get_schemes", lambda: pricing.get_schemes())
 			run("push.get_vapid_public_key", lambda: push.get_vapid_public_key())

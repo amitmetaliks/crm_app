@@ -82,15 +82,20 @@ def _haversine_m(lat1, lng1, lat2, lng2):
 
 
 def _geofence(party_type, customer, lat, lng, radius_m=300):
-	"""Return (within(0/1), distance_m) vs the dealer's saved geo, or (None, None)."""
+	"""Return (within(0/1), distance_m) vs the dealer's location, or (None, None).
+
+	Coordinates come from geo_resolve, which also reads the linked ERPNext Address —
+	that is where 1843 of 1970 real dealers actually have coordinates. Reading only our
+	own custom field (empty on every real customer) made this check silently no-op.
+	"""
 	if party_type != "Customer" or not customer or lat in (None, "") or lng in (None, ""):
 		return (None, None)
-	g = frappe.db.get_value(
-		"Customer", customer, ["custom_geo_latitude", "custom_geo_longitude"], as_dict=True
-	)
-	if not g or not g.get("custom_geo_latitude") or not g.get("custom_geo_longitude"):
+	from crm_app.geo_resolve import customer_coords
+
+	g = customer_coords(customer)
+	if not g:
 		return (None, None)
-	d = _haversine_m(flt(lat), flt(lng), flt(g.custom_geo_latitude), flt(g.custom_geo_longitude))
+	d = _haversine_m(flt(lat), flt(lng), g["lat"], g["lng"])
 	return (1 if d <= radius_m else 0, int(d))
 
 

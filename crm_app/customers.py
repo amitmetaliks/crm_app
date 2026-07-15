@@ -7,7 +7,7 @@ versions even if a field is renamed or absent.
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, getdate
 
 from crm_app.api import get_current_employee, is_sales_manager
 
@@ -134,10 +134,101 @@ def get_customer(name):
 		limit=10,
 	)
 
+	from crm_app.geo_resolve import customer_coords
+
 	return {
 		"customer": profile,
 		"visits": visits,
 		"outstanding": _customer_outstanding(name),
+		"geo": customer_coords(name),
+	}
+
+
+@frappe.whitelist()
+def get_customer_360(name):
+	"""Everything a rep needs while standing outside the shop, in one call.
+
+	Deliberately one round trip: reps open this on 3G outside a dealer's shop, so five
+	chatty calls would mean five chances to hang.
+	"""
+	get_current_employee()
+	base = get_customer(name)
+
+	# --- trade history (all reps, not just the caller: it is the dealer's history) ---
+	orders = {"count": 0, "value": 0.0, "qty_mt": 0.0, "last_date": None}
+	top_products, recent_orders = [], []
+	if _exists("Sales Order"):
+		rows = frappe.get_all(
+			"Sales Order",
+			filters={"customer": name, "docstatus": 1},
+			fields=["name", "transaction_date", "grand_total", "total_qty"],
+			order_by="transaction_date desc",
+			limit=200,
+		)
+		orders["count"] = len(rows)
+		orders["value"] = flt(sum(flt(r.grand_total) for r in rows), 2)
+		orders["qty_mt"] = flt(sum(flt(r.total_qty) for r in rows), 3)
+		orders["last_date"] = str(rows[0].transaction_date) if rows else None
+		recent_orders = [
+			{
+				"name": r.name,
+				"date": str(r.transaction_date),
+				"amount": flt(r.grand_total),
+				"qty": flt(r.total_qty),
+			}
+			for r in rows[:5]
+		]
+		if rows and _exists("Sales Order Item"):
+			items = frappe.get_all(
+				"Sales Order Item",
+				filters={"parent": ["in", [r.name for r in rows[:100]]]},
+				fields=["item_code", "item_name", "qty", "amount"],
+				limit=1000,
+			)
+			agg = {}
+			for it in items:
+				a = agg.setdefault(it.item_code, {"item": it.item_name or it.item_code, "qty": 0.0, "amount": 0.0})
+				a["qty"] += flt(it.qty)
+				a["amount"] += flt(it.amount)
+			top_products = sorted(agg.values(), key=lambda x: x["amount"], reverse=True)[:5]
+
+	# --- money owed ---
+	overdue = 0.0
+	if _exists("Sales Invoice"):
+		inv = frappe.get_all(
+			"Sales Invoice",
+			filters={"customer": name, "docstatus": 1, "outstanding_amount": [">", 0]},
+			fields=["outstanding_amount", "due_date"],
+			limit=500,
+		)
+		td = getdate()
+		overdue = flt(
+			sum(flt(i.outstanding_amount) for i in inv if i.due_date and getdate(i.due_date) < td), 2
+		)
+
+	# --- relationship health ---
+	visits = base["visits"]
+	last_visit = visits[0]["visit_date"] if visits else None
+	days_since_visit = (getdate() - getdate(last_visit)).days if last_visit else None
+	days_since_order = (getdate() - getdate(orders["last_date"])).days if orders["last_date"] else None
+
+	credit_limit = 0.0
+	if _has("Customer", "credit_limit"):
+		credit_limit = flt(frappe.db.get_value("Customer", name, "credit_limit"))
+
+	return {
+		**base,
+		"orders": orders,
+		"recent_orders": recent_orders,
+		"top_products": top_products,
+		"overdue": overdue,
+		"credit_limit": credit_limit,
+		"visit_count": frappe.db.count("CRM Visit", {"party_type": "Customer", "customer": name}),
+		"last_visit": str(last_visit) if last_visit else None,
+		"days_since_visit": days_since_visit,
+		"days_since_order": days_since_order,
+		# Same rule of thumb the insights module uses: quiet for a quarter = at risk.
+		"at_risk": bool(days_since_order is not None and days_since_order > 90),
 	}
 
 
