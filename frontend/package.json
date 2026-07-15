@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@capacitor/core": "^6.1.2",
-    "@capacitor-community/background-geolocation": "^1.2.20",
     "dayjs": "^1.11.11",
     "frappe-ui": "0.1.105",
     "leaflet": "^1.9.4",

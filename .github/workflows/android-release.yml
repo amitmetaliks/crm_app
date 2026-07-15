@@ -29,11 +29,17 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      # Foreground location only. ACCESS_BACKGROUND_LOCATION is deliberately NOT
+      # requested: it triggers Google's Permissions Declaration review (form + video
+      # + justification) and is a common rejection cause. Location is captured while
+      # the app is open and at every check-in/check-out, which is all the app needs.
       - name: Add location permissions + version code
         working-directory: frontend
         run: |
           MAN=android/app/src/main/AndroidManifest.xml
-          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>\n    $1#' "$MAN"
+          perl -0pi -e 's#(<application)#<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    $1#' "$MAN"
+          echo "--- manifest permissions ---"; grep uses-permission "$MAN" || true
+          if grep -q ACCESS_BACKGROUND_LOCATION "$MAN"; then echo "ERROR: background location present"; exit 1; fi
           perl -0pi -e 's/versionCode \d+/versionCode '"${GITHUB_RUN_NUMBER}"'/' android/app/build.gradle
 
       - name: Decode keystore
