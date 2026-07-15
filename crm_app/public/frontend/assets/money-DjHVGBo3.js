@@ -1,1 +1,0 @@
-function t(e){return Number(e||0).toLocaleString("en-IN")}function i(e){e=Number(e||0);const r=Math.abs(e);return r>=1e7?"₹"+(e/1e7).toFixed(2).replace(/\.?0+$/,"")+" Cr":r>=1e5?"₹"+(e/1e5).toFixed(2).replace(/\.?0+$/,"")+" L":r>=1e3?"₹"+(e/1e3).toFixed(1).replace(/\.0$/,"")+"K":"₹"+t(e)}export{i};

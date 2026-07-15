@@ -25,6 +25,7 @@ const routes = [
 	{ path: "/kra", name: "Kra", component: () => import("./pages/Kra.vue") },
 	{ path: "/timeline", name: "Timeline", component: () => import("./pages/Timeline.vue") },
 	{ path: "/route", name: "Route", component: () => import("./pages/Route.vue") },
+	{ path: "/conveyance", name: "Conveyance", component: () => import("./pages/Conveyance.vue") },
 	{ path: "/insights", name: "Insights", component: () => import("./pages/Insights.vue") },
 	{ path: "/schemes", name: "Schemes", component: () => import("./pages/Schemes.vue") },
 	{ path: "/team-map", name: "TeamMap", component: () => import("./pages/TeamMap.vue") },

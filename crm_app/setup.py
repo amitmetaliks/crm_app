@@ -80,10 +80,37 @@ def _install_custom_fields():
 		},
 	]
 
+	# Auto-conveyance audit trail on the expense line: what GPS actually measured, and
+	# whether the rep overrode it. The approver can then compare against the claimed
+	# distance instead of taking it on trust.
+	#
+	# NOTE: their site already has its own `custom_distance_travelled` (Data) field on
+	# this doctype. It is deliberately NOT declared here — create_custom_fields would
+	# rewrite an existing field's properties, and that field belongs to their setup, not
+	# ours. conveyance.py fills it only when the site actually has it.
+	expense_detail_fields = [
+		{
+			"fieldname": "custom_gps_distance_km",
+			"fieldtype": "Float",
+			"label": "GPS Distance (km)",
+			"precision": "2",
+			"read_only": 1,
+			"insert_after": "description",
+		},
+		{
+			"fieldname": "custom_distance_source",
+			"fieldtype": "Data",
+			"label": "Distance Source",
+			"read_only": 1,
+			"insert_after": "custom_gps_distance_km",
+		},
+	]
+
 	custom_fields: dict[str, list[dict]] = {
 		"Customer": geo_fields,
 		"CRM Lead": geo_fields,
 		"Employee Checkin": checkin_fields,
+		"Expense Claim Detail": expense_detail_fields,
 	}
 
 	to_install = {dt: fields for dt, fields in custom_fields.items() if frappe.db.exists("DocType", dt)}
