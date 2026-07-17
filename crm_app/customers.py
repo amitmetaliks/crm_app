@@ -235,6 +235,14 @@ def get_customer_360(name):
 		base["last_payment"] = sap_bal["last_paid"]
 		base["payments"] = sap_receivables.customer_payments(name, limit=5)
 
+		# The balance says how much; this says against WHICH ORDER — the question a rep
+		# is actually asked at the counter. Payments carry the SAP order number, so the
+		# two can be reconciled per order.
+		from crm_app import sap_orders
+
+		if sap_orders.available():
+			base["order_ledger"] = sap_orders.customer_orders(name, limit=15)
+
 	overdue = 0.0
 	if not sap_bal and _exists("Sales Invoice"):
 		inv = frappe.get_all(

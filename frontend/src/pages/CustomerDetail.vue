@@ -97,6 +97,37 @@
 				</div>
 			</div>
 
+			<!-- Order ledger: which order is the money against -->
+			<div v-if="d.order_ledger?.orders?.length">
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Order ledger") }}</h2>
+				<div class="aa-card space-y-3">
+					<div v-for="o in d.order_ledger.orders" :key="o.order_no" class="border-b border-gray-100 pb-2 last:border-0 last:pb-0 dark:border-navy-700">
+						<div class="flex items-center justify-between text-sm">
+							<span class="font-medium text-navy-700 dark:text-white">{{ o.order_no }}</span>
+							<span
+								class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+								:class="{
+									'bg-green-50 text-green-700': o.status === 'paid',
+									'bg-amber-50 text-amber-700': o.status === 'part',
+									'bg-red-50 text-red-600': o.status === 'due',
+									'bg-gray-100 text-gray-500': o.status === 'unknown',
+								}"
+							>{{ $t(statusLabel(o.status)) }}</span>
+						</div>
+						<p class="text-xs text-gray-400">
+							{{ formatDate(o.ordered_on) }} · {{ inrShort(o.invoiced) }}
+							<template v-if="o.paid > 0"> · {{ $t("paid") }} {{ inrShort(o.paid) }}</template>
+						</p>
+						<p v-if="o.balance > 0" class="text-xs font-semibold text-red-600">{{ inrShort(o.balance) }} {{ $t("due") }}</p>
+					</div>
+				</div>
+				<!-- Never let a rep read 'unknown' as 'unpaid'. -->
+				<p v-if="d.order_ledger.counts?.unknown" class="px-1 pt-1 text-xs leading-relaxed text-gray-400">
+					{{ $t("Older orders show no payment because the payment feed starts") }}
+					{{ formatDate(d.order_ledger.feed_start) }}. {{ $t("They are not necessarily unpaid.") }}
+				</p>
+			</div>
+
 			<!-- Payments: what a rep needs when a dealer says "I already paid" -->
 			<div v-if="d.payments?.length">
 				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent payments") }}</h2>
@@ -194,6 +225,11 @@ const isManager = ref(false)
 const canPin = computed(() => !d.value.geo || isManager.value)
 
 function formatDate(x) { return x ? dayjs(x).format("DD MMM YYYY") : "" }
+
+// "unknown" reads as "No payment data", never as "unpaid": those orders predate the
+// payment feed, so we cannot see their payments — most are settled.
+const STATUS_LABEL = { paid: "Paid", part: "Part paid", due: "Due", unknown: "No payment data" }
+function statusLabel(s) { return STATUS_LABEL[s] || s }
 function ago(days) {
 	if (days === null || days === undefined) return "Never"
 	if (days === 0) return "Today"
