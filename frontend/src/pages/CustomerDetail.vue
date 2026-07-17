@@ -39,9 +39,14 @@
 			<!-- The numbers that matter at the door -->
 			<div class="grid grid-cols-2 gap-3">
 				<div class="aa-card">
-					<p class="text-xs text-gray-400">{{ $t("Outstanding") }}</p>
-					<p class="text-xl font-bold" :class="d.outstanding > 0 ? 'text-red-600' : 'text-green-600'">{{ inrShort(d.outstanding) }}</p>
+					<p class="text-xs text-gray-400">{{ d.in_credit ? $t("In credit") : $t("Outstanding") }}</p>
+					<p class="text-xl font-bold" :class="d.in_credit ? 'text-green-600' : d.outstanding > 0 ? 'text-red-600' : 'text-green-600'">
+						{{ inrShort(d.in_credit ? Math.abs(d.balance) : d.outstanding) }}
+					</p>
 					<p v-if="d.overdue > 0" class="text-xs font-medium text-red-500">{{ inrShort(d.overdue) }} overdue</p>
+					<!-- The balance is a SAP snapshot, not live. Say when, so nobody argues
+					     with a dealer using a stale number. -->
+					<p v-else-if="d.balance_as_of" class="text-xs text-gray-400">{{ $t("as of") }} {{ formatDate(d.balance_as_of) }}</p>
 				</div>
 				<div class="aa-card">
 					<p class="text-xs text-gray-400">{{ $t("Business done") }}</p>
@@ -88,6 +93,20 @@
 					<div v-for="p in d.top_products" :key="p.item" class="flex items-center justify-between text-sm">
 						<span class="min-w-0 truncate text-navy-700 dark:text-white">{{ p.item }}</span>
 						<span class="shrink-0 text-gray-500">{{ num(p.qty) }} · {{ inrShort(p.amount) }}</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Payments: what a rep needs when a dealer says "I already paid" -->
+			<div v-if="d.payments?.length">
+				<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Recent payments") }}</h2>
+				<div class="aa-card space-y-2">
+					<div v-for="p in d.payments" :key="p.document" class="flex items-center justify-between text-sm">
+						<div class="min-w-0">
+							<p class="truncate text-navy-700 dark:text-white">{{ formatDate(p.date) }}</p>
+							<p class="text-xs text-gray-400">{{ p.document }}</p>
+						</div>
+						<span class="shrink-0 font-medium text-green-600">{{ inrShort(p.amount) }}</span>
 					</div>
 				</div>
 			</div>

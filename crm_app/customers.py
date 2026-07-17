@@ -221,8 +221,22 @@ def get_customer_360(name):
 			top_products = sorted(agg.values(), key=lambda x: x["amount"], reverse=True)[:5]
 
 	# --- money owed ---
+	# SAP carries the real balance; ERPNext has no invoices on their site. Unlike the
+	# collections screen, a CREDIT is shown here too — on a dealer's own page that is
+	# useful context, not a chase target.
+	from crm_app import sap_receivables
+
+	sap_bal = sap_receivables.customer_balance(name) if sap_receivables.available() else None
+	if sap_bal:
+		base["outstanding"] = sap_bal["balance"] if sap_bal["balance"] > 0 else 0.0
+		base["balance"] = sap_bal["balance"]
+		base["balance_as_of"] = sap_bal["as_of"]
+		base["in_credit"] = sap_bal["balance"] < 0
+		base["last_payment"] = sap_bal["last_paid"]
+		base["payments"] = sap_receivables.customer_payments(name, limit=5)
+
 	overdue = 0.0
-	if _exists("Sales Invoice"):
+	if not sap_bal and _exists("Sales Invoice"):
 		inv = frappe.get_all(
 			"Sales Invoice",
 			filters={"customer": name, "docstatus": 1, "outstanding_amount": [">", 0]},

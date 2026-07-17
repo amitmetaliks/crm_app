@@ -454,7 +454,7 @@ def full_test(rep_user=None, mgr_user=None):
 
 	from crm_app import (
 		api, approvals, attendance, beat, collections, customers, dashboards, expense,
-		conveyance, customers, dms, field_visit, holidays, insights, leads, leave, orders, pjp, pricing, push, salary, sap_sales, sfa, skips, targets, tracking, whatsapp,
+		conveyance, customers, dms, field_visit, holidays, insights, leads, leave, orders, pjp, pricing, push, salary, sap_receivables, sap_sales, sfa, skips, targets, tracking, whatsapp,
 	)
 
 	if rep_user:
@@ -488,6 +488,7 @@ def full_test(rep_user=None, mgr_user=None):
 			run("conveyance.get_today_conveyance", lambda: conveyance.get_today_conveyance())
 			run("collections.get_payment_modes", lambda: collections.get_payment_modes())
 			run("collections.get_my_receipts", lambda: collections.get_my_receipts())
+			run("sap_receivables.last_synced", lambda: sap_receivables.last_synced())
 			run("sap_sales.last_synced", lambda: sap_sales.last_synced())
 			run("sap_sales.coverage", lambda: sap_sales.coverage())
 			run("dms.get_my_stock_checks", lambda: dms.get_my_stock_checks())

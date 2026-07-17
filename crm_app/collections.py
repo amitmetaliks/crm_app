@@ -30,13 +30,8 @@ def _exists(dt):
 	return bool(frappe.db.exists("DocType", dt))
 
 
-@frappe.whitelist()
-def get_my_collections(scope="mine"):
-	"""Outstanding amount per dealer for the session rep's assigned customers."""
-	employee = get_current_employee()
-	if not _exists("Sales Invoice"):
-		return {"total": 0.0, "overdue": 0.0, "customers": []}
-
+def _my_customers(employee, scope):
+	"""The dealers this rep may chase."""
 	# The assigned-sales-person field is ours; on a site where our migrate has not run
 	# (e.g. a freshly restored production DB) filtering on it raises Unknown column.
 	if scope == "team" and is_sales_manager():
@@ -45,7 +40,46 @@ def get_my_collections(scope="mine"):
 		cust_filter = {"custom_assigned_sales_person": employee}
 	else:
 		cust_filter = {"name": ["in", list(rep_customers(employee)) or [""]]}
-	customers = frappe.get_all("Customer", filters=cust_filter, fields=["name", "customer_name"])
+	return frappe.get_all("Customer", filters=cust_filter, fields=["name", "customer_name"])
+
+
+@frappe.whitelist()
+def get_my_collections(scope="mine"):
+	"""What the rep's dealers owe.
+
+	**SAP first.** They invoice in SAP, so ERPNext holds 0 Sales Invoices and the old
+	path here could only ever return ₹0 — a permanently empty collections screen. The
+	Sales Invoice path stays as the fallback for sites without the SAP feed, and for the
+	day invoicing moves here.
+	"""
+	employee = get_current_employee()
+	from crm_app import sap_receivables
+
+	if sap_receivables.available():
+		customers = _my_customers(employee, scope)
+		if not customers:
+			return {"total": 0.0, "overdue": 0.0, "customers": [], "source": "sap"}
+		owed = sap_receivables.outstanding_for([c.name for c in customers])
+		rows = sorted(owed.values(), key=lambda r: r["outstanding"], reverse=True)
+		for r in rows:
+			# SAP sends a balance, not an open-item list, so there is no invoice-level
+			# ageing to derive "overdue" from. Reporting 0 is honest; inventing a due
+			# date from the last posting would be a guess a rep might act on.
+			r["overdue"] = 0.0
+			r["invoices"] = 0
+			r["oldest_due"] = None
+		return {
+			"total": flt(sum(r["outstanding"] for r in rows), 2),
+			"overdue": 0.0,
+			"customers": rows,
+			"source": "sap",
+			"no_ageing": True,
+		}
+
+	if not _exists("Sales Invoice"):
+		return {"total": 0.0, "overdue": 0.0, "customers": []}
+
+	customers = _my_customers(employee, scope)
 	if not customers:
 		return {"total": 0.0, "overdue": 0.0, "customers": []}
 

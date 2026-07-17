@@ -340,6 +340,10 @@ const hi = {
 	"Skipped with reason": "कारण सहित छोड़े",
 	// ---- DMS / PJP ----
 	"Recent dispatches": "हाल की डिलीवरी",
+	"Recent payments": "हाल के भुगतान",
+	"In credit": "जमा (एडवांस)",
+	"as of": "तारीख तक",
+	"No ageing from SAP — balance only.": "SAP से बिल-वार उम्र नहीं, सिर्फ बकाया।",
 	"Stock check": "स्टॉक जांच",
 	"Stock recorded": "स्टॉक दर्ज हुआ",
 	Closing: "बचा स्टॉक",
@@ -704,6 +708,10 @@ const bn = {
 	"Skipped with reason": "কারণসহ বাদ",
 	// ---- DMS / PJP ----
 	"Recent dispatches": "সাম্প্রতিক ডেলিভারি",
+	"Recent payments": "সাম্প্রতিক পেমেন্ট",
+	"In credit": "জমা (অগ্রিম)",
+	"as of": "তারিখ পর্যন্ত",
+	"No ageing from SAP — balance only.": "SAP থেকে বিল-ভিত্তিক বয়স নেই, শুধু বকেয়া।",
 	"Stock check": "স্টক পরীক্ষা",
 	"Stock recorded": "স্টক রেকর্ড হয়েছে",
 	Closing: "অবশিষ্ট স্টক",
