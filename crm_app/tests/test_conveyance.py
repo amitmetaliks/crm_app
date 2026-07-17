@@ -134,3 +134,56 @@ class TestCustomFieldGuards(FrappeTestCase):
 			self.skipTest("no employee")
 		# Must not raise regardless of whether the field exists on this site.
 		self.assertIsInstance(_assigned_customers(emp), set)
+
+
+class TestSapRegisterGeneration(FrappeTestCase):
+	"""There are two generations of the SAP sales feed and reading the wrong one is
+	silent: the old AML table stopped on 11 May, so a rep's achievement reads ~44%
+	short and two months stale while nothing looks broken. The live table must win
+	wherever it exists.
+	"""
+
+	def test_live_register_is_preferred_when_populated(self):
+		from crm_app import sap_sales
+
+		if not (frappe.db.exists("DocType", sap_sales.LIVE) and frappe.db.count(sap_sales.LIVE)):
+			self.skipTest("no live SAP Sales Register on this site")
+		self.assertEqual(
+			sap_sales.which(),
+			sap_sales.LIVE,
+			"The dead AML generation is being read while a populated live register exists.",
+		)
+
+	def test_rep_code_zero_padding_is_stripped(self):
+		"""Live codes are zero-padded ('0010000675'); Employee ids are not."""
+		from crm_app import sap_sales
+
+		if sap_sales.which() != sap_sales.LIVE:
+			self.skipTest("not on the live register")
+		row = frappe.db.sql(
+			f"""SELECT TRIM(LEADING '0' FROM salempcode) AS code FROM `tab{sap_sales.LIVE}`
+			    WHERE COALESCE(salempcode, '') != '' LIMIT 1""",
+			as_dict=True,
+		)
+		if not row:
+			self.skipTest("no rep codes in the register")
+		code = row[0].code
+		# The padded form must NOT be an Employee; the trimmed one is what we match on.
+		self.assertFalse(code.startswith("00"), "leading zeros were not stripped")
+
+	def test_quantity_survives_the_varchar_cast(self):
+		"""fkimg is a VARCHAR holding '41.360 ' — summed raw it loses its decimals."""
+		from crm_app import sap_sales
+
+		if sap_sales.which() != sap_sales.LIVE:
+			self.skipTest("not on the live register")
+		emp = frappe.db.sql(
+			f"""SELECT TRIM(LEADING '0' FROM salempcode) AS code FROM `tab{sap_sales.LIVE}`
+			    WHERE COALESCE(salempcode, '') != '' GROUP BY salempcode
+			    ORDER BY COUNT(*) DESC LIMIT 1""",
+			as_dict=True,
+		)
+		if not emp:
+			self.skipTest("no rep in the register")
+		got = sap_sales.rep_sales(emp[0].code, "2020-01-01", "2030-01-01")
+		self.assertGreater(got["qty"], 0, "quantity did not survive the varchar cast")
