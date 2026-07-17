@@ -9,7 +9,7 @@ none = Zero-Order; Cancelled/Missed = Skipped. Strike rate = Productive / Comple
 import frappe
 from frappe.utils import flt, get_first_day, getdate, add_days, today
 
-from crm_app.api import get_current_employee, is_sales_manager
+from crm_app.api import has_field, get_current_employee, is_sales_manager
 
 
 def _hrms(dt):
@@ -107,7 +107,9 @@ def _expense(emp, day, mstart):
 def _new_retailers(emp, mstart, day):
 	return frappe.db.count(
 		"Customer",
-		{"custom_assigned_sales_person": emp, "creation": ["between", [f"{mstart} 00:00:00", f"{day} 23:59:59"]]},
+		{"custom_assigned_sales_person": emp, "creation": ["between", [f"{mstart} 00:00:00", f"{day} 23:59:59"]]}
+		if has_field("Customer", "custom_assigned_sales_person")
+		else {"name": ["in", [""]]},
 	)
 
 
@@ -187,7 +189,11 @@ def get_kra():
 	# Collection ratio: paid vs billed (this month, rep's customers)
 	coll_ratio = 0.0
 	if _hrms("Sales Invoice"):
-		custs = frappe.get_all("Customer", filters={"custom_assigned_sales_person": emp}, pluck="name")
+		custs = (
+			frappe.get_all("Customer", filters={"custom_assigned_sales_person": emp}, pluck="name")
+			if has_field("Customer", "custom_assigned_sales_person")
+			else []
+		)
 		if custs:
 			inv = frappe.get_all(
 				"Sales Invoice",

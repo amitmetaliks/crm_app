@@ -454,7 +454,7 @@ def full_test(rep_user=None, mgr_user=None):
 
 	from crm_app import (
 		api, approvals, attendance, beat, collections, customers, dashboards, expense,
-		conveyance, customers, dms, field_visit, holidays, insights, leads, leave, orders, pjp, pricing, push, salary, sap_sales, sfa, targets, tracking, whatsapp,
+		conveyance, customers, dms, field_visit, holidays, insights, leads, leave, orders, pjp, pricing, push, salary, sap_sales, sfa, skips, targets, tracking, whatsapp,
 	)
 
 	if rep_user:
@@ -492,6 +492,9 @@ def full_test(rep_user=None, mgr_user=None):
 			run("sap_sales.coverage", lambda: sap_sales.coverage())
 			run("dms.get_my_stock_checks", lambda: dms.get_my_stock_checks())
 			run("dms.get_secondary_summary", lambda: dms.get_secondary_summary())
+			run("skips.get_skip_reasons", lambda: skips.get_skip_reasons())
+			run("skips.get_my_skips", lambda: skips.get_my_skips())
+			run("skips.get_skip_summary", lambda: skips.get_skip_summary())
 			run("pjp.get_my_pjp", lambda: pjp.get_my_pjp())
 			run("pjp.get_coverage", lambda: pjp.get_coverage())
 			run("customers.get_customer_360", lambda: customers.get_customer_360(_any_customer()) if _any_customer() else "skip")

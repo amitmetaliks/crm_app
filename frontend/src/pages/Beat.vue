@@ -22,18 +22,33 @@
 			<template v-else>
 				<!-- existing beat -->
 				<template v-if="beat.exists && !editing">
-					<div v-for="(e, i) in beat.entries" :key="i" class="aa-card flex items-center justify-between">
-						<div class="min-w-0">
-							<p class="truncate font-semibold text-navy-700 dark:text-white">{{ e.party_name || e.customer }}</p>
-							<p class="text-xs text-gray-400">{{ e.area || "—" }}</p>
+					<div v-for="(e, i) in beat.entries" :key="i" class="aa-card">
+						<div class="flex items-center justify-between">
+							<div class="min-w-0">
+								<p class="truncate font-semibold text-navy-700 dark:text-white">{{ e.party_name || e.customer }}</p>
+								<p class="text-xs text-gray-400">{{ e.area || "—" }}</p>
+							</div>
+							<div class="flex shrink-0 items-center gap-2">
+								<template v-if="!e.visited">
+									<button
+										v-if="!skipOf(e.customer)"
+										class="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-500 dark:border-navy-700"
+										@click="askSkip(e)"
+									>{{ $t("Skip") }}</button>
+									<router-link
+										:to="{ name: 'NewVisit', query: { ptype: e.party_type, id: e.customer, label: e.party_name || e.customer } }"
+										class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
+									>{{ $t("Visit") }}</router-link>
+								</template>
+								<span v-else class="flex items-center gap-1 text-xs font-semibold text-green-600">
+									<CheckCircle2 class="h-4 w-4" /> {{ $t("Done") }} </span>
+							</div>
 						</div>
-						<router-link
-							v-if="!e.visited"
-							:to="{ name: 'NewVisit', query: { ptype: e.party_type, id: e.customer, label: e.party_name || e.customer } }"
-							class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
-						>{{ $t("Visit") }}</router-link>
-						<span v-else class="flex items-center gap-1 text-xs font-semibold text-green-600">
-							<CheckCircle2 class="h-4 w-4" /> {{ $t("Done") }} </span>
+						<!-- Skipped: show the reason and let him undo it -->
+						<div v-if="skipOf(e.customer) && !e.visited" class="mt-2 flex items-center justify-between rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+							<span class="min-w-0 truncate">{{ $t("Skipped") }}: {{ $t(skipOf(e.customer).skip_reason) }}</span>
+							<button class="shrink-0 font-semibold text-amber-700 underline" @click="undoSkip(e)">{{ $t("Undo") }}</button>
+						</div>
 					</div>
 					<button @click="optimize" :disabled="optimizing" class="aa-card w-full text-center text-sm font-medium text-navy-700 dark:text-white">
 						{{ optimizing ? "Optimizing…" : "🧭 Optimize route" }}
@@ -83,6 +98,31 @@
 				</template>
 			</template>
 		</div>
+
+		<!-- Skip reason sheet: one tap, because a rep does this standing outside a shut shop -->
+		<div v-if="skipFor" class="fixed inset-0 z-50 flex items-end bg-black/40" @click.self="skipFor = null">
+			<div class="w-full rounded-t-2xl bg-white p-4 dark:bg-navy-800" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))">
+				<p class="mb-1 font-semibold text-navy-700 dark:text-white">{{ $t("Why skip this stop?") }}</p>
+				<p class="mb-3 truncate text-xs text-gray-400">{{ skipFor.party_name || skipFor.customer }}</p>
+				<button
+					v-for="r in reasons"
+					:key="r"
+					class="mb-2 w-full rounded-xl border px-3 py-3 text-left text-sm font-medium"
+					:class="skipReason === r ? 'border-saffron bg-saffron/10 text-saffron' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
+					@click="skipReason = r"
+				>{{ $t(r) }}</button>
+				<input v-if="skipReason === 'Other'" v-model="skipOther" class="aa-input mb-2 w-full" :placeholder='$t("Say what happened")' />
+				<div class="flex gap-2">
+					<button class="flex-1 rounded-xl bg-gray-200 py-3 text-sm font-medium text-gray-600" @click="skipFor = null">{{ $t("Cancel") }}</button>
+					<button
+						class="flex-1 rounded-xl bg-saffron py-3 text-sm font-semibold text-white disabled:opacity-50"
+						:disabled="!skipReason || skipping"
+						@click="confirmSkip"
+					>{{ skipping ? $t("Saving…") : $t("Save") }}</button>
+				</div>
+			</div>
+		</div>
+
 		<BottomNav />
 	</div>
 </template>
@@ -109,6 +149,13 @@ const stops = reactive([])
 const q = ref("")
 const results = ref([])
 const busy = ref(false)
+// Skip: reasons mirror the incumbent's vocabulary so their history can migrate 1:1.
+const reasons = ["Shop Closed", "Owner Not Available", "No Stock Required", "Credit Limit Exceeded", "Location Not Accessible", "Other"]
+const skips = ref([])
+const skipFor = ref(null)
+const skipReason = ref("")
+const skipOther = ref("")
+const skipping = ref(false)
 const optimizing = ref(false)
 const optStops = ref([])
 const optTotal = ref(0)
@@ -144,8 +191,59 @@ async function load() {
 	editing.value = false
 	try {
 		beat.value = await call("crm_app.beat.get_my_beat", { plan_date: date.value })
+		try {
+			skips.value = await call("crm_app.skips.get_my_skips", { skip_date: date.value })
+		} catch (e) {
+			skips.value = [] // never let a skip lookup take the beat down with it
+		}
 	} finally {
 		loading.value = false
+	}
+}
+
+function skipOf(customer) {
+	return skips.value.find((s) => s.customer === customer)
+}
+
+function askSkip(entry) {
+	skipFor.value = entry
+	skipReason.value = ""
+	skipOther.value = ""
+}
+
+async function confirmSkip() {
+	skipping.value = true
+	try {
+		let pos = {}
+		try {
+			pos = await getPosition()
+		} catch (e) {
+			/* a shut shop is worth recording even without a fix */
+		}
+		await call("crm_app.skips.skip_stop", {
+			customer: skipFor.value.customer,
+			skip_reason: skipReason.value,
+			other_reason: skipOther.value || null,
+			skip_date: date.value,
+			beat_plan: beat.value.name || null,
+			latitude: pos.latitude ?? null,
+			longitude: pos.longitude ?? null,
+		})
+		skipFor.value = null
+		await load()
+	} catch (e) {
+		toast.error(e?.messages?.[0] || "Could not save the skip")
+	} finally {
+		skipping.value = false
+	}
+}
+
+async function undoSkip(entry) {
+	try {
+		await call("crm_app.skips.unskip", { customer: entry.customer, skip_date: date.value })
+		await load()
+	} catch (e) {
+		toast.error("Could not undo")
 	}
 }
 function startEdit() {

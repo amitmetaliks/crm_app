@@ -76,6 +76,25 @@
 					</div>
 				</div>
 
+				<!-- Skipped WITH a reason: uncovered, but explained. Kept separate from
+				     'missed' so coverage can never be dressed up by skipping. -->
+				<div v-if="cov.excused?.length">
+					<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">
+						{{ $t("Skipped with reason") }} ({{ cov.excused_count }})
+					</h2>
+					<div class="aa-card space-y-2">
+						<router-link
+							v-for="(m, i) in cov.excused.slice(0, 10)"
+							:key="i"
+							:to="{ name: 'CustomerDetail', params: { name: m.customer } }"
+							class="flex items-center justify-between text-sm"
+						>
+							<span class="min-w-0 truncate text-navy-700 dark:text-white">{{ m.customer_name }}</span>
+							<span class="shrink-0 text-xs text-amber-600">{{ $t(m.skip_reason) }} · {{ fmtDate(m.date) }}</span>
+						</router-link>
+					</div>
+				</div>
+
 				<!-- The plan itself -->
 				<div>
 					<h2 class="mb-2 px-1 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Full plan") }}</h2>

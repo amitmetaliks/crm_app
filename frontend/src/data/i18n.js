@@ -324,6 +324,20 @@ const hi = {
 	"No reps reporting yet": "अभी कोई रेप रिपोर्ट नहीं कर रहा",
 	"Locations appear once reps open the app today.": "रेप के ऐप खोलते ही लोकेशन दिखेंगी।",
 
+	// ---- Skip ----
+	Skip: "छोड़ें",
+	Skipped: "छोड़ा गया",
+	Undo: "वापस लें",
+	"Why skip this stop?": "यह स्टॉप क्यों छोड़ रहे हैं?",
+	"Say what happened": "क्या हुआ बताएं",
+	"Shop Closed": "दुकान बंद",
+	"Owner Not Available": "मालिक नहीं मिले",
+	"No Stock Required": "स्टॉक नहीं चाहिए",
+	"Credit Limit Exceeded": "क्रेडिट लिमिट पार",
+	"Location Not Accessible": "जगह तक नहीं पहुंचे",
+	Other: "अन्य",
+	Excused: "कारण सहित",
+	"Skipped with reason": "कारण सहित छोड़े",
 	// ---- DMS / PJP ----
 	"Recent dispatches": "हाल की डिलीवरी",
 	"Stock check": "स्टॉक जांच",
@@ -674,6 +688,20 @@ const bn = {
 	"No reps reporting yet": "এখনও কোনো রেপ রিপোর্ট করছে না",
 	"Locations appear once reps open the app today.": "রেপরা অ্যাপ খুললেই লোকেশন দেখাবে।",
 
+	// ---- Skip ----
+	Skip: "বাদ দিন",
+	Skipped: "বাদ দেওয়া",
+	Undo: "ফিরিয়ে নিন",
+	"Why skip this stop?": "এই স্টপ কেন বাদ দিচ্ছেন?",
+	"Say what happened": "কী হয়েছে বলুন",
+	"Shop Closed": "দোকান বন্ধ",
+	"Owner Not Available": "মালিক নেই",
+	"No Stock Required": "স্টক লাগবে না",
+	"Credit Limit Exceeded": "ক্রেডিট লিমিট পার",
+	"Location Not Accessible": "জায়গায় পৌঁছানো যায়নি",
+	Other: "অন্যান্য",
+	Excused: "কারণসহ",
+	"Skipped with reason": "কারণসহ বাদ",
 	// ---- DMS / PJP ----
 	"Recent dispatches": "সাম্প্রতিক ডেলিভারি",
 	"Stock check": "স্টক পরীক্ষা",

@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:SKIP-{#####}",
+ "creation": "2026-07-17 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "sales_person",
+  "sales_person_name",
+  "customer",
+  "customer_name",
+  "skip_date",
+  "beat_plan",
+  "skip_reason",
+  "other_reason",
+  "latitude",
+  "longitude"
+ ],
+ "fields": [
+  {"fieldname": "sales_person", "fieldtype": "Link", "label": "Sales Person", "options": "Employee", "reqd": 1, "in_standard_filter": 1},
+  {"fieldname": "sales_person_name", "fieldtype": "Data", "label": "Sales Person Name", "fetch_from": "sales_person.employee_name", "read_only": 1, "in_list_view": 1},
+  {"fieldname": "customer", "fieldtype": "Link", "label": "Dealer", "options": "Customer", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "customer_name", "fieldtype": "Data", "label": "Dealer Name", "fetch_from": "customer.customer_name", "read_only": 1},
+  {"fieldname": "skip_date", "fieldtype": "Date", "label": "Date", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "beat_plan", "fieldtype": "Link", "label": "Beat Plan", "options": "CRM Beat Plan", "read_only": 1},
+  {"fieldname": "skip_reason", "fieldtype": "Select", "label": "Skip Reason", "options": "Shop Closed\nOwner Not Available\nNo Stock Required\nCredit Limit Exceeded\nLocation Not Accessible\nOther", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "other_reason", "fieldtype": "Small Text", "label": "Details"},
+  {"fieldname": "latitude", "fieldtype": "Float", "label": "Latitude", "precision": "6", "read_only": 1},
+  {"fieldname": "longitude", "fieldtype": "Float", "label": "Longitude", "precision": "6", "read_only": 1}
+ ],
+ "links": [],
+ "modified": "2026-07-17 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Visit Skip",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales User", "read": 1, "write": 1, "create": 1, "report": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

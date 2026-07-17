@@ -46,6 +46,27 @@ def is_sales_manager(user: str | None = None) -> bool:
 	return any(r in roles for r in ("Sales Manager", "Sales Master Manager", "System Manager"))
 
 
+def has_field(doctype: str, fieldname: str) -> bool:
+	"""Does this SITE have that field?
+
+	Custom fields are not a given. Ours (``custom_assigned_sales_person``,
+	``custom_geo_latitude``…) only exist after our ``after_migrate`` has run, and theirs
+	(``Address.latitude``, ``Customer.custom_customer_sap_code``) only exist on their
+	sites. Filtering on an absent column does not return nothing — it raises
+	``Unknown column`` and takes the whole screen down. This has bitten twice:
+	Customer 360 on a site without Address geo, and Collections on a freshly-restored
+	production database before migrate.
+
+	Guard every query that touches a custom field with this.
+	"""
+	try:
+		if not frappe.db.exists("DocType", doctype):
+			return False
+		return bool(frappe.get_meta(doctype).has_field(fieldname))
+	except Exception:
+		return False
+
+
 # ── upload safety ─────────────────────────────────────────────────────────────
 
 # Extensions that can host/execute scripts — never accept these as uploads.

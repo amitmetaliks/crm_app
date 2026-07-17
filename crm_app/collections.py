@@ -22,7 +22,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, today
 
-from crm_app.api import get_current_employee, is_sales_manager, validate_upload
+from crm_app.api import get_current_employee, has_field, is_sales_manager, validate_upload
+from crm_app.sales_attr import rep_customers
 
 
 def _exists(dt):
@@ -36,7 +37,14 @@ def get_my_collections(scope="mine"):
 	if not _exists("Sales Invoice"):
 		return {"total": 0.0, "overdue": 0.0, "customers": []}
 
-	cust_filter = {} if (scope == "team" and is_sales_manager()) else {"custom_assigned_sales_person": employee}
+	# The assigned-sales-person field is ours; on a site where our migrate has not run
+	# (e.g. a freshly restored production DB) filtering on it raises Unknown column.
+	if scope == "team" and is_sales_manager():
+		cust_filter = {}
+	elif has_field("Customer", "custom_assigned_sales_person"):
+		cust_filter = {"custom_assigned_sales_person": employee}
+	else:
+		cust_filter = {"name": ["in", list(rep_customers(employee)) or [""]]}
 	customers = frappe.get_all("Customer", filters=cust_filter, fields=["name", "customer_name"])
 	if not customers:
 		return {"total": 0.0, "overdue": 0.0, "customers": []}

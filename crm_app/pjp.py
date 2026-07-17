@@ -159,9 +159,32 @@ def get_coverage(from_date=None, to_date=None, employee=None) -> dict:
 
 	pjp = _active_pjp(employee)
 	if not pjp:
-		return {"exists": False, "planned": 0, "covered": 0, "pct": 0, "missed": []}
+		# Same shape as the real answer. A caller reading .excused_count must not have to
+		# know whether this rep happens to have a plan — a missing key is a crash on the
+		# rep's screen, and reps without a PJP are the common case today.
+		return {
+			"exists": False,
+			"planned": 0,
+			"covered": 0,
+			"pct": 0.0,
+			"missed": [],
+			"missed_count": 0,
+			"excused": [],
+			"excused_count": 0,
+		}
 
-	planned, covered, missed = 0, 0, []
+	# One lookup for the window instead of a query per planned stop per day.
+	skips = {}
+	if frappe.db.exists("DocType", "CRM Visit Skip"):
+		for s in frappe.get_all(
+			"CRM Visit Skip",
+			filters={"sales_person": employee, "skip_date": ["between", [frm_d, to_d]]},
+			fields=["customer", "skip_date", "skip_reason", "other_reason"],
+			limit=2000,
+		):
+			skips[(s.customer, str(s.skip_date))] = s
+
+	planned, covered, missed, excused = 0, 0, [], []
 	d = frm_d
 	while d <= to_d:
 		for e in _due_entries(pjp, d):
@@ -177,10 +200,19 @@ def get_coverage(from_date=None, to_date=None, employee=None) -> dict:
 			)
 			if hit:
 				covered += 1
-			elif d < getdate():  # today is still in play — do not call it missed yet
-				missed.append(
-					{"customer": e.customer, "customer_name": e.customer_name or e.customer, "date": str(d)}
-				)
+				continue
+			if d >= getdate():
+				continue  # today is still in play — do not call it missed yet
+			# A stop the rep excused with a reason is a different thing from one he
+			# ignored. Both are uncovered; only one tells you anything.
+			s = skips.get((e.customer, str(d)))
+			row = {"customer": e.customer, "customer_name": e.customer_name or e.customer, "date": str(d)}
+			if s:
+				row["skip_reason"] = s.skip_reason
+				row["other_reason"] = s.other_reason
+				excused.append(row)
+			else:
+				missed.append(row)
 		d = add_days(d, 1)
 
 	return {
@@ -192,6 +224,9 @@ def get_coverage(from_date=None, to_date=None, employee=None) -> dict:
 		"pct": flt(covered / planned * 100, 1) if planned else 0.0,
 		"missed": missed[:50],
 		"missed_count": len(missed),
+		# Explained absences, kept separate so coverage cannot be dressed up by skipping.
+		"excused": excused[:50],
+		"excused_count": len(excused),
 	}
 
 

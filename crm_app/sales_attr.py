@@ -12,6 +12,17 @@ import frappe
 from frappe.utils import flt
 
 
+def _assigned_customers(employee):
+	"""Dealers explicitly assigned to a rep — empty when our custom field is absent
+	(a restored production DB before migrate). Filtering on a missing column raises
+	Unknown column rather than returning nothing; see api.has_field."""
+	from crm_app.api import has_field
+
+	if not has_field("Customer", "custom_assigned_sales_person"):
+		return set()
+	return set(frappe.get_all("Customer", filters={"custom_assigned_sales_person": employee}, pluck="name"))
+
+
 def _sales_persons_for(employee):
 	if frappe.db.exists("DocType", "Sales Person") and frappe.get_meta("Sales Person").has_field("employee"):
 		return frappe.get_all("Sales Person", filters={"employee": employee}, pluck="name")
@@ -57,7 +68,7 @@ def rep_sales(employee, frm, to):
 	if not employee or not frappe.db.exists("DocType", "Sales Order"):
 		return {"amount": 0.0, "qty": 0.0, "orders": 0}
 	user = frappe.db.get_value("Employee", employee, "user_id")
-	assigned = set(frappe.get_all("Customer", filters={"custom_assigned_sales_person": employee}, pluck="name"))
+	assigned = _assigned_customers(employee)
 	team_sos = _team_sales_orders(_sales_persons_for(employee))
 	sos = frappe.get_all(
 		"Sales Order",
@@ -79,7 +90,7 @@ def rep_customers(employee):
 	"""Set of Customer names attributed to the rep (SAP invoices + assigned + orders)."""
 	from crm_app import sap_sales
 
-	custs = set(frappe.get_all("Customer", filters={"custom_assigned_sales_person": employee}, pluck="name"))
+	custs = _assigned_customers(employee)
 	# Whoever he actually invoiced in SAP is the strongest signal of "his" dealer.
 	custs.update(sap_sales.rep_customers(employee))
 	if not frappe.db.exists("DocType", "Sales Order"):

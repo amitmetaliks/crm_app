@@ -102,3 +102,35 @@ class TestConveyanceRules(FrappeTestCase):
 		if not row:
 			self.skipTest("no Sales Person has a rate configured")
 		self.assertEqual(conveyance._rate_for(row[0].employee), row[0].travel_allowance_per_km)
+
+
+class TestCustomFieldGuards(FrappeTestCase):
+	"""Custom fields are not guaranteed to exist on a site.
+
+	Ours appear only after our after_migrate; theirs (Address.latitude,
+	Customer.custom_customer_sap_code) only on their sites. Filtering on an absent column
+	raises "Unknown column" and takes the screen down — it does not quietly return
+	nothing. This has bitten twice: Customer 360 on a site without Address geo, and
+	Collections on a freshly-restored production DB. api.has_field is the guard.
+	"""
+
+	def test_has_field_is_false_for_absent_field(self):
+		from crm_app.api import has_field
+
+		self.assertFalse(has_field("Customer", "definitely_not_a_real_field_xyz"))
+		self.assertFalse(has_field("No Such DocType At All", "whatever"))
+
+	def test_has_field_is_true_for_a_real_field(self):
+		from crm_app.api import has_field
+
+		self.assertTrue(has_field("Customer", "customer_name"))
+
+	def test_assigned_customers_survives_missing_custom_field(self):
+		"""The helper must return empty, not explode, when our field is absent."""
+		from crm_app.sales_attr import _assigned_customers
+
+		emp = frappe.db.get_value("Employee", {"status": "Active"}, "name")
+		if not emp:
+			self.skipTest("no employee")
+		# Must not raise regardless of whether the field exists on this site.
+		self.assertIsInstance(_assigned_customers(emp), set)
