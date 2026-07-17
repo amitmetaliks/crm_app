@@ -8,7 +8,7 @@
 					:key="f.value"
 					@click="setStatus(f.value)"
 					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
-					:class="status === f.value ? 'bg-saffron-600 text-white' : 'bg-white/10 text-navy-100'"
+					:class="status === f.value ? 'bg-saffron text-navy-700' : 'bg-white/10 text-navy-100'"
 				>
 					{{ f.label }}
 				</button>

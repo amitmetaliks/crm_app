@@ -44,7 +44,7 @@
 						</router-link>
 						<router-link
 							:to="{ name: 'StockCheck', query: { customer: row.customer, label: row.customer_name } }"
-							class="shrink-0 rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white"
+							class="aa-pill-btn shrink-0 !rounded-lg !px-3 !py-1.5 !text-xs"
 						>{{ $t("Check") }}</router-link>
 					</div>
 					<div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-2 text-sm dark:border-navy-700">

@@ -32,7 +32,7 @@
 					<button @click="remind(c)" class="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">{{ $t("Remind") }}</button>
 					<router-link
 						:to="{ name: 'Collect', query: { customer: c.customer, label: c.customer_name } }"
-						class="rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white"
+						class="aa-pill-btn !rounded-lg !px-3 !py-1.5 !text-xs"
 					>{{ $t("Collect") }}</router-link>
 				</div>
 			</div>

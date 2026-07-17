@@ -294,6 +294,7 @@ onMounted(async () => {
 	@apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 dark:border-navy-700 dark:bg-navy-800 dark:text-white;
 }
 .chip-primary {
-	@apply border-saffron-600 bg-saffron-600 text-white dark:border-saffron-600 dark:bg-saffron-600;
+	@apply border-saffron bg-saffron;
+	color: #2d3952; /* navy on amber — 5.04:1; white would be 2.29:1 */
 }
 </style>

@@ -22,7 +22,7 @@
 					@click="startCapture"
 					:disabled="busy"
 					class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-semibold text-white shadow-lg disabled:opacity-50 active:scale-[0.99]"
-					:class="nextAction === 'IN' ? 'bg-saffron-600 shadow-saffron/30' : 'bg-navy-700'"
+					:class="nextAction === 'IN' ? 'bg-saffron text-navy-700 shadow-saffron/30' : 'bg-navy-700'"
 				>
 					<Camera class="h-5 w-5" /> {{ busy ? "Recording…" : (nextAction === "IN" ? "Selfie Check-IN" : "Selfie Check-OUT") }}
 				</button>

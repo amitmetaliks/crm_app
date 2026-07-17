@@ -117,7 +117,7 @@
 							v-for="l in LANGS"
 							:key="l.code"
 							class="rounded-lg px-2.5 py-1 text-xs font-semibold"
-							:class="locale === l.code ? 'bg-saffron-600 text-white' : 'bg-gray-100 text-navy-700 dark:bg-navy-700 dark:text-white'"
+							:class="locale === l.code ? 'bg-saffron text-navy-700' : 'bg-gray-100 text-navy-700 dark:bg-navy-700 dark:text-white'"
 							@click="setLocale(l.code)"
 						>{{ l.label }}</button>
 					</div>

@@ -8,34 +8,53 @@ module.exports = {
 	],
 	theme: {
 		extend: {
+			// Palette shared with the HR app, deliberately identical (owner's call: "the
+			// colour combination of the HR App is far better, let's stick to it").
+			//
+			// This is not only a taste decision — it is the safer engineering one. The HR
+			// palette has already been through a WCAG contrast pass over a live app, so its
+			// numbers are measured rather than derived, and the two apps now read as one
+			// suite to the reps who use both.
+			//
+			// The TRIAM logo keeps its own orange/navy: it sits on its own white plate
+			// (.aa-logo-pill), so the mark stays true to the brand while the app chrome is
+			// the quieter Amit Alliance tone around it.
 			colors: {
-				// Amit Alliance brand — Navy Blue
+				// Amit Alliance brand — Slate Blue (quieter enterprise tone, replacing the
+				// earlier deep navy; same token names, so every bg-navy-*/text-navy-* class
+				// already written across the app recolors automatically).
 				navy: {
-					50: "#eef1f7",
-					100: "#d3dbea",
-					200: "#a7b6d5",
-					300: "#7b91bf",
-					400: "#4f6caa",
-					500: "#2f4d8c",
-					600: "#223a6b",
-					700: "#15264c",
-					DEFAULT: "#15264c",
-					800: "#0f1c39",
-					900: "#0a1326",
+					50: "#eff1f6",
+					100: "#d8dde9",
+					200: "#b0bbd4",
+					300: "#8999be",
+					400: "#6178a8",
+					500: "#4c608a",
+					600: "#3b4a6b",
+					DEFAULT: "#3b4a6b",
+					700: "#2d3952",
+					800: "#21293b",
+					850: "#19202e",
+					900: "#121721",
+					// Dark-mode surfaces
+					950: "#0d1017",     // app background in dark mode
+					surface: "#181e2b", // card surface in dark mode
+					hover: "#222b3f",   // card hover in dark mode
 				},
-				// Amit Alliance brand — Reddish Saffron / Orange
+				// Amit Alliance brand — muted amber (replacing the earlier saturated
+				// saffron; used sparingly for CTAs/highlights, not as a dominant fill).
 				saffron: {
-					50: "#fdeee7",
-					100: "#fad3c2",
-					200: "#f5a888",
-					300: "#f17d4e",
-					400: "#ee6630",
-					500: "#e8541c",
-					DEFAULT: "#e8541c",
-					600: "#c44415",
-					700: "#963310",
-					800: "#69240b",
-					900: "#3b1406",
+					50: "#fcf5e9",
+					100: "#f7e6ca",
+					200: "#efce95",
+					300: "#e7b55f",
+					400: "#e3a945",
+					500: "#e09f2e",
+					DEFAULT: "#e09f2e",
+					600: "#c8891e",
+					700: "#a06e18",
+					800: "#7c5613",
+					900: "#593d0d",
 				},
 			},
 			fontFamily: {

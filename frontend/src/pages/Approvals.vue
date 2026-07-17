@@ -60,7 +60,7 @@
 							<p class="truncate font-semibold text-navy-700 dark:text-white">{{ v.party_display }}</p>
 							<p class="text-xs text-gray-400">{{ v.sales_person_name }} · {{ fmtDate(v.visit_date) }}</p>
 						</div>
-						<button @click="verify(v.name)" class="shrink-0 rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white">{{ $t("Verify") }}</button>
+						<button @click="verify(v.name)" class="aa-pill-btn shrink-0 !rounded-lg !px-3 !py-1.5 !text-xs">{{ $t("Verify") }}</button>
 					</div>
 				</div>
 			</template>

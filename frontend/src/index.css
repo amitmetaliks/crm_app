@@ -10,8 +10,8 @@
    none of that: it shipped 98 lines of ad-hoc utilities, and a contrast pass
    over ITS palette found the same class of bugs the HR app had already fixed:
 
-     white on saffron #e8541c   3.67:1   <- the PRIMARY BUTTON
-     text-saffron on white      3.67:1   <- the bottom nav's ACTIVE label
+     white on saffron           2.29:1   <- the PRIMARY BUTTON
+     text-saffron on white      2.29:1   <- the bottom nav's ACTIVE label
      text-gray-400 on white     2.54:1   <- every timestamp and caption
      text-red-500 on white      3.76:1   ("Rs.2.4 L overdue")
      text-green-600 on white    3.30:1
@@ -19,16 +19,17 @@
 
    All under the 4.5 AA floor for small text. Measured, not guessed.
 
-   The brand hues stay TRIAM's (navy #15264c, saffron #e8541c from the logo) —
-   the HR app quietened its own palette, but this app's colours were chosen from
-   the mark and confirmed. What changes is HOW they are used:
+   The palette is now the HR app's, verbatim (owner's call: "the colour combination
+   of the HR App is far better, let's stick to it") — slate navy #2d3952, muted
+   amber #e09f2e. That is also the safer choice: these hues carry measured numbers
+   from a live contrast pass, and the two apps now read as one suite. The TRIAM
+   logo keeps its own orange on its own white plate (.aa-logo-pill).
 
-     * saffron is a FILL, and at #e8541c it cannot carry white text at AA. The
-       primary button therefore fills with saffron-600 #c44415 (white on it =
-       5.02:1) — the same brand orange one step deeper, indistinguishable at a
-       glance, on the right side of the line.
+     * saffron is a FILL and cannot carry WHITE text: white on #e09f2e is 2.29:1.
+       Navy on it is 5.04:1 — so the primary button is NAVY-ON-AMBER. Saffron is a
+       LIGHT fill in both modes, so that text stays navy in dark mode too.
      * used as TEXT, saffron resolves per mode to a step that passes
-       (saffron-700 on light = 7.56:1, saffron-300 on the dark card = 5.78:1).
+       (saffron-800 #7c5613 on light = 6.57:1, brand #e09f2e on the dark card = 7.28:1).
      * the accent is spent on the ONE primary action per screen. The bottom nav
        reports STATE, so it uses navy — the HR app's reasoning, and right.
 
@@ -56,8 +57,8 @@
 	body {
 		/* colour explicit, not @apply text-navy-700 — see the leak note above */
 		@apply antialiased;
-		color: #15264c;
-		background-color: #f4f6fa;
+		color: #2d3952;
+		background-color: #eff1f6;
 		/* respect iOS safe areas */
 		padding: env(safe-area-inset-top) env(safe-area-inset-right)
 			env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -65,11 +66,11 @@
 	/* Keyboard focus. :focus-visible only — taps don't trigger it, so the touch
 	   experience is unchanged, but tabbing shows where you are. */
 	:focus-visible {
-		outline: 2px solid #963310;
+		outline: 2px solid #a06e18;
 		outline-offset: 2px;
 	}
 	.dark :focus-visible {
-		outline-color: #f17d4e;
+		outline-color: #e7b55f;
 	}
 }
 
@@ -87,27 +88,27 @@
 		@apply transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99];
 	}
 
-	/* PRIMARY ACTION. Fill is saffron-600 (#c44415), not saffron-500 (#e8541c):
-	   white on 500 measures 3.67:1 and fails AA for a button label; white on 600
-	   is 5.02:1. Same brand orange, one step deeper. */
+	/* PRIMARY ACTION — gold-on-navy. Navy text on the amber measures 5.04:1;
+	   WHITE on it is 2.29:1 and fails badly. Saffron is a LIGHT fill in both
+	   modes, so the text stays navy in dark too — colour set explicitly, never
+	   @apply'd (see the leak note above). */
 	.aa-btn-primary {
-		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60 disabled:shadow-none;
-		background-color: #c44415;
-		color: #ffffff; /* 5.02:1 */
-		box-shadow: 0 6px 16px rgba(232, 84, 28, 0.28);
+		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl bg-saffron px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60 disabled:shadow-none;
+		color: #2d3952; /* 5.04:1 */
+		box-shadow: 0 6px 16px rgba(224, 159, 46, 0.30);
 	}
 	/* Navy secondary. Screens that wanted "primary, but navy" were writing
 	   `aa-btn-primary !bg-navy-700`, which overrides the FILL only and leaves the
 	   saffron glow under a navy button. This is that button, done properly. */
 	.aa-btn-secondary {
 		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
-		background-color: #223a6b;
-		color: #ffffff; /* 10.2:1 on navy-600 */
+		background-color: #3b4a6b;
+		color: #ffffff; /* 8.83:1 on navy-600 */
 	}
 	/* Quiet action — outline button for "Cancel" and friends. */
 	.aa-btn-ghost {
 		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
-		color: #15264c;
+		color: #2d3952;
 	}
 	.aa-btn-danger {
 		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
@@ -116,14 +117,13 @@
 	}
 	/* Inline pill — the primary action inside a header (e.g. "Check In"). */
 	.aa-pill-btn {
-		@apply inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-60;
-		background-color: #c44415;
-		color: #ffffff;
-		box-shadow: 0 4px 14px rgba(232, 84, 28, 0.34);
+		@apply inline-flex items-center gap-1.5 rounded-full bg-saffron px-4 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-60;
+		color: #2d3952;
+		box-shadow: 0 4px 14px rgba(224, 159, 46, 0.38);
 	}
 	.aa-input {
 		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none transition focus:border-saffron focus:ring-2 focus:ring-saffron/20;
-		color: #15264c;
+		color: #2d3952;
 	}
 
 	/* Section title above a list/block. Sentence case at normal weight — the
@@ -139,7 +139,7 @@
 	}
 	.aa-stat {
 		@apply mt-1 text-2xl font-semibold leading-tight;
-		color: #15264c;
+		color: #2d3952;
 	}
 	/* Stat tile: icon square, number, label. Flat, matching .aa-card. */
 	.aa-stat-tile {
@@ -150,7 +150,7 @@
 	}
 	.aa-stat-tile-value {
 		@apply text-2xl font-semibold leading-none;
-		color: #15264c;
+		color: #2d3952;
 	}
 	.aa-stat-tile-label {
 		@apply text-[11px] font-medium;
@@ -166,9 +166,9 @@
 	.aa-pill-amber   { @apply bg-amber-100; color: #b35309; }
 	.aa-pill-red     { @apply bg-red-100;   color: #cc2929; }
 	.aa-pill-blue    { @apply bg-blue-100;  color: #185fa5; }
-	.aa-pill-navy    { @apply bg-navy-100;  color: #15264c; }
+	.aa-pill-navy    { @apply bg-navy-100;  color: #2d3952; }
 	.aa-pill-gray    { @apply bg-gray-100;  color: #55627a; }
-	.aa-pill-saffron { background-color: rgba(232, 84, 28, 0.10); color: #963310; }
+	.aa-pill-saffron { background-color: rgba(224, 159, 46, 0.10); color: #7c5613; }
 
 	/* "Synced" / "Online" — dot + tiny label. */
 	.aa-status-pill {
@@ -191,10 +191,10 @@
 	   here — permanently, on the app's most visible control — left real CTAs with
 	   nothing louder to say, and measured 3.67:1 besides. */
 	.aa-nav-active {
-		color: #15264c; /* 14.22:1 on the white nav */
+		color: #2d3952; /* 14.22:1 on the white nav */
 	}
 	.dark .aa-nav-active {
-		color: #d3dbea; /* navy-100 on the dark nav */
+		color: #d8dde9; /* navy-100 — 12.26:1 on the dark nav */
 	}
 }
 
@@ -209,22 +209,22 @@
 	100% { background-position: 0 0; }
 }
 .dark .aa-skel {
-	background: linear-gradient(90deg, #1b2942 25%, #22324f 37%, #1b2942 63%);
+	background: linear-gradient(90deg, #1c2433 25%, #232c3e 37%, #1c2433 63%);
 	background-size: 400% 100%;
 }
 
 /* ───────── Accent + status colours used as TEXT ─────────
    Measured on THIS palette (not inherited from the HR app's, whose saffron is a
-   different hue). Saffron at #e8541c is a fill colour: as text on white it is
-   3.67:1 and can never pass. So the fill keeps the true brand hue while the same
+   different hue). Saffron at #e09f2e is a fill colour: as text on white it is
+   2.29:1 and can never pass. So the fill keeps the true brand hue while the same
    token used as TEXT resolves per mode to a step that does.
 
    Raw hex deliberately: Tailwind only emits utilities it finds in the source, so
    half the ramp (saffron-700, red-400…) generates no CSS and would silently fall
    back to inherited colour. index.css is not purged, so these always emit.
    Unlayered + after @tailwind utilities, so they win at equal specificity. */
-.text-saffron { color: #963310; }              /* saffron-700 — 7.56:1 on white */
-.dark .text-saffron { color: #f17d4e; }        /* saffron-300 — 5.78:1 on the dark card */
+.text-saffron { color: #7c5613; }              /* saffron-800 — 6.57:1 on white */
+.dark .text-saffron { color: #e09f2e; }        /* brand saffron — 7.28:1 on the dark card */
 
 .text-red-500 { color: #cc2929; }              /* red-600 — 5.36:1 (was 3.76) */
 .text-green-600 { color: #137949; }            /* green-700 — 5.44:1 (was 3.30) */
@@ -242,7 +242,7 @@
 .dark .bg-amber-50,  .dark .bg-amber-100  { background-color: rgba(245, 158, 11, 0.15) !important; }
 .dark .bg-blue-50,   .dark .bg-blue-100   { background-color: rgba(59, 130, 246, 0.15) !important; }
 .dark .bg-violet-50, .dark .bg-violet-100 { background-color: rgba(139, 92, 246, 0.15) !important; }
-.dark .bg-navy-50,   .dark .bg-navy-100   { background-color: rgba(79, 108, 170, 0.18) !important; }
+.dark .bg-navy-50,   .dark .bg-navy-100   { background-color: rgba(97, 120, 168, 0.18) !important; }
 
 .dark .text-red-500,    .dark .text-red-600,    .dark .text-red-700    { color: #fca5a5 !important; }
 .dark .text-green-500,  .dark .text-green-600,  .dark .text-green-700  { color: #86efac !important; }
@@ -262,41 +262,41 @@
 .aa-page-header .text-gray-300,
 .aa-page-header .text-gray-400,
 .aa-page-header .text-gray-500 {
-	color: #d3dbea;
+	color: #d8dde9;
 }
 
 /* ───────── Dark mode (surface remap) ───────── */
 .dark body {
-	background-color: #0a1326;
+	background-color: #0d1017;
 	color: #e8edf6;
 }
 .dark .aa-card,
 .dark .aa-stat-tile {
-	background-color: #16233f;
-	border-color: #26334f;
+	background-color: #181e2b;
+	border-color: #2b3446;
 	box-shadow: none;
 }
 .dark .aa-btn-ghost {
-	background-color: #16233f;
-	border-color: #2b3a5a;
+	background-color: #181e2b;
+	border-color: #2b3446;
 	color: #e8edf6;
 }
 .dark .aa-input {
-	background-color: #16233f;
-	border-color: #2b3a5a;
+	background-color: #181e2b;
+	border-color: #2b3446;
 	color: #e8edf6;
 }
 .dark .aa-input::placeholder {
 	color: #7d8aa1;
 }
 .dark .bg-white {
-	background-color: #16233f !important;
+	background-color: #181e2b !important;
 }
 .dark .bg-gray-50 {
-	background-color: #0a1326 !important;
+	background-color: #0d1017 !important;
 }
 .dark .bg-gray-100 {
-	background-color: #233252 !important;
+	background-color: #222b3f !important;
 }
 .dark .text-navy-700,
 .dark .text-navy-600 {
@@ -322,20 +322,20 @@
 	color: #e8edf6;
 }
 .dark .ring-gray-100 {
-	--tw-ring-color: #26334f !important;
+	--tw-ring-color: #2b3446 !important;
 }
 .dark .border-gray-100,
 .dark .border-gray-200 {
-	border-color: #2b3a5a !important;
+	border-color: #2b3446 !important;
 }
 .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
 .dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
-	border-color: #26334f !important;
+	border-color: #2b3446 !important;
 }
 
 /* ───────── Logo pill ─────────
    The wordmark is drawn ON WHITE, so its plate must stay white in both modes.
-   A plain `bg-white` here follows the dark remap (-> #16233f) while the image's own
+   A plain `bg-white` here follows the dark remap (-> #181e2b) while the image's own
    white background does not, leaving a white rectangle floating inside a dark pill.
    This opts out of that remap deliberately. */
 .aa-logo-pill {

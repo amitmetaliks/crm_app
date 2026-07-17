@@ -40,7 +40,7 @@
 						</p>
 					</div>
 				</div>
-				<span class="rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
+				<span class="aa-pill-btn !rounded-lg !px-3 !py-1.5 !text-xs">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
 			</router-link>
 
 			<!-- Quick action -->

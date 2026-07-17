@@ -54,7 +54,7 @@
 							v-for="b in ['Ours', 'Competitor']"
 							:key="b"
 							class="flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold"
-							:class="row.brand_type === b ? 'border-saffron-600 bg-saffron-600 text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
+							:class="row.brand_type === b ? 'border-saffron bg-saffron text-navy-700' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
 							@click="row.brand_type = b"
 						>{{ $t(b) }}</button>
 					</div>

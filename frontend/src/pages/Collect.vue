@@ -35,7 +35,7 @@
 								v-for="m in modes"
 								:key="m.name"
 								class="rounded-lg border px-3 py-1.5 text-sm font-medium"
-								:class="mode === m.name ? 'border-saffron-600 bg-saffron-600 text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
+								:class="mode === m.name ? 'border-saffron bg-saffron text-navy-700' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
 								@click="mode = m.name"
 							>{{ m.name }}</button>
 						</div>
