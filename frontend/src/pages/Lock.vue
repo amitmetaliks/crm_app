@@ -1,6 +1,6 @@
 <template>
 	<div class="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-navy-700 to-navy-900 px-6 text-white">
-		<div class="mb-6 rounded-2xl bg-white px-5 py-3 shadow-lg"><img :src="wordmark" alt="TRIAM A+" class="h-7" /></div>
+		<div class="aa-logo-pill mb-6 !rounded-2xl !px-5 !py-3 shadow-lg"><img :src="wordmark" alt="TRIAM A+" class="h-7" /></div>
 		<p class="mb-1 text-lg font-semibold">{{ $t("App locked") }}</p>
 		<p class="mb-6 text-sm text-navy-200">{{ $t("Enter your PIN to continue") }}</p>
 

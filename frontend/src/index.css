@@ -332,3 +332,16 @@
 .dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
 	border-color: #26334f !important;
 }
+
+/* ───────── Logo pill ─────────
+   The wordmark is drawn ON WHITE, so its plate must stay white in both modes.
+   A plain `bg-white` here follows the dark remap (-> #16233f) while the image's own
+   white background does not, leaving a white rectangle floating inside a dark pill.
+   This opts out of that remap deliberately. */
+.aa-logo-pill {
+	@apply rounded-lg px-3 py-1.5 shadow-sm;
+	background-color: #ffffff;
+}
+.dark .aa-logo-pill {
+	background-color: #ffffff;
+}

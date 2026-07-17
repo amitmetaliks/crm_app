@@ -1,7 +1,7 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
 		<header class="aa-page-header">
-			<div class="mb-4 inline-block rounded-lg bg-white px-3 py-1.5 shadow-sm">
+			<div class="aa-logo-pill mb-4 inline-block">
 				<img :src="wordmark" alt="TRIAM A+" class="h-6" />
 			</div>
 			<div class="flex items-center gap-3">

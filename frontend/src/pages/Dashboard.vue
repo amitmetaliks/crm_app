@@ -3,7 +3,7 @@
 		<!-- Header -->
 		<header class="bg-gradient-to-b from-navy-700 to-navy-600 px-5 pb-6 pt-6 text-white">
 			<div class="flex items-center justify-between">
-				<div class="rounded-lg bg-white px-3 py-1.5 shadow-sm">
+				<div class="aa-logo-pill">
 					<img :src="wordmark" alt="TRIAM A+" class="h-6" />
 				</div>
 				<router-link :to="{ name: 'Notifications' }" class="rounded-full bg-white/10 p-2.5"><Bell class="h-5 w-5" /></router-link>

@@ -57,7 +57,7 @@
 <script setup>
 import { ref } from "vue"
 import { loginResource } from "../data/session"
-import logoUrl from "../assets/triam-logo.jpg"
+import logoUrl from "../assets/logo-full.png"
 
 const email = ref("")
 const password = ref("")
