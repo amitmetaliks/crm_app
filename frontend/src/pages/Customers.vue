@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-4 pt-6 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Dealers & Customers") }}</h1>
 			<input
 				v-model="query"

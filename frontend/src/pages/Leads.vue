@@ -1,10 +1,10 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-3 pt-6 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Leads & Deals") }}</h1>
 			<div class="mt-3 flex gap-2">
-				<button @click="tab = 'leads'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">{{ $t("Leads") }}</button>
-				<button @click="tab = 'deals'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'">{{ $t("Deals") }}</button>
+				<button @click="tab = 'leads'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron-600 text-white' : 'bg-white/10 text-navy-100'">{{ $t("Leads") }}</button>
+				<button @click="tab = 'deals'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron-600 text-white' : 'bg-white/10 text-navy-100'">{{ $t("Deals") }}</button>
 			</div>
 		</header>
 
@@ -22,7 +22,7 @@
 					<input v-model="form.territory" class="aa-input" :placeholder='$t("Area / Territory")' />
 					<div class="flex gap-2">
 						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">{{ $t("Cancel") }}</button>
-						<button @click="createLead" :disabled="busy || !form.lead_name" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Save") }}</button>
+						<button @click="createLead" :disabled="busy || !form.lead_name" class="aa-btn-primary flex-1 !py-2.5 text-sm">{{ $t("Save") }}</button>
 					</div>
 				</div>
 			</div>

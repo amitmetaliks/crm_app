@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
+		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 			<h1 class="truncate text-lg font-semibold">{{ c?.customer_name || name }}</h1>
 		</header>
@@ -294,6 +294,6 @@ onMounted(async () => {
 	@apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 dark:border-navy-700 dark:bg-navy-800 dark:text-white;
 }
 .chip-primary {
-	@apply border-saffron bg-saffron text-white dark:border-saffron dark:bg-saffron;
+	@apply border-saffron-600 bg-saffron-600 text-white dark:border-saffron-600 dark:bg-saffron-600;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
+		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 			<h1 class="text-lg font-semibold">{{ $t("Leave") }}</h1>
 		</header>
@@ -31,7 +31,7 @@
 					<input v-model="form.description" class="aa-input" :placeholder='$t("Reason")' />
 					<div class="flex gap-2">
 						<button @click="adding = false" class="flex-1 rounded-xl bg-gray-200 py-2.5 text-sm text-gray-600">{{ $t("Cancel") }}</button>
-						<button @click="apply" :disabled="busy || !form.leave_type || !form.from_date || !form.to_date" class="flex-1 rounded-xl bg-saffron py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Apply") }}</button>
+						<button @click="apply" :disabled="busy || !form.leave_type || !form.from_date || !form.to_date" class="aa-btn-primary flex-1 !py-2.5 text-sm">{{ $t("Apply") }}</button>
 					</div>
 				</div>
 			</div>

@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-xl font-bold">{{ $t("Journey plan") }}</h1>

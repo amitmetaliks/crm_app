@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-xl font-bold">{{ $t("Secondary sales") }}</h1>
@@ -44,7 +44,7 @@
 						</router-link>
 						<router-link
 							:to="{ name: 'StockCheck', query: { customer: row.customer, label: row.customer_name } }"
-							class="shrink-0 rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
+							class="shrink-0 rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white"
 						>{{ $t("Check") }}</router-link>
 					</div>
 					<div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-2 text-sm dark:border-navy-700">

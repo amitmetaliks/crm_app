@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-xl font-bold">{{ $t("Stock check") }}</h1>
@@ -54,7 +54,7 @@
 							v-for="b in ['Ours', 'Competitor']"
 							:key="b"
 							class="flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold"
-							:class="row.brand_type === b ? 'border-saffron bg-saffron text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
+							:class="row.brand_type === b ? 'border-saffron-600 bg-saffron-600 text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
 							@click="row.brand_type = b"
 						>{{ $t(b) }}</button>
 					</div>

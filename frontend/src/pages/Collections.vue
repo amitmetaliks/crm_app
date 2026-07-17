@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Collections") }}</h1>
 			<div v-if="!loading" class="mt-3 grid grid-cols-2 gap-3">
 				<div class="rounded-xl bg-white/10 p-3">
@@ -32,7 +32,7 @@
 					<button @click="remind(c)" class="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">{{ $t("Remind") }}</button>
 					<router-link
 						:to="{ name: 'Collect', query: { customer: c.customer, label: c.customer_name } }"
-						class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
+						class="rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white"
 					>{{ $t("Collect") }}</router-link>
 				</div>
 			</div>

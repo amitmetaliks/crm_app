@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-xl font-bold">{{ $t("Collect payment") }}</h1>
@@ -35,7 +35,7 @@
 								v-for="m in modes"
 								:key="m.name"
 								class="rounded-lg border px-3 py-1.5 text-sm font-medium"
-								:class="mode === m.name ? 'border-saffron bg-saffron text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
+								:class="mode === m.name ? 'border-saffron-600 bg-saffron-600 text-white' : 'border-gray-200 text-navy-700 dark:border-navy-700 dark:text-white'"
 								@click="mode = m.name"
 							>{{ m.name }}</button>
 						</div>

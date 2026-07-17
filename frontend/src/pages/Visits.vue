@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-4 pt-6 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Visits") }}</h1>
 			<div class="mt-3 flex gap-2 overflow-x-auto pb-1">
 				<button
@@ -8,7 +8,7 @@
 					:key="f.value"
 					@click="setStatus(f.value)"
 					class="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
-					:class="status === f.value ? 'bg-saffron text-white' : 'bg-white/10 text-navy-100'"
+					:class="status === f.value ? 'bg-saffron-600 text-white' : 'bg-white/10 text-navy-100'"
 				>
 					{{ f.label }}
 				</button>

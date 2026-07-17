@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center gap-3">
 				<router-link to="/more"><ChevronLeft class="h-6 w-6" /></router-link>
 				<h1 class="text-xl font-bold">{{ $t("Conveyance") }}</h1>

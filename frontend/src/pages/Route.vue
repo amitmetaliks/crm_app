@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-4 pb-4 pt-5 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-lg font-semibold">{{ $t("My Route") }}</h1>
 			<div class="mt-3 flex items-center justify-between">
 				<button @click="shift(-1)" class="rounded-lg bg-white/10 px-3 py-1"><ChevronLeft class="h-5 w-5" /></button>

@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-8 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="mb-4 inline-block rounded-lg bg-white px-3 py-1.5 shadow-sm">
 				<img :src="wordmark" alt="TRIAM A+" class="h-6" />
 			</div>
@@ -117,7 +117,7 @@
 							v-for="l in LANGS"
 							:key="l.code"
 							class="rounded-lg px-2.5 py-1 text-xs font-semibold"
-							:class="locale === l.code ? 'bg-saffron text-white' : 'bg-gray-100 text-navy-700 dark:bg-navy-700 dark:text-white'"
+							:class="locale === l.code ? 'bg-saffron-600 text-white' : 'bg-gray-100 text-navy-700 dark:bg-navy-700 dark:text-white'"
 							@click="setLocale(l.code)"
 						>{{ l.label }}</button>
 					</div>

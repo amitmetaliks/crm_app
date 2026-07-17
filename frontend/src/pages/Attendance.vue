@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-6 pt-6 text-white">
+		<header class="aa-page-header">
 			<button @click="$router.back()" class="mb-2 flex items-center gap-1 text-sm text-navy-200"><ChevronLeft class="h-5 w-5" /> {{ $t("Back") }}</button>
 			<h1 class="text-xl font-bold">{{ $t("Attendance") }}</h1>
 			<p class="text-sm text-navy-200">{{ todayLabel }}</p>
@@ -22,7 +22,7 @@
 					@click="startCapture"
 					:disabled="busy"
 					class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-semibold text-white shadow-lg disabled:opacity-50 active:scale-[0.99]"
-					:class="nextAction === 'IN' ? 'bg-saffron shadow-saffron/30' : 'bg-navy-700'"
+					:class="nextAction === 'IN' ? 'bg-saffron-600 shadow-saffron/30' : 'bg-navy-700'"
 				>
 					<Camera class="h-5 w-5" /> {{ busy ? "Recording…" : (nextAction === "IN" ? "Selfie Check-IN" : "Selfie Check-OUT") }}
 				</button>

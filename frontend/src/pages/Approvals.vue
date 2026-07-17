@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-4 pt-6 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Approvals") }}</h1>
 			<p class="text-sm text-navy-200">{{ (data.leaves.length + data.expenses.length) }} pending · {{ data.visits.length }} visits to verify</p>
 		</header>
@@ -60,7 +60,7 @@
 							<p class="truncate font-semibold text-navy-700 dark:text-white">{{ v.party_display }}</p>
 							<p class="text-xs text-gray-400">{{ v.sales_person_name }} · {{ fmtDate(v.visit_date) }}</p>
 						</div>
-						<button @click="verify(v.name)" class="shrink-0 rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white">{{ $t("Verify") }}</button>
+						<button @click="verify(v.name)" class="shrink-0 rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white">{{ $t("Verify") }}</button>
 					</div>
 				</div>
 			</template>

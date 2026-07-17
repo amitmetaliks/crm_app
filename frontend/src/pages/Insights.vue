@@ -1,10 +1,10 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-4 pb-4 pt-5 text-white">
+		<header class="aa-page-header">
 			<h1 class="text-lg font-semibold">{{ $t("Smart Insights") }}</h1>
 			<div v-if="session.isSalesManager" class="mt-2 flex gap-2">
-				<button @click="setScope('mine')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron text-white' : 'bg-white/10'">{{ $t("Mine") }}</button>
-				<button @click="setScope('team')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron text-white' : 'bg-white/10'">{{ $t("Team") }}</button>
+				<button @click="setScope('mine')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron-600 text-white' : 'bg-white/10'">{{ $t("Mine") }}</button>
+				<button @click="setScope('team')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron-600 text-white' : 'bg-white/10'">{{ $t("Team") }}</button>
 			</div>
 		</header>
 

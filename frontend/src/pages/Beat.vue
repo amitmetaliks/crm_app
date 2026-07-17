@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="bg-navy-700 px-5 pb-5 pt-6 text-white">
+		<header class="aa-page-header">
 			<div class="flex items-center justify-between">
 				<h1 class="text-xl font-bold">{{ $t("Today's Beat") }}</h1>
 				<input type="date" v-model="date" @change="load" class="rounded-lg px-2 py-1 text-sm text-navy-700" />
@@ -37,7 +37,7 @@
 									>{{ $t("Skip") }}</button>
 									<router-link
 										:to="{ name: 'NewVisit', query: { ptype: e.party_type, id: e.customer, label: e.party_name || e.customer } }"
-										class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white"
+										class="rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white"
 									>{{ $t("Visit") }}</router-link>
 								</template>
 								<span v-else class="flex items-center gap-1 text-xs font-semibold text-green-600">
@@ -74,8 +74,8 @@
 				<template v-if="editing">
 					<div class="aa-card">
 						<div class="mb-2 flex gap-2">
-							<button @click="beatType = 'Primary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Primary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Primary") }}</button>
-							<button @click="beatType = 'Secondary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Secondary' ? 'bg-saffron text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Secondary") }}</button>
+							<button @click="beatType = 'Primary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Primary' ? 'bg-saffron-600 text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Primary") }}</button>
+							<button @click="beatType = 'Secondary'" class="flex-1 rounded-lg py-2 text-sm font-medium" :class="beatType === 'Secondary' ? 'bg-saffron-600 text-white' : 'bg-gray-100 text-gray-600'">{{ $t("Secondary") }}</button>
 						</div>
 						<input v-model="title" class="aa-input mb-2" :placeholder='$t("Beat title (e.g. North zone)")' />
 						<input v-model="territory" class="aa-input mb-2" :placeholder='$t("Territory (e.g. West Bengal)")' />
@@ -93,7 +93,7 @@
 					</div>
 					<div class="flex gap-2">
 						<button @click="editing = false" class="flex-1 rounded-xl bg-gray-200 py-3 text-sm font-medium text-gray-600">{{ $t("Cancel") }}</button>
-						<button @click="saveBeat" :disabled="busy" class="flex-1 rounded-xl bg-saffron py-3 text-sm font-semibold text-white disabled:opacity-50">{{ $t("Save beat") }}</button>
+						<button @click="saveBeat" :disabled="busy" class="aa-btn-primary flex-1 !py-3 text-sm">{{ $t("Save beat") }}</button>
 					</div>
 				</template>
 			</template>
@@ -115,7 +115,7 @@
 				<div class="flex gap-2">
 					<button class="flex-1 rounded-xl bg-gray-200 py-3 text-sm font-medium text-gray-600" @click="skipFor = null">{{ $t("Cancel") }}</button>
 					<button
-						class="flex-1 rounded-xl bg-saffron py-3 text-sm font-semibold text-white disabled:opacity-50"
+						class="aa-btn-primary flex-1 !py-3 text-sm"
 						:disabled="!skipReason || skipping"
 						@click="confirmSkip"
 					>{{ skipping ? $t("Saving…") : $t("Save") }}</button>

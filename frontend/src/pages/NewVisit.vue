@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-28 dark:bg-navy-900">
-		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
+		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
 			<button @click="goBack"><ChevronLeft class="h-6 w-6" /></button>
 			<h1 class="text-lg font-semibold">{{ checkedIn ? "Visit in progress" : "Start a Visit" }}</h1>
 		</header>
@@ -75,7 +75,7 @@
 				v-if="!checkedIn"
 				@click="doCheckIn"
 				:disabled="!canCheckIn || busy"
-				class="flex w-full items-center justify-center gap-2 rounded-2xl bg-saffron px-4 py-4 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50 active:scale-[0.99]"
+				class="aa-btn-primary !rounded-2xl !py-4 shadow-lg"
 			>
 				<MapPin class="h-5 w-5" /> {{ busy ? "Getting location…" : "Check in here" }}
 			</button>
@@ -174,8 +174,8 @@
 				</div>
 
 				<div class="flex gap-3">
-					<button @click="save(false)" :disabled="busy" class="flex-1 rounded-2xl bg-navy-700 px-4 py-3.5 font-semibold text-white disabled:opacity-50"> {{ $t("Save") }} </button>
-					<button @click="save(true)" :disabled="busy" class="flex-1 rounded-2xl bg-saffron px-4 py-3.5 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50"> {{ $t("Check out") }} </button>
+					<button @click="save(false)" :disabled="busy" class="aa-btn-secondary flex-1 !rounded-2xl !py-3.5"> {{ $t("Save") }} </button>
+					<button @click="save(true)" :disabled="busy" class="aa-btn-primary flex-1 !rounded-2xl !py-3.5"> {{ $t("Check out") }} </button>
 				</div>
 			</template>
 		</div>

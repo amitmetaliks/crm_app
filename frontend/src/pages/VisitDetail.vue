@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="flex items-center gap-3 bg-navy-700 px-4 py-4 text-white">
+		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
 			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 			<h1 class="truncate text-lg font-semibold">{{ v?.party_display || name }}</h1>
 		</header>
@@ -107,7 +107,7 @@
 				v-if="v.visit_status === 'In Progress'"
 				@click="checkout"
 				:disabled="busy"
-				class="w-full rounded-2xl bg-saffron px-4 py-3.5 font-semibold text-white shadow-lg shadow-saffron/30 disabled:opacity-50"
+				class="aa-btn-primary !rounded-2xl !py-3.5"
 			> {{ $t("Check out now") }} </button>
 		</div>
 

@@ -2,6 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRIAM A+ design system.
+
+   Ported from the HR app's, which had already been through a WCAG contrast
+   pass over the live app and carries the scars in its comments. The CRM had
+   none of that: it shipped 98 lines of ad-hoc utilities, and a contrast pass
+   over ITS palette found the same class of bugs the HR app had already fixed:
+
+     white on saffron #e8541c   3.67:1   <- the PRIMARY BUTTON
+     text-saffron on white      3.67:1   <- the bottom nav's ACTIVE label
+     text-gray-400 on white     2.54:1   <- every timestamp and caption
+     text-red-500 on white      3.76:1   ("Rs.2.4 L overdue")
+     text-green-600 on white    3.30:1
+     text-amber-600 on white    3.19:1
+
+   All under the 4.5 AA floor for small text. Measured, not guessed.
+
+   The brand hues stay TRIAM's (navy #15264c, saffron #e8541c from the logo) —
+   the HR app quietened its own palette, but this app's colours were chosen from
+   the mark and confirmed. What changes is HOW they are used:
+
+     * saffron is a FILL, and at #e8541c it cannot carry white text at AA. The
+       primary button therefore fills with saffron-600 #c44415 (white on it =
+       5.02:1) — the same brand orange one step deeper, indistinguishable at a
+       glance, on the right side of the line.
+     * used as TEXT, saffron resolves per mode to a step that passes
+       (saffron-700 on light = 7.56:1, saffron-300 on the dark card = 5.78:1).
+     * the accent is spent on the ONE primary action per screen. The bottom nav
+       reports STATE, so it uses navy — the HR app's reasoning, and right.
+
+   ── THE RULE THAT MATTERS ──────────────────────────────────────────────────
+   NEVER @apply a text utility that gets repainted in dark mode.
+
+   The `.dark .text-*` rules at the foot of this file repaint body copy with
+   !important. Tailwind's @apply HOISTS those overrides onto whatever component
+   applies the utility — so `.aa-input { @apply text-navy-700 }` silently emits
+   `.dark .aa-input { color: #e8edf6 }`. Nobody writes that rule; it just
+   appears. In the HR app this made the primary button near-white text on a
+   saffron fill in dark mode.
+
+   Inside @layer components: set `color:` explicitly, as raw hex. Layout and
+   background utilities are safe to @apply — only the repainted TEXT ones leak.
+   index.css is not purged, so raw hex here always emits.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @layer base {
 	html,
 	body,
@@ -9,24 +54,147 @@
 		height: 100%;
 	}
 	body {
-		@apply bg-gray-50 text-navy-700 antialiased;
+		/* colour explicit, not @apply text-navy-700 — see the leak note above */
+		@apply antialiased;
+		color: #15264c;
+		background-color: #f4f6fa;
 		/* respect iOS safe areas */
 		padding: env(safe-area-inset-top) env(safe-area-inset-right)
 			env(safe-area-inset-bottom) env(safe-area-inset-left);
 	}
+	/* Keyboard focus. :focus-visible only — taps don't trigger it, so the touch
+	   experience is unchanged, but tabbing shows where you are. */
+	:focus-visible {
+		outline: 2px solid #963310;
+		outline-offset: 2px;
+	}
+	.dark :focus-visible {
+		outline-color: #f17d4e;
+	}
 }
 
 @layer components {
+	/* Flat card: solid surface + hairline border. Not frosted glass — the same
+	   component renders differently depending on what sits behind it, and
+	   backdrop-filter is expensive to composite on the low-end Androids most
+	   reps carry. Solid beats clever. */
 	.aa-card {
-		@apply rounded-2xl bg-white p-4 ring-1 ring-gray-100;
-		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 14px rgba(16, 24, 40, 0.05);
+		@apply rounded-2xl border border-gray-200/70 bg-white p-4;
+		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 	}
+	/* For a card that is also a button. */
+	.aa-card-button {
+		@apply transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99];
+	}
+
+	/* PRIMARY ACTION. Fill is saffron-600 (#c44415), not saffron-500 (#e8541c):
+	   white on 500 measures 3.67:1 and fails AA for a button label; white on 600
+	   is 5.02:1. Same brand orange, one step deeper. */
 	.aa-btn-primary {
-		@apply inline-flex w-full items-center justify-center rounded-xl bg-saffron px-4 py-3 font-semibold text-white transition active:scale-[0.98] disabled:opacity-60;
-		box-shadow: 0 4px 12px rgba(232, 84, 28, 0.25);
+		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60 disabled:shadow-none;
+		background-color: #c44415;
+		color: #ffffff; /* 5.02:1 */
+		box-shadow: 0 6px 16px rgba(232, 84, 28, 0.28);
+	}
+	/* Navy secondary. Screens that wanted "primary, but navy" were writing
+	   `aa-btn-primary !bg-navy-700`, which overrides the FILL only and leaves the
+	   saffron glow under a navy button. This is that button, done properly. */
+	.aa-btn-secondary {
+		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
+		background-color: #223a6b;
+		color: #ffffff; /* 10.2:1 on navy-600 */
+	}
+	/* Quiet action — outline button for "Cancel" and friends. */
+	.aa-btn-ghost {
+		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
+		color: #15264c;
+	}
+	.aa-btn-danger {
+		@apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition active:scale-[0.98] disabled:opacity-60;
+		background-color: #cc2929;
+		color: #ffffff; /* 5.36:1 */
+	}
+	/* Inline pill — the primary action inside a header (e.g. "Check In"). */
+	.aa-pill-btn {
+		@apply inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-60;
+		background-color: #c44415;
+		color: #ffffff;
+		box-shadow: 0 4px 14px rgba(232, 84, 28, 0.34);
 	}
 	.aa-input {
-		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-navy-700 outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20;
+		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none transition focus:border-saffron focus:ring-2 focus:ring-saffron/20;
+		color: #15264c;
+	}
+
+	/* Section title above a list/block. Sentence case at normal weight — the
+	   11px semibold UPPERCASE treatment shouted for attention a label doesn't
+	   need, and all-caps is measurably slower to read. */
+	.aa-section-title {
+		@apply mb-2 text-xs font-medium;
+		color: #55627a; /* 6.15:1 */
+	}
+	.aa-stat-label {
+		@apply text-[11px] font-medium;
+		color: #55627a;
+	}
+	.aa-stat {
+		@apply mt-1 text-2xl font-semibold leading-tight;
+		color: #15264c;
+	}
+	/* Stat tile: icon square, number, label. Flat, matching .aa-card. */
+	.aa-stat-tile {
+		@apply flex flex-col gap-2 rounded-2xl border border-gray-200/70 bg-white p-3;
+	}
+	.aa-stat-tile-icon {
+		@apply flex h-9 w-9 items-center justify-center rounded-xl;
+	}
+	.aa-stat-tile-value {
+		@apply text-2xl font-semibold leading-none;
+		color: #15264c;
+	}
+	.aa-stat-tile-label {
+		@apply text-[11px] font-medium;
+		color: #55627a;
+	}
+
+	/* Status pills. The 100-tint fills pair with 700 text; both halves flip
+	   together in dark (see the pairing block below) so they cannot drift. */
+	.aa-pill {
+		@apply inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+	}
+	.aa-pill-green   { @apply bg-green-100; color: #137949; }
+	.aa-pill-amber   { @apply bg-amber-100; color: #b35309; }
+	.aa-pill-red     { @apply bg-red-100;   color: #cc2929; }
+	.aa-pill-blue    { @apply bg-blue-100;  color: #185fa5; }
+	.aa-pill-navy    { @apply bg-navy-100;  color: #15264c; }
+	.aa-pill-gray    { @apply bg-gray-100;  color: #55627a; }
+	.aa-pill-saffron { background-color: rgba(232, 84, 28, 0.10); color: #963310; }
+
+	/* "Synced" / "Online" — dot + tiny label. */
+	.aa-status-pill {
+		@apply inline-flex items-center gap-1.5 rounded-full bg-green-500/15 px-2.5 py-1 text-[11px] font-semibold;
+		color: #137949;
+	}
+	.aa-status-pill::before {
+		content: "";
+		@apply h-1.5 w-1.5 rounded-full bg-green-500;
+		box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+	}
+
+	/* Page header — every screen opens with this. */
+	.aa-page-header {
+		@apply bg-gradient-to-br from-navy-700 via-navy-700 to-navy-800 px-5 pb-8 pt-6 text-white;
+	}
+
+	/* Bottom nav ACTIVE tab. Navy, not saffron: the accent belongs to the one
+	   primary ACTION on a screen, and a nav tab reports STATE. Spending saffron
+	   here — permanently, on the app's most visible control — left real CTAs with
+	   nothing louder to say, and measured 3.67:1 besides. */
+	.aa-nav-active {
+		color: #15264c; /* 14.22:1 on the white nav */
+	}
+	.dark .aa-nav-active {
+		color: #d3dbea; /* navy-100 on the dark nav */
 	}
 }
 
@@ -45,15 +213,73 @@
 	background-size: 400% 100%;
 }
 
-/* ───────── Dark mode (global surface remap) ───────── */
-.dark body {
-	background-color: #0b1326;
-	color: #e5e7eb;
+/* ───────── Accent + status colours used as TEXT ─────────
+   Measured on THIS palette (not inherited from the HR app's, whose saffron is a
+   different hue). Saffron at #e8541c is a fill colour: as text on white it is
+   3.67:1 and can never pass. So the fill keeps the true brand hue while the same
+   token used as TEXT resolves per mode to a step that does.
+
+   Raw hex deliberately: Tailwind only emits utilities it finds in the source, so
+   half the ramp (saffron-700, red-400…) generates no CSS and would silently fall
+   back to inherited colour. index.css is not purged, so these always emit.
+   Unlayered + after @tailwind utilities, so they win at equal specificity. */
+.text-saffron { color: #963310; }              /* saffron-700 — 7.56:1 on white */
+.dark .text-saffron { color: #f17d4e; }        /* saffron-300 — 5.78:1 on the dark card */
+
+.text-red-500 { color: #cc2929; }              /* red-600 — 5.36:1 (was 3.76) */
+.text-green-600 { color: #137949; }            /* green-700 — 5.44:1 (was 3.30) */
+.text-amber-600 { color: #b35309; }            /* amber-700 — 5.05:1 (was 3.19) */
+.text-blue-600 { color: #185fa5; }             /* 6.52:1 */
+
+/* ───────── Status hues in dark mode: tint the FILL, lighten the TEXT ─────
+   Lightening status text is only safe when it sits on the dark page/card. On a
+   light tinted pill it is WRONG: `bg-red-100` has no dark variant, so lightening
+   text-red-500 alone gives light-on-light. Each hue is therefore a PAIR — the
+   100-tint fill goes dark-translucent, the 600/700 text goes light. Both halves
+   flip together, so they can't drift apart. */
+.dark .bg-red-50,    .dark .bg-red-100    { background-color: rgba(239, 68, 68, 0.15) !important; }
+.dark .bg-green-50,  .dark .bg-green-100  { background-color: rgba(34, 197, 94, 0.15) !important; }
+.dark .bg-amber-50,  .dark .bg-amber-100  { background-color: rgba(245, 158, 11, 0.15) !important; }
+.dark .bg-blue-50,   .dark .bg-blue-100   { background-color: rgba(59, 130, 246, 0.15) !important; }
+.dark .bg-violet-50, .dark .bg-violet-100 { background-color: rgba(139, 92, 246, 0.15) !important; }
+.dark .bg-navy-50,   .dark .bg-navy-100   { background-color: rgba(79, 108, 170, 0.18) !important; }
+
+.dark .text-red-500,    .dark .text-red-600,    .dark .text-red-700    { color: #fca5a5 !important; }
+.dark .text-green-500,  .dark .text-green-600,  .dark .text-green-700  { color: #86efac !important; }
+.dark .text-amber-600,  .dark .text-amber-700,
+.dark .text-amber-800,  .dark .text-amber-900   { color: #fcd34d !important; }
+.dark .text-blue-600,   .dark .text-blue-700    { color: #93c5fd !important; }
+.dark .text-violet-600, .dark .text-violet-700  { color: #c4b5fd !important; }
+
+/* ───────── Muted greys ─────────
+   text-gray-400 measured 2.54:1 on white — and it carries every timestamp,
+   caption and "3 orders · 12 MT" line in this app, so it is not decoration.
+   Darkened to a navy-tinted slate that passes. */
+.text-gray-400 { color: #55627a; }             /* 6.15:1 (was 2.54) */
+.text-gray-300 { color: #7d8aa1; }             /* 4.51:1 (was ~1.9) */
+
+/* Inside the navy page header those greys must read LIGHT on navy, not dark. */
+.aa-page-header .text-gray-300,
+.aa-page-header .text-gray-400,
+.aa-page-header .text-gray-500 {
+	color: #d3dbea;
 }
-.dark .aa-card {
+
+/* ───────── Dark mode (surface remap) ───────── */
+.dark body {
+	background-color: #0a1326;
+	color: #e8edf6;
+}
+.dark .aa-card,
+.dark .aa-stat-tile {
 	background-color: #16233f;
+	border-color: #26334f;
 	box-shadow: none;
-	--tw-ring-color: #26334f;
+}
+.dark .aa-btn-ghost {
+	background-color: #16233f;
+	border-color: #2b3a5a;
+	color: #e8edf6;
 }
 .dark .aa-input {
 	background-color: #16233f;
@@ -61,13 +287,13 @@
 	color: #e8edf6;
 }
 .dark .aa-input::placeholder {
-	color: #6b7a99;
+	color: #7d8aa1;
 }
 .dark .bg-white {
 	background-color: #16233f !important;
 }
 .dark .bg-gray-50 {
-	background-color: #0b1326 !important;
+	background-color: #0a1326 !important;
 }
 .dark .bg-gray-100 {
 	background-color: #233252 !important;
@@ -79,11 +305,21 @@
 .dark .text-navy-500 {
 	color: #c7d0e0 !important;
 }
-.dark .text-gray-400 {
+.dark .text-gray-400,
+.dark .text-gray-300 {
 	color: #8b97b0 !important;
 }
 .dark .text-gray-500 {
 	color: #9aa6bd !important;
+}
+.dark .aa-section-title,
+.dark .aa-stat-label,
+.dark .aa-stat-tile-label {
+	color: #9aa6bd;
+}
+.dark .aa-stat,
+.dark .aa-stat-tile-value {
+	color: #e8edf6;
 }
 .dark .ring-gray-100 {
 	--tw-ring-color: #26334f !important;

@@ -40,11 +40,11 @@
 						</p>
 					</div>
 				</div>
-				<span class="rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
+				<span class="rounded-lg bg-saffron-600 px-3 py-1.5 text-xs font-semibold text-white">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
 			</router-link>
 
 			<!-- Quick action -->
-			<router-link :to="{ name: 'NewVisit' }" class="flex items-center justify-center gap-2 rounded-2xl bg-saffron px-4 py-4 font-semibold text-white shadow-lg shadow-saffron/30 active:scale-[0.99]">
+			<router-link :to="{ name: 'NewVisit' }" class="aa-btn-primary !rounded-2xl !py-4 shadow-lg">
 				<MapPin class="h-5 w-5" /> {{ $t("Start a Visit") }} </router-link>
 
 			<!-- Today's beat + productivity -->

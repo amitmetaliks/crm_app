@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="flex items-center justify-between bg-navy-700 px-4 py-4 text-white">
+		<header class="aa-page-header !pb-5 !pt-5 flex items-center justify-between">
 			<div class="flex items-center gap-3">
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-lg font-semibold">Team — Live</h1>
