@@ -317,3 +317,67 @@ def coverage() -> dict:
 		"reps_total": int(reps.total or 0),
 		"reps_matched": int(reps.matched or 0),
 	}
+
+
+# ── Bulk helpers ─────────────────────────────────────────────────────────────
+# Per-customer lookups are fine on a dealer page; they are not fine across a book of
+# 2,000 dealers. churn_risk was running two queries PER customer — 40,000 round trips for
+# a manager — so these answer the same questions in one.
+
+
+def _codes_for(customers) -> dict:
+	"""``{sap_code: customer_name}`` for a list of Customers."""
+	from crm_app.api import has_field
+
+	if not customers or not has_field("Customer", "custom_customer_sap_code"):
+		return {}
+	rows = frappe.get_all(
+		"Customer",
+		filters={"name": ["in", list(customers)], "custom_customer_sap_code": ["!=", ""]},
+		fields=["name", "custom_customer_sap_code"],
+		limit=20000,
+	)
+	return {r.custom_customer_sap_code: r.name for r in rows if r.custom_customer_sap_code}
+
+
+def last_invoice_dates(customers) -> dict:
+	"""``{customer: last_invoice_date}`` — one query for the whole book."""
+	t = _table()
+	by_code = _codes_for(customers)
+	if not t or not by_code:
+		return {}
+	c = COLS[t]
+	rows = frappe.db.sql(
+		f"""SELECT {c['cust']} AS code, MAX({c['date']}) AS last_date
+		    FROM `tab{t}` WHERE {c['cust']} IN %(codes)s GROUP BY {c['cust']}""",
+		{"codes": tuple(by_code.keys())},
+		as_dict=True,
+	)
+	return {by_code[r.code]: r.last_date for r in rows if r.code in by_code and r.last_date}
+
+
+def monthly_totals(customers, months=4) -> list:
+	"""``[{label, value}]`` invoiced per calendar month — one query, not one per month."""
+	from frappe.utils import add_months, get_first_day, get_last_day
+
+	t = _table()
+	by_code = _codes_for(customers)
+	base = getdate()
+	spans = []
+	for i in range(int(months) - 1, -1, -1):
+		ms = get_first_day(add_months(base, -i))
+		spans.append((ms, get_last_day(ms), ms.strftime("%b")))
+	if not t or not by_code:
+		return [{"label": lbl, "value": 0.0} for _, _, lbl in spans]
+
+	c = COLS[t]
+	rows = frappe.db.sql(
+		f"""SELECT DATE_FORMAT({c['date']}, '%%Y-%%m') AS ym, SUM({c['amount']}) AS amount
+		    FROM `tab{t}`
+		    WHERE {c['cust']} IN %(codes)s AND {c['date']} BETWEEN %(frm)s AND %(to)s
+		    GROUP BY ym""",
+		{"codes": tuple(by_code.keys()), "frm": spans[0][0], "to": spans[-1][1]},
+		as_dict=True,
+	)
+	by_ym = {r.ym: flt(r.amount, 2) for r in rows}
+	return [{"label": lbl, "value": by_ym.get(ms.strftime("%Y-%m"), 0.0)} for ms, _, lbl in spans]

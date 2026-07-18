@@ -164,9 +164,21 @@ def get_analytics() -> dict:
 		expense_pending = len(ec)
 		expense_pending_amount = flt(sum(flt(x.grand_total) for x in ec), 2)
 
-	# Accounts receivable (outstanding)
+	# Accounts receivable (outstanding).
+	# SAP first: their ERPNext holds 0 Sales Invoices, so this tile read ₹0 forever while
+	# 54 dealers owed ₹5.31 Cr in the payment feed. Sales Invoice stays as the fallback
+	# for sites without the SAP sync.
 	ar_total = ar_overdue = 0.0
-	if frappe.db.exists("DocType", "Sales Invoice"):
+	from crm_app import sap_receivables
+
+	if sap_receivables.available():
+		names = frappe.get_all("Customer", pluck="name", limit=20000)
+		owed = sap_receivables.outstanding_for(names)
+		ar_total = flt(sum(r["outstanding"] for r in owed.values()), 2)
+		# SAP sends a balance, not open items — there is no ageing to derive, so overdue
+		# stays 0 rather than being invented.
+		ar_overdue = 0.0
+	elif frappe.db.exists("DocType", "Sales Invoice"):
 		row = frappe.db.sql(
 			"select sum(outstanding_amount) from `tabSales Invoice` where docstatus=1 and outstanding_amount>0"
 		)
