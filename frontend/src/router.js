@@ -22,6 +22,7 @@ const routes = [
 	{ path: "/salary", name: "Salary", component: () => import("./pages/Salary.vue") },
 	{ path: "/approvals", name: "Approvals", component: () => import("./pages/Approvals.vue") },
 	{ path: "/analytics", name: "Analytics", component: () => import("./pages/Analytics.vue") },
+	{ path: "/business", name: "ManagerDashboard", component: () => import("./pages/ManagerDashboard.vue") },
 	{ path: "/kra", name: "Kra", component: () => import("./pages/Kra.vue") },
 	{ path: "/timeline", name: "Timeline", component: () => import("./pages/Timeline.vue") },
 	{ path: "/route", name: "Route", component: () => import("./pages/Route.vue") },

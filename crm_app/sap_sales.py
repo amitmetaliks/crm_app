@@ -49,11 +49,27 @@ LIVE = "SAP Sales Register"
 OLD = "AML Sales Register"
 
 
+def _table_exists(table: str) -> bool:
+	"""Does the physical table exist and hold rows?
+
+	NOT frappe.db.exists("DocType", ...) and NOT frappe.db.count(): the SAP feeds arrive
+	as TABLES from the production restore, while their DocType definitions live in
+	`sap_app`, which is not installed on this bench. Both of those checks therefore
+	answer "no" for data that is demonstrably present — which silently sent sales back to
+	the DEAD AML register and reported receivables as zero on the very site that has
+	1,677 payment rows. A read needs the table, not the controller class.
+	"""
+	try:
+		return bool(frappe.db.sql(f"SELECT 1 FROM `tab{table}` LIMIT 1"))
+	except Exception:
+		return False
+
+
 def _table():
 	"""The live register if this site has it, else the old generation, else None."""
-	if frappe.db.exists("DocType", LIVE) and frappe.db.count(LIVE):
+	if _table_exists(LIVE):
 		return LIVE
-	if frappe.db.exists("DocType", OLD):
+	if _table_exists(OLD):
 		return OLD
 	return None
 

@@ -87,6 +87,9 @@
 			<div v-if="session.isSalesManager">
 				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("Manager") }}</p>
 				<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+					<router-link :to="{ name: 'ManagerDashboard' }" class="flex items-center gap-3 px-4 py-3.5">
+						<TrendingUp class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Business dashboard") }}</span>
+					</router-link>
 					<router-link :to="{ name: 'Approvals' }" class="flex items-center gap-3 px-4 py-3.5">
 						<CheckSquare class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Approvals") }}</span>
 					</router-link>
@@ -136,7 +139,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages, CalendarRange, Boxes } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages, CalendarRange, Boxes, TrendingUp } from "lucide-vue-next"
 import { LANGS, locale, setLocale } from "../data/i18n"
 import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
 import { toast } from "../utils/toast"
