@@ -3,8 +3,8 @@
 		<header class="aa-page-header">
 			<h1 class="text-lg font-semibold">{{ $t("Smart Insights") }}</h1>
 			<div v-if="session.isSalesManager" class="mt-2 flex gap-2">
-				<button @click="setScope('mine')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron text-navy-700' : 'bg-white/10'">{{ $t("Mine") }}</button>
-				<button @click="setScope('team')" class="rounded-full px-3 py-1 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron text-navy-700' : 'bg-white/10'">{{ $t("Team") }}</button>
+				<button @click="setScope('mine')" class="rounded-full px-4 py-2 text-xs font-medium" :class="scope === 'mine' ? 'bg-saffron text-navy-700' : 'bg-white/10'">{{ $t("Mine") }}</button>
+				<button @click="setScope('team')" class="rounded-full px-4 py-2 text-xs font-medium" :class="scope === 'team' ? 'bg-saffron text-navy-700' : 'bg-white/10'">{{ $t("Team") }}</button>
 			</div>
 		</header>
 
@@ -19,7 +19,7 @@
 					</div>
 					<BarChart v-if="histBars.length" :data="histBars" />
 					<p v-else class="text-xs text-gray-400">{{ $t("No sales history yet.") }}</p>
-					<p class="mt-2 text-[11px] text-gray-400">{{ $t("Based on the average of recent months' booked orders.") }}</p>
+					<p class="mt-2 text-xs text-gray-400">{{ $t("Based on the average of recent months' booked orders.") }}</p>
 				</div>
 
 				<!-- Churn risk -->
@@ -32,7 +32,7 @@
 								<p class="truncate font-semibold text-navy-700 dark:text-white">{{ c.customer_name }}</p>
 								<p class="text-xs text-gray-400">{{ c.last_activity ? "Last activity " + fmtDate(c.last_activity) : "No recorded activity" }}</p>
 							</div>
-							<span class="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-600">
+							<span class="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
 								{{ c.days_since != null ? c.days_since + "d" : "never" }}
 							</span>
 						</router-link>

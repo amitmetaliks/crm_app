@@ -8,7 +8,7 @@
 				v-for="item in items"
 				:key="item.name"
 				:to="{ name: item.name }"
-				class="flex flex-col items-center gap-1 py-2.5 text-[11px]"
+				class="flex flex-col items-center gap-1 py-2.5 text-xs"
 				:class="isActive(item.name) ? 'aa-nav-active' : 'text-gray-400'"
 			>
 				<component :is="item.icon" class="h-6 w-6" :stroke-width="isActive(item.name) ? 2.4 : 1.8" />

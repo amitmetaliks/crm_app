@@ -75,13 +75,13 @@
 					<div class="aa-card space-y-2">
 						<div v-for="(r, i) in d.leaderboard.slice(0, 8)" :key="r.employee" class="flex items-center gap-3">
 							<span
-								class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+								class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
 								:class="i === 0 ? 'bg-saffron text-navy-700' : 'bg-gray-100 text-gray-500 dark:bg-navy-700 dark:text-white'"
 							>{{ i + 1 }}</span>
 							<span class="min-w-0 flex-1 truncate text-sm text-navy-700 dark:text-white">{{ r.employee_name }}</span>
 							<span class="shrink-0 text-right">
 								<span class="block text-sm font-semibold text-navy-700 dark:text-white">{{ inrShort(r.amount) }}</span>
-								<span class="block text-[11px] text-gray-400">{{ num(r.qty_mt) }} MT</span>
+								<span class="block text-xs text-gray-400">{{ num(r.qty_mt) }} MT</span>
 							</span>
 						</div>
 					</div>
@@ -134,7 +134,7 @@
 							</div>
 							<div class="shrink-0 text-right">
 								<span class="block text-xs font-semibold text-red-600">{{ r.days_quiet }}d</span>
-								<span class="block text-[11px] text-gray-400">{{ inrShort(r.lifetime_value) }}</span>
+								<span class="block text-xs text-gray-400">{{ inrShort(r.lifetime_value) }}</span>
 							</div>
 						</router-link>
 					</div>

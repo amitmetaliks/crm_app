@@ -5,7 +5,7 @@
 				<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
 				<h1 class="text-lg font-semibold">Team — Live</h1>
 			</div>
-			<button @click="load" class="rounded-lg bg-white/10 px-3 py-1.5 text-xs">{{ $t("Refresh") }}</button>
+			<button @click="load" class="aa-icon-btn bg-white/10 text-xs">{{ $t("Refresh") }}</button>
 		</header>
 
 		<div class="mx-auto max-w-xl p-4">

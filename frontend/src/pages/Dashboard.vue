@@ -16,7 +16,7 @@
 			<div class="mt-4 flex justify-between gap-1">
 				<div v-for="d in week" :key="d.iso" class="flex flex-1 flex-col items-center rounded-xl py-2"
 					:class="d.isToday ? 'bg-white text-navy-700' : 'text-navy-100'">
-					<span class="text-[10px]">{{ d.dow }}</span>
+					<span class="text-xs">{{ d.dow }}</span>
 					<span class="text-sm font-bold">{{ d.day }}</span>
 				</div>
 			</div>
@@ -54,10 +54,10 @@
 					<router-link :to="{ name: 'Beat' }" class="text-xs font-medium text-saffron">Beat: {{ home.beat?.visited || 0 }}/{{ home.beat?.planned || 0 }}</router-link>
 				</div>
 				<div class="grid grid-cols-4 gap-2 text-center">
-					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Visits") }}</p></div>
-					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Productive") }}</p></div>
-					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-[10px] text-gray-400">{{ $t("Zero order") }}</p></div>
-					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-[10px] text-gray-400">{{ $t("Strike") }}</p></div>
+					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Visits") }}</p></div>
+					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Productive") }}</p></div>
+					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Zero order") }}</p></div>
+					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-xs text-gray-400">{{ $t("Strike") }}</p></div>
 				</div>
 			</div>
 
@@ -92,10 +92,10 @@
 
 			<!-- Quick access -->
 			<div class="grid grid-cols-4 gap-3">
-				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("KRA") }}</span></router-link>
-				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Timeline") }}</span></router-link>
-				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Collect") }}</span></router-link>
-				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-[11px] font-medium text-navy-700 dark:text-white">{{ $t("Dealers") }}</span></router-link>
+				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("KRA") }}</span></router-link>
+				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Timeline") }}</span></router-link>
+				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Collect") }}</span></router-link>
+				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Dealers") }}</span></router-link>
 			</div>
 		</div>
 

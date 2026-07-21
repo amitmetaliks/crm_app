@@ -3,8 +3,8 @@
 		<header class="aa-page-header">
 			<h1 class="text-xl font-bold">{{ $t("Leads & Deals") }}</h1>
 			<div class="mt-3 flex gap-2">
-				<button @click="tab = 'leads'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron text-navy-700' : 'bg-white/10 text-navy-100'">{{ $t("Leads") }}</button>
-				<button @click="tab = 'deals'" class="rounded-full px-4 py-1.5 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron text-navy-700' : 'bg-white/10 text-navy-100'">{{ $t("Deals") }}</button>
+				<button @click="tab = 'leads'" class="rounded-full px-4 py-2 text-sm font-medium" :class="tab === 'leads' ? 'bg-saffron text-navy-700' : 'bg-white/10 text-navy-100'">{{ $t("Leads") }}</button>
+				<button @click="tab = 'deals'" class="rounded-full px-4 py-2 text-sm font-medium" :class="tab === 'deals' ? 'bg-saffron text-navy-700' : 'bg-white/10 text-navy-100'">{{ $t("Deals") }}</button>
 			</div>
 		</header>
 

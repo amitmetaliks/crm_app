@@ -11,7 +11,7 @@
 				<div class="grid grid-cols-2 gap-2">
 					<div v-for="b in balanceRows" :key="b.type" class="rounded-xl bg-gray-50 p-2.5 text-center dark:bg-navy-800">
 						<p class="text-lg font-bold text-navy-700 dark:text-white">{{ b.value }}</p>
-						<p class="text-[11px] text-gray-400">{{ b.type }}</p>
+						<p class="text-xs text-gray-400">{{ b.type }}</p>
 					</div>
 				</div>
 			</div>
@@ -42,7 +42,7 @@
 					<p class="font-semibold text-navy-700 dark:text-white">{{ r.leave_type }}</p>
 					<p class="text-xs text-gray-400">{{ fmtDate(r.from_date) }} – {{ fmtDate(r.to_date) }} · {{ r.total_leave_days }}d</p>
 				</div>
-				<span class="rounded-full px-2.5 py-1 text-[11px] font-semibold" :class="badge(r.status)">{{ r.status }}</span>
+				<span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="badge(r.status)">{{ r.status }}</span>
 			</div>
 		</div>
 	</div>

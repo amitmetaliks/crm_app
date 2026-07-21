@@ -29,7 +29,7 @@
 					</p>
 				</div>
 				<div class="flex shrink-0 gap-2">
-					<button @click="remind(c)" class="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">{{ $t("Remind") }}</button>
+					<button @click="remind(c)" class="inline-flex min-h-11 items-center rounded-lg bg-green-50 px-3 text-xs font-semibold text-green-600">{{ $t("Remind") }}</button>
 					<router-link
 						:to="{ name: 'Collect', query: { customer: c.customer, label: c.customer_name } }"
 						class="aa-pill-btn !rounded-lg !px-3 !py-1.5 !text-xs"

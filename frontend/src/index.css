@@ -115,14 +115,21 @@
 		background-color: #cc2929;
 		color: #ffffff; /* 5.36:1 */
 	}
-	/* Inline pill — the primary action inside a header (e.g. "Check In"). */
+	/* Inline pill — the primary action inside a header (e.g. "Check In").
+	   min-h-11 (44px) so it clears the accessible touch-target floor; a rep taps this
+	   one-handed, often gloved or in a hurry. */
 	.aa-pill-btn {
-		@apply inline-flex items-center gap-1.5 rounded-full bg-saffron px-4 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-60;
+		@apply inline-flex min-h-11 items-center gap-1.5 rounded-full bg-saffron px-4 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-60;
 		color: #2d3952;
 		box-shadow: 0 4px 14px rgba(224, 159, 46, 0.38);
 	}
+	/* Icon / chevron / "Refresh" button — a square 44px tap area. Use for the compact
+	   controls (date steppers, small header actions) that were ~28px and hard to hit. */
+	.aa-icon-btn {
+		@apply inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-3 transition active:scale-95 disabled:opacity-60;
+	}
 	.aa-input {
-		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none transition focus:border-saffron focus:ring-2 focus:ring-saffron/20;
+		@apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-saffron focus:ring-2 focus:ring-saffron/20;
 		color: #2d3952;
 	}
 
@@ -134,7 +141,7 @@
 		color: #55627a; /* 6.15:1 */
 	}
 	.aa-stat-label {
-		@apply text-[11px] font-medium;
+		@apply text-xs font-medium;
 		color: #55627a;
 	}
 	.aa-stat {
@@ -153,14 +160,14 @@
 		color: #2d3952;
 	}
 	.aa-stat-tile-label {
-		@apply text-[11px] font-medium;
+		@apply text-xs font-medium;
 		color: #55627a;
 	}
 
 	/* Status pills. The 100-tint fills pair with 700 text; both halves flip
 	   together in dark (see the pairing block below) so they cannot drift. */
 	.aa-pill {
-		@apply inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+		@apply inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
 	}
 	.aa-pill-green   { @apply bg-green-100; color: #137949; }
 	.aa-pill-amber   { @apply bg-amber-100; color: #b35309; }
@@ -172,7 +179,7 @@
 
 	/* "Synced" / "Online" — dot + tiny label. */
 	.aa-status-pill {
-		@apply inline-flex items-center gap-1.5 rounded-full bg-green-500/15 px-2.5 py-1 text-[11px] font-semibold;
+		@apply inline-flex items-center gap-1.5 rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-semibold;
 		color: #137949;
 	}
 	.aa-status-pill::before {

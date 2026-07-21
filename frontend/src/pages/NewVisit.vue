@@ -95,7 +95,7 @@
 						</div>
 						<label class="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400">
 							<Camera class="h-6 w-6" />
-							<span class="mt-1 text-[10px]">{{ $t("Add") }}</span>
+							<span class="mt-1 text-xs">{{ $t("Add") }}</span>
 							<input type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
 						</label>
 					</div>

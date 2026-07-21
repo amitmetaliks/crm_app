@@ -11,7 +11,7 @@
 				{{ visit.visit_purpose }} · {{ formatDate(visit.visit_date) }}
 			</p>
 		</div>
-		<span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold" :class="badgeClass">
+		<span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold" :class="badgeClass">
 			{{ visit.visit_status }}
 		</span>
 	</router-link>

@@ -38,7 +38,7 @@
 					<p class="font-semibold text-navy-700 dark:text-white">₹{{ fmt(r.total_claimed_amount || r.grand_total) }}</p>
 					<p class="text-xs text-gray-400">{{ fmtDate(r.posting_date) }} · {{ r.name }}</p>
 				</div>
-				<span class="rounded-full px-2.5 py-1 text-[11px] font-semibold" :class="badge(r.approval_status)">{{ r.approval_status || r.status }}</span>
+				<span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="badge(r.approval_status)">{{ r.approval_status || r.status }}</span>
 			</div>
 		</div>
 	</div>

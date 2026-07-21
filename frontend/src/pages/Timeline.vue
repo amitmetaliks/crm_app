@@ -3,9 +3,9 @@
 		<header class="aa-page-header">
 			<h1 class="text-lg font-semibold">{{ $t("Activity Timeline") }}</h1>
 			<div class="mt-3 flex items-center justify-between">
-				<button @click="shift(-1)" class="rounded-lg bg-white/10 px-3 py-1"><ChevronLeft class="h-5 w-5" /></button>
+				<button @click="shift(-1)" class="aa-icon-btn bg-white/10"><ChevronLeft class="h-5 w-5" /></button>
 				<span class="text-sm font-medium">{{ fmtDay(date) }}</span>
-				<button @click="shift(1)" class="rounded-lg bg-white/10 px-3 py-1"><ChevronRight class="h-5 w-5" /></button>
+				<button @click="shift(1)" class="aa-icon-btn bg-white/10"><ChevronRight class="h-5 w-5" /></button>
 			</div>
 		</header>
 

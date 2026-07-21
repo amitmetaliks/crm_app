@@ -20,7 +20,7 @@ const props = defineProps({
 
 const sizeCls = computed(
 	() =>
-		({ xs: "h-6 w-6 text-[9px]", sm: "h-8 w-8 text-[11px]", md: "h-11 w-11 text-sm", lg: "h-14 w-14 text-lg" }[
+		({ xs: "h-6 w-6 text-[9px]", sm: "h-8 w-8 text-xs", md: "h-11 w-11 text-sm", lg: "h-14 w-14 text-lg" }[
 			props.size
 		] || "h-11 w-11 text-sm")
 )

@@ -7,7 +7,7 @@
 			</div>
 			<div v-if="beat.exists" class="mt-3">
 				<div class="flex items-center justify-between text-sm">
-					<span class="text-navy-100">{{ beat.title || "Beat plan" }}<span v-if="beat.beat_type" class="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-[11px]">{{ beat.beat_type }}</span></span>
+					<span class="text-navy-100">{{ beat.title || "Beat plan" }}<span v-if="beat.beat_type" class="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-xs">{{ beat.beat_type }}</span></span>
 					<span class="font-semibold">{{ beat.visited }}/{{ beat.planned }} visited</span>
 				</div>
 				<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/20">

@@ -105,7 +105,7 @@
 						<div class="flex items-center justify-between text-sm">
 							<span class="font-medium text-navy-700 dark:text-white">{{ o.order_no }}</span>
 							<span
-								class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+								class="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold"
 								:class="{
 									'bg-green-50 text-green-700': o.status === 'paid',
 									'bg-amber-50 text-amber-700': o.status === 'part',
