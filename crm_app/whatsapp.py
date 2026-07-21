@@ -60,20 +60,27 @@ def _post(payload):
 	return r.json()
 
 
-@frappe.whitelist()
+# send_text / send_template are INTERNAL helpers — deliberately NOT @frappe.whitelist().
+#
+# Whitelisting them let any logged-in employee POST an arbitrary recipient AND arbitrary
+# body/template to Meta on the company's paid WhatsApp account: spam, phishing from the
+# company number, and uncapped cost, with no product feature using them (the app sends
+# rep-to-dealer messages via free wa.me deep links, and dunning via send_payment_reminder
+# below, which builds its own content from a Customer record).
+#
+# So these stay as building blocks that only trusted server-side callers may use. Any
+# future feature that needs a free send must expose its OWN whitelisted endpoint that
+# validates the recipient against a known party and constructs the message itself.
 def send_text(to, message):
-	"""Plain text — only delivered inside the 24h customer-initiated window."""
-	get_current_employee()
+	"""Plain text — only delivered inside the 24h customer-initiated window. INTERNAL."""
 	to = _norm(to)
 	if not to:
 		frappe.throw(_("No phone number."))
 	return _post({"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": message}})
 
 
-@frappe.whitelist()
 def send_template(to, template, params=None, lang="en"):
-	"""Proactive message via a Meta-approved template. params = list of body variables."""
-	get_current_employee()
+	"""Proactive message via a Meta-approved template. params = body variables. INTERNAL."""
 	to = _norm(to)
 	if not to:
 		frappe.throw(_("No phone number."))

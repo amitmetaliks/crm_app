@@ -31,7 +31,7 @@ pipe reads as a stale pipe.
 import frappe
 from frappe.utils import add_days, flt, get_first_day, getdate, today
 
-from crm_app.api import get_current_employee, is_sales_manager
+from crm_app.api import get_current_employee, has_field, is_sales_manager
 from crm_app.dashboards import _require_manager
 
 
@@ -246,6 +246,11 @@ def get_at_risk_dealers(days=90, limit=15) -> list:
 		return []
 
 	# Map back to Customers so the manager can open the dealer, not a SAP code.
+	# custom_customer_sap_code is a custom field: on a site that has the SAP register but
+	# not that field (they are independent), filtering on it raises "Unknown column" and
+	# takes the whole dashboard down — the same trap as Address.latitude. Guard it.
+	if not has_field("Customer", "custom_customer_sap_code"):
+		return []
 	custs = frappe.get_all(
 		"Customer",
 		filters={"custom_customer_sap_code": ["in", [r.sap_code for r in rows]]},

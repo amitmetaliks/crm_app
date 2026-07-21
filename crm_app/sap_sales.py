@@ -239,8 +239,10 @@ def rep_top_products(employee, frm, to, limit=5) -> list:
 
 def rep_customers(employee) -> set:
 	"""Customers this rep has actually invoiced, mapped back to Frappe Customer names."""
+	from crm_app.api import has_field
+
 	t = _table()
-	if not t or not employee:
+	if not t or not employee or not has_field("Customer", "custom_customer_sap_code"):
 		return set()
 	c = COLS[t]
 	codes = frappe.db.sql_list(
