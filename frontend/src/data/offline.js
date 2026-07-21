@@ -121,6 +121,11 @@ function classify(e) {
 	)
 		return "auth"
 	if (status >= 500 || /deadlock|timestampmismatch|timeout|internalservererror/.test(blob)) return "server"
+	// Retryable client codes: 408 Request Timeout, 409 Conflict, 425 Too Early, 429 Too Many
+	// Requests. These are transient, not a rejection of the payload — a later flush usually
+	// succeeds. Retrying is safe now that writes carry an idempotency key, so a 409 caused by
+	// a first attempt that actually committed returns the stored result instead of duplicating.
+	if ([408, 409, 425, 429].includes(status)) return "server"
 	// Anything else the server returned deterministically is permanent for this payload.
 	return "permanent"
 }
