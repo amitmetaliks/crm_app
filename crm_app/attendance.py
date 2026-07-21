@@ -12,6 +12,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, now_datetime
 
+from crm_app import idempotency
 from crm_app.api import get_current_employee, validate_upload
 
 DEVICE_ID = "TRIAM A+ CRM PWA"
@@ -22,11 +23,19 @@ def _hrms_ready() -> bool:
 
 
 @frappe.whitelist()
-def check_in_out(latitude=None, longitude=None, selfie_base64=None, address=None, log_type=None) -> dict:
-	"""Record an Employee Checkin (auto-toggles IN/OUT) with GPS + a selfie."""
+def check_in_out(latitude=None, longitude=None, selfie_base64=None, address=None, log_type=None, idempotency_key=None) -> dict:
+	"""Record an Employee Checkin (auto-toggles IN/OUT) with GPS + a selfie.
+
+	`idempotency_key` (set by the offline queue) makes a replay safe: if a punch already
+	committed under this key, return that result instead of recording a duplicate.
+	"""
 	employee = get_current_employee()
 	if not _hrms_ready():
 		frappe.throw(_("Attendance is not available on this site (HR module missing)."))
+
+	prior = idempotency.replay(idempotency_key)
+	if prior is not None:
+		return prior
 
 	if not log_type:
 		today = getdate()
@@ -71,8 +80,10 @@ def check_in_out(latitude=None, longitude=None, selfie_base64=None, address=None
 		if doc.meta.has_field("custom_selfie"):
 			doc.db_set("custom_selfie", f.file_url)
 
+	result = {"name": doc.name, "log_type": doc.log_type, "time": doc.time}
+	idempotency.record(idempotency_key, "attendance.check_in_out", result, employee)
 	frappe.db.commit()
-	return {"name": doc.name, "log_type": doc.log_type, "time": doc.time}
+	return result
 
 
 @frappe.whitelist()

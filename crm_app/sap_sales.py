@@ -293,17 +293,27 @@ def coverage() -> dict:
 	"""How much of the SAP business we can actually attribute — reported, not hidden."""
 	from crm_app.api import get_current_employee
 
+	from crm_app.api import has_field
+
 	get_current_employee()
 	t = _table()
 	if not t:
 		return {"available": False}
 	c = COLS[t]
-	parties = frappe.db.sql(
-		f"""SELECT COUNT(DISTINCT r.{c['cust']}) AS total, COUNT(DISTINCT cu.name) AS matched
-		    FROM `tab{t}` r
-		    LEFT JOIN `tabCustomer` cu ON cu.custom_customer_sap_code = r.{c['cust']}""",
-		as_dict=True,
-	)[0]
+	# Same trap as get_at_risk_dealers / rep_customers: the JOIN references
+	# custom_customer_sap_code in raw SQL, which raises "Unknown column" on a site that has
+	# the SAP register but not that custom field — taking the whole dashboard down. Report
+	# customer attribution as unknown rather than crashing.
+	if has_field("Customer", "custom_customer_sap_code"):
+		parties = frappe.db.sql(
+			f"""SELECT COUNT(DISTINCT r.{c['cust']}) AS total, COUNT(DISTINCT cu.name) AS matched
+			    FROM `tab{t}` r
+			    LEFT JOIN `tabCustomer` cu ON cu.custom_customer_sap_code = r.{c['cust']}""",
+			as_dict=True,
+		)[0]
+	else:
+		total = frappe.db.sql(f"SELECT COUNT(DISTINCT {c['cust']}) FROM `tab{t}`")[0][0]
+		parties = frappe._dict(total=total, matched=0)
 	reps = frappe.db.sql(
 		f"""SELECT COUNT(DISTINCT x.code) AS total, COUNT(DISTINCT e.name) AS matched FROM
 		    (SELECT DISTINCT {c['rep_match']} AS code FROM `tab{t}`

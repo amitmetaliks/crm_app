@@ -59,8 +59,28 @@ async function refresh() {
 	}
 }
 
+// A stable per-submission key. Minted ONCE, before the first attempt, and carried on every
+// retry — this is the client half of server-side idempotency. Without it, a write that
+// COMMITTED but whose response was lost would be retried under a fresh identity and create a
+// duplicate (a second attendance punch, a second — reimbursable — expense claim). The server
+// (crm_app/idempotency.py) dedupes on this key. Visits carry their own client_ref, so this is
+// harmless extra there: submit_full_visit simply ignores the arg.
+function newKey() {
+	try {
+		if (globalThis.crypto?.randomUUID) return crypto.randomUUID()
+	} catch (e) {
+		/* fall through */
+	}
+	return "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
+}
+function ensureIdem(params) {
+	const p = params && typeof params === "object" ? params : {}
+	if (p.idempotency_key) return p
+	return { ...p, idempotency_key: newKey() }
+}
+
 export async function enqueue(method, params, label) {
-	await addRec({ method, params, label: label || method, ts: Date.now(), attempts: 0 })
+	await addRec({ method, params: ensureIdem(params), label: label || method, ts: Date.now(), attempts: 0 })
 	await refresh()
 }
 
@@ -111,19 +131,23 @@ function reasonOf(e) {
 }
 
 // Online → call directly; offline or network failure → queue and return a marker.
+// The idempotency key is stamped BEFORE the first attempt and reused if we fall through to
+// the queue, so the retry carries the SAME key as the request that may have already
+// committed — closing the lost-response duplicate window.
 export async function callOrQueue(method, params, label) {
+	const p = ensureIdem(params)
 	if (navigator.onLine) {
 		try {
-			return await call(method, params)
+			return await call(method, p)
 		} catch (e) {
 			if (isNetworkError(e)) {
-				await enqueue(method, params, label)
+				await enqueue(method, p, label)
 				return { queued: true }
 			}
 			throw e
 		}
 	}
-	await enqueue(method, params, label)
+	await enqueue(method, p, label)
 	return { queued: true }
 }
 

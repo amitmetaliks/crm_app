@@ -12,7 +12,7 @@ window. When not configured, callers fall back to free wa.me deep-links.
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import add_to_date, flt, now_datetime
 
 from crm_app.api import get_current_employee
 
@@ -101,23 +101,85 @@ def send_template(to, template, params=None, lang="en"):
 	)
 
 
+# Minimum gap between two reminders to the SAME dealer, in hours. A dealer messaged twice
+# in an afternoon (a double tap, or two reps) is a real complaint waiting to happen and a
+# wasted paid template; override per-site with `crm_reminder_min_gap_hours` if needed.
+REMINDER_MIN_GAP_HOURS = 12
+
+
 @frappe.whitelist()
 def send_payment_reminder(customer):
-	"""Send a dealer their outstanding via the configured reminder template."""
-	get_current_employee()
+	"""Send a dealer their REAL outstanding (from SAP) via the approved reminder template.
+
+	This is a paid, proactive message from the company's number, so it is fenced in:
+
+	  * amount comes from the SAP receivable balance — NOT ERPNext Sales Invoices, which
+	    hold ₹0 on this business (invoicing lives in SAP), so the old code messaged every
+	    dealer "outstanding: 0";
+	  * refuses to send when the balance is zero, a credit, or unknown — a "you owe ₹0"
+	    dunning message is worse than none;
+	  * a rep may only remind a dealer that is actually theirs; managers may remind anyone;
+	  * one reminder per dealer per `REMINDER_MIN_GAP_HOURS`, so a double-tap or two reps
+	    can't spam the dealer or the paid quota;
+	  * every send is logged with who sent it and the amount.
+	"""
+	from crm_app import sap_receivables
+	from crm_app.api import is_sales_manager
+
+	employee = get_current_employee()
 	if not configured():
 		frappe.throw(_("WhatsApp API not configured — use the in-app share button instead."))
 	cust = frappe.db.get_value("Customer", customer, ["customer_name", "mobile_no"], as_dict=True)
-	if not cust or not cust.mobile_no:
+	if not cust:
+		frappe.throw(_("Unknown customer."))
+	if not cust.mobile_no:
 		frappe.throw(_("This customer has no mobile number on file."))
-	outstanding = 0.0
-	if frappe.db.exists("DocType", "Sales Invoice"):
-		rows = frappe.get_all(
-			"Sales Invoice",
-			filters={"customer": customer, "docstatus": 1, "outstanding_amount": [">", 0]},
-			fields=["outstanding_amount"],
-			limit=2000,
+
+	# Ownership: a rep may only dun their own dealers; a manager may dun anyone.
+	if not is_sales_manager():
+		from crm_app import sap_sales
+
+		if customer not in sap_sales.rep_customers(employee):
+			frappe.throw(_("You can only send a reminder to a dealer in your own territory."))
+
+	# Real balance, from SAP. Refuse anything that isn't a genuine positive due.
+	bal = sap_receivables.customer_balance(customer)
+	outstanding = flt(bal.get("balance")) if bal else 0.0
+	if not bal:
+		frappe.throw(_("No receivable balance is available for this dealer yet — cannot send a reminder."))
+	if outstanding <= 0:
+		frappe.throw(_("This dealer has nothing outstanding ({0}) — no reminder sent.").format(f"₹{outstanding:,.0f}"))
+
+	# Rate-limit / duplicate-prevention per dealer.
+	gap = flt(frappe.conf.get("crm_reminder_min_gap_hours") or REMINDER_MIN_GAP_HOURS)
+	if gap > 0 and frappe.db.exists("DocType", "CRM Payment Reminder Log"):
+		since = add_to_date(now_datetime(), hours=-gap)
+		recent = frappe.db.get_value(
+			"CRM Payment Reminder Log",
+			{"customer": customer, "sent_at": [">=", since]},
+			["sent_at"],
 		)
-		outstanding = flt(sum(flt(r.outstanding_amount) for r in rows), 2)
+		if recent:
+			frappe.throw(_("A reminder was already sent to this dealer recently. Please wait before sending another."))
+
 	template = frappe.conf.get("crm_whatsapp_reminder_template") or "payment_reminder"
-	return send_template(cust.mobile_no, template, params=[cust.customer_name, f"{outstanding:,.0f}"])
+	resp = send_template(cust.mobile_no, template, params=[cust.customer_name, f"{outstanding:,.0f}"])
+
+	# Record the send (who, how much) — best-effort; a logging miss must not fail the send.
+	if frappe.db.exists("DocType", "CRM Payment Reminder Log"):
+		try:
+			frappe.get_doc(
+				{
+					"doctype": "CRM Payment Reminder Log",
+					"customer": customer,
+					"employee": employee,
+					"amount": outstanding,
+					"mobile_no": cust.mobile_no,
+					"sent_at": now_datetime(),
+				}
+			).insert(ignore_permissions=True)
+			frappe.db.commit()
+		except Exception:
+			frappe.log_error(title="Payment reminder log failed", message=frappe.get_traceback())
+
+	return {"sent": True, "outstanding": outstanding, "as_of": bal.get("as_of")}

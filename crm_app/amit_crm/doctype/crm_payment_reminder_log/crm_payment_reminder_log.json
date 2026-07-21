@@ -1,0 +1,31 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2026-07-21 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["customer", "employee", "amount", "mobile_no", "sent_at"],
+ "fields": [
+  {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Customer", "reqd": 1, "in_standard_filter": 1},
+  {"fieldname": "employee", "fieldtype": "Link", "label": "Sent By", "options": "Employee", "in_standard_filter": 1},
+  {"fieldname": "amount", "fieldtype": "Currency", "label": "Outstanding Sent"},
+  {"fieldname": "mobile_no", "fieldtype": "Data", "label": "Mobile"},
+  {"fieldname": "sent_at", "fieldtype": "Datetime", "label": "Sent At", "in_standard_filter": 1}
+ ],
+ "links": [],
+ "modified": "2026-07-21 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Amit CRM",
+ "name": "CRM Payment Reminder Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Sales Manager", "read": 1, "report": 1, "export": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

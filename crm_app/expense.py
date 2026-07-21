@@ -11,6 +11,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate
 
+from crm_app import idempotency
 from crm_app.api import get_current_employee, validate_upload
 
 
@@ -55,11 +56,20 @@ def _attach(doc, b64, filename):
 
 
 @frappe.whitelist()
-def create_expense_claim(items, receipt_base64=None, receipt_filename=None) -> dict:
-	"""Create + submit an Expense Claim for the logged-in employee."""
+def create_expense_claim(items, receipt_base64=None, receipt_filename=None, idempotency_key=None) -> dict:
+	"""Create + submit an Expense Claim for the logged-in employee.
+
+	`idempotency_key` (set by the offline queue) makes a replay safe: if a claim already
+	committed under this key, return that result instead of creating a duplicate claim —
+	a duplicate here is a duplicate reimbursement.
+	"""
 	employee = get_current_employee()
 	if not _hrms_ready():
 		frappe.throw(_("Expense claims are not available on this site (HR module missing)."))
+
+	prior = idempotency.replay(idempotency_key)
+	if prior is not None:
+		return prior
 	company = frappe.db.get_value("Employee", employee, "company")
 	if isinstance(items, str):
 		items = json.loads(items)
@@ -100,11 +110,14 @@ def create_expense_claim(items, receipt_base64=None, receipt_filename=None) -> d
 		_attach(doc, receipt_base64, receipt_filename)
 	try:
 		doc.submit()
-		frappe.db.commit()
-		return {"name": doc.name, "submitted": True}
+		result = {"name": doc.name, "submitted": True}
 	except Exception as e:
-		frappe.db.commit()
-		return {"name": doc.name, "submitted": False, "message": str(e)}
+		result = {"name": doc.name, "submitted": False, "message": str(e)}
+	# The claim exists either way (draft if submit failed); dedupe on the key so a replay
+	# does not create a second one.
+	idempotency.record(idempotency_key, "expense.create_expense_claim", result, employee)
+	frappe.db.commit()
+	return result
 
 
 @frappe.whitelist()
