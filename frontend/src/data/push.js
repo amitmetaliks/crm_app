@@ -1,6 +1,8 @@
 import { createResource } from "frappe-ui"
 
-const SW_URL = "/assets/crm_app/frontend/sw.js"
+// One worker, served at root and scoped to the CRM (see main.js + crm_app/www/sw.js).
+const SW_URL = "/sw.js"
+const SW_SCOPE = "/amit-crm"
 
 function callMethod(url, params) {
 	return createResource({ url }).submit(params)
@@ -27,8 +29,8 @@ function isStandalone() {
 	)
 }
 
-// Resolve once the registration has an ACTIVE worker (do NOT use serviceWorker.ready —
-// it waits for a worker that controls THIS page, which never happens with our /assets scope).
+// Resolve once the registration has an ACTIVE worker. Kept as an explicit wait (rather than
+// serviceWorker.ready) so enabling push never blocks on controller handoff timing.
 function waitForActive(reg, timeoutMs = 12000) {
 	return new Promise((resolve) => {
 		if (reg.active) return resolve(reg.active)
@@ -66,7 +68,7 @@ export async function enablePush() {
 	}
 
 	// 2) Register SW and wait for it to become active (bounded, never hangs)
-	const reg = await navigator.serviceWorker.register(SW_URL)
+	const reg = await navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE })
 	await waitForActive(reg)
 
 	// 3) Subscribe (reuse existing subscription if present)
@@ -90,7 +92,7 @@ export async function disablePush() {
 	} catch (e) {
 		/* ignore */
 	}
-	const reg = await navigator.serviceWorker.getRegistration(SW_URL)
+	const reg = await navigator.serviceWorker.getRegistration(SW_SCOPE)
 	if (reg) {
 		const sub = await reg.pushManager.getSubscription()
 		if (sub) await sub.unsubscribe()
@@ -105,8 +107,8 @@ export async function showTestNotification() {
 		if (p !== "granted") throw new Error("Notification permission is OFF for this site/browser.")
 	}
 	const reg =
-		(await navigator.serviceWorker.getRegistration(SW_URL)) ||
-		(await navigator.serviceWorker.register(SW_URL))
+		(await navigator.serviceWorker.getRegistration(SW_SCOPE)) ||
+		(await navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE }))
 	await waitForActive(reg)
 	await reg.showNotification("TRIAM A+", {
 		body: "Local test notification ✅ If you see this, notifications work!",
@@ -120,7 +122,7 @@ export async function showTestNotification() {
 export async function isPushEnabled() {
 	if (!pushSupported()) return false
 	try {
-		const reg = await navigator.serviceWorker.getRegistration(SW_URL)
+		const reg = await navigator.serviceWorker.getRegistration(SW_SCOPE)
 		if (!reg) return false
 		const sub = await reg.pushManager.getSubscription()
 		return !!sub && Notification.permission === "granted"

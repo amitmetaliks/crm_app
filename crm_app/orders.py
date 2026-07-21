@@ -64,19 +64,36 @@ def _has(dt, f):
 
 @frappe.whitelist()
 def get_credit_status(customer):
-	"""Outstanding + credit limit + available credit for a customer."""
+	"""Outstanding + credit limit + available credit for a customer.
+
+	Outstanding comes from the SAP receivable feed, NOT ERPNext Sales Invoices: this
+	business invoices in SAP, so `tabSales Invoice` holds 0 rows and the old path reported
+	every dealer as owing ₹0 — which silently disabled the credit gate in book_order. The
+	SAP balance (positive = owes) is the real exposure; a credit balance is clamped to 0
+	owed. Sales Invoice stays as the fallback for a site where invoicing lands in ERPNext.
+	"""
 	get_current_employee()
 	out = {"outstanding": 0.0, "credit_limit": 0.0, "available": 0.0, "has_limit": False}
 	if not customer:
 		return out
-	if _exists("Sales Invoice"):
+
+	outstanding = None
+	from crm_app import sap_receivables
+
+	if sap_receivables.available():
+		bal = sap_receivables.customer_balance(customer)
+		if bal is not None:
+			# positive = owes us; negative = in advance (no exposure) -> 0 owed
+			outstanding = max(0.0, flt(bal.get("balance"), 2))
+	if outstanding is None and _exists("Sales Invoice"):
 		rows = frappe.get_all(
 			"Sales Invoice",
 			filters={"customer": customer, "docstatus": 1, "outstanding_amount": [">", 0]},
 			fields=["outstanding_amount"],
 			limit=2000,
 		)
-		out["outstanding"] = flt(sum(flt(r.outstanding_amount) for r in rows), 2)
+		outstanding = flt(sum(flt(r.outstanding_amount) for r in rows), 2)
+	out["outstanding"] = flt(outstanding or 0.0, 2)
 	limit = 0
 	if _exists("Customer Credit Limit"):
 		limit = frappe.db.get_value("Customer Credit Limit", {"parent": customer}, "credit_limit") or 0
@@ -106,10 +123,29 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	company = frappe.db.get_value("Customer", customer, "company") or frappe.defaults.get_global_default("company")
 	pl = _default_price_list()
 
-	# Credit check
-	order_value = sum(flt(i.get("qty")) * flt(i.get("rate")) for i in items)
+	# Order value for the credit check must use the REAL price, not the client's `rate`.
+	# The client normally omits rate (the Sales Order prices from the list below), so
+	# `qty * rate` was 0 for every line -> order_value 0 -> the gate always passed. Resolve
+	# the price-list rate for any line without one so the check reflects the true value.
+	def _line_value(i):
+		r = flt(i.get("rate"))
+		if not r and pl and _exists("Item Price"):
+			r = flt(
+				frappe.db.get_value(
+					"Item Price", {"item_code": i["item_code"], "price_list": pl, "selling": 1}, "price_list_rate"
+				)
+			)
+		return flt(i.get("qty")) * r
+
+	order_value = sum(_line_value(i) for i in items)
+
+	# Overriding the credit limit is a manager decision, not something any rep can pass as a
+	# flag: `ignore_credit` is only honoured for a Sales Manager.
+	from crm_app.api import is_sales_manager
+
+	allow_ignore = bool(int(ignore_credit or 0)) and is_sales_manager()
 	credit = get_credit_status(customer)
-	if credit["has_limit"] and not int(ignore_credit or 0):
+	if credit["has_limit"] and not allow_ignore:
 		if order_value > credit["available"]:
 			frappe.throw(
 				_("Credit limit exceeded: order ₹{0} but only ₹{1} available (outstanding ₹{2}).").format(

@@ -31,16 +31,20 @@ def _exists(dt):
 
 
 def _my_customers(employee, scope):
-	"""The dealers this rep may chase."""
-	# The assigned-sales-person field is ours; on a site where our migrate has not run
-	# (e.g. a freshly restored production DB) filtering on it raises Unknown column.
+	"""The dealers this rep may chase.
+
+	Uses rep_customers(), which unions the assigned-sales-person field with the dealers he
+	actually invoiced in SAP. That matters because custom_assigned_sales_person, though it
+	EXISTS on this site, is populated on 0 of ~2000 customers — so filtering on it alone
+	returned an empty list for every rep (an empty collections screen). The SAP-invoiced
+	signal fills that gap until the field is populated.
+	"""
 	if scope == "team" and is_sales_manager():
-		cust_filter = {}
-	elif has_field("Customer", "custom_assigned_sales_person"):
-		cust_filter = {"custom_assigned_sales_person": employee}
-	else:
-		cust_filter = {"name": ["in", list(rep_customers(employee)) or [""]]}
-	return frappe.get_all("Customer", filters=cust_filter, fields=["name", "customer_name"])
+		return frappe.get_all("Customer", fields=["name", "customer_name"])
+	names = rep_customers(employee)
+	if not names:
+		return []
+	return frappe.get_all("Customer", filters={"name": ["in", list(names)]}, fields=["name", "customer_name"])
 
 
 @frappe.whitelist()
@@ -226,15 +230,25 @@ def record_payment(
 	photo_filename=None,
 	latitude=None,
 	longitude=None,
+	idempotency_key=None,
 ) -> dict:
 	"""Record money collected from a dealer as an on-account Payment Entry.
 
 	Mirrors their existing receipts exactly: Receive / Customer / fully unallocated,
 	because there are no invoices to allocate against.
+
+	`idempotency_key` (set by the offline queue) makes a replay safe: if a receipt already
+	committed under this key, return it instead of posting the dealer's money twice.
 	"""
+	from crm_app import idempotency
+
 	employee = get_current_employee()
 	if not _exists("Payment Entry"):
 		frappe.throw(_("Payments are not available on this site."))
+
+	prior = idempotency.replay(idempotency_key)
+	if prior is not None:
+		return prior
 	if not frappe.db.exists("Customer", customer):
 		frappe.throw(_("Customer not found."), frappe.DoesNotExistError)
 	amt = flt(amount)
@@ -327,9 +341,8 @@ def record_payment(
 			submitted = True
 		except Exception:
 			pass
-	frappe.db.commit()
 
-	return {
+	result = {
 		"name": doc.name,
 		"amount": amt,
 		"customer": customer,
@@ -339,6 +352,10 @@ def record_payment(
 		# Draft = recorded, pending verification by accounts. Say so plainly.
 		"status": "Submitted" if submitted else "Recorded — pending verification by accounts",
 	}
+	idempotency.record(idempotency_key, "collections.record_payment", result, employee)
+	frappe.db.commit()
+
+	return result
 
 
 @frappe.whitelist()

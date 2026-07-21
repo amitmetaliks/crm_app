@@ -13,10 +13,14 @@
 			<div v-if="done" class="aa-card text-center">
 				<CheckCircle2 class="mx-auto h-12 w-12 text-green-500" />
 				<p class="mt-2 text-2xl font-bold text-navy-700 dark:text-white">{{ inr(done.amount) }}</p>
-				<p class="text-sm text-gray-500">{{ done.mode }} · {{ done.name }}</p>
-				<p class="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{{ done.status }}</p>
+				<p class="text-sm text-gray-500">{{ done.mode }}<span v-if="done.name"> · {{ done.name }}</span></p>
+				<!-- Offline: saved, not yet posted. Only the online path can send a receipt (needs the ref). -->
+				<p v-if="done.queued" class="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{{ $t("Saved offline — will sync and post when you're back online.") }}</p>
+				<template v-else>
+					<p class="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">{{ done.status }}</p>
+				</template>
 				<div class="mt-3 flex gap-2">
-					<button class="aa-btn-primary flex-1" @click="sendReceipt">{{ $t("Send receipt on WhatsApp") }}</button>
+					<button v-if="!done.queued" class="aa-btn-primary flex-1" @click="sendReceipt">{{ $t("Send receipt on WhatsApp") }}</button>
 					<router-link to="/collections" class="flex-1 rounded-xl border border-gray-200 py-2.5 text-center text-sm font-semibold text-navy-700 dark:border-navy-700 dark:text-white">{{ $t("Done") }}</router-link>
 				</div>
 			</div>
@@ -84,7 +88,7 @@ import { ref, computed, onMounted } from "vue"
 import { useRoute } from "vue-router"
 import { ChevronLeft, Camera, CheckCircle2 } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
-import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
 import { openWhatsApp } from "../utils/wa"
@@ -126,7 +130,7 @@ async function submit() {
 		} catch (e) {
 			/* location is a nice-to-have on a receipt, not a blocker */
 		}
-		done.value = await call("crm_app.collections.record_payment", {
+		const res = await callOrQueue("crm_app.collections.record_payment", {
 			customer,
 			amount: amount.value,
 			mode_of_payment: mode.value,
@@ -138,7 +142,15 @@ async function submit() {
 			latitude: pos.latitude ?? null,
 			longitude: pos.longitude ?? null,
 		})
-		toast.success("Payment recorded")
+		if (res?.queued) {
+			// Offline: the receipt is saved and will post when back online. No server doc
+			// name yet, so show a queued confirmation (no WhatsApp receipt — needs the ref).
+			done.value = { queued: true, amount: amount.value, mode: mode.value }
+			toast.success("Saved offline — will sync when you're back online")
+		} else {
+			done.value = res
+			toast.success("Payment recorded")
+		}
 	} catch (err) {
 		toast.error(err?.messages?.[0] || err?.message || "Could not record the payment")
 	} finally {

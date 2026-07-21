@@ -26,9 +26,11 @@ app.use(router)
 app.use(resourcesPlugin)
 app.mount("#app")
 
-// Register the service worker (enables installability + web push)
+// Register the service worker (app-shell caching for offline open + web push).
+// Served at /sw.js (root path) but scoped to /amit-crm so it controls ONLY this app and
+// never the HR app or Frappe desk on the same site.
 if ("serviceWorker" in navigator) {
 	window.addEventListener("load", () => {
-		navigator.serviceWorker.register("/assets/crm_app/frontend/sw.js").catch(() => {})
+		navigator.serviceWorker.register("/sw.js", { scope: "/amit-crm" }).catch(() => {})
 	})
 }

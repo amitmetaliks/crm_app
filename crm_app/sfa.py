@@ -105,11 +105,16 @@ def _expense(emp, day, mstart):
 
 
 def _new_retailers(emp, mstart, day):
+	# rep_customers() unions the assigned-SP field (empty on all rows on this site) with the
+	# dealers the rep actually invoiced in SAP, so this counts real new dealers instead of 0.
+	from crm_app.sales_attr import rep_customers
+
+	names = rep_customers(emp)
+	if not names:
+		return 0
 	return frappe.db.count(
 		"Customer",
-		{"custom_assigned_sales_person": emp, "creation": ["between", [f"{mstart} 00:00:00", f"{day} 23:59:59"]]}
-		if has_field("Customer", "custom_assigned_sales_person")
-		else {"name": ["in", [""]]},
+		{"name": ["in", list(names)], "creation": ["between", [f"{mstart} 00:00:00", f"{day} 23:59:59"]]},
 	)
 
 
@@ -186,14 +191,15 @@ def get_kra():
 	productive = len([n for n in completed_names if n in with_orders])
 	ach = _achievement(emp, mstart, day)
 
-	# Collection ratio: paid vs billed (this month, rep's customers)
+	# Collection ratio: paid vs billed (this month, rep's customers).
+	# NOTE: billed/paid still read ERPNext Sales Invoices, which are empty on this site, so
+	# this ratio reads 0 until invoicing lands in ERPNext (a separate item — the SAP-based
+	# collection ratio). The customer set is corrected here regardless via rep_customers().
 	coll_ratio = 0.0
 	if _hrms("Sales Invoice"):
-		custs = (
-			frappe.get_all("Customer", filters={"custom_assigned_sales_person": emp}, pluck="name")
-			if has_field("Customer", "custom_assigned_sales_person")
-			else []
-		)
+		from crm_app.sales_attr import rep_customers
+
+		custs = list(rep_customers(emp))
 		if custs:
 			inv = frappe.get_all(
 				"Sales Invoice",
