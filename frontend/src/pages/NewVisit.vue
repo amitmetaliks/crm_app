@@ -190,6 +190,7 @@ import {
 } from "lucide-vue-next"
 import dayjs from "dayjs"
 import { call } from "../data/api"
+import { searchDealers } from "../data/cache"
 import { enqueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { resizeImageToDataURL } from "../utils/image"
@@ -262,7 +263,9 @@ function onSearch() {
 	searching.value = true
 	searchTimer = setTimeout(async () => {
 		try {
-			results.value = (await call("crm_app.customers.search_parties", { query: query.value, limit: 15 })) || []
+			// Online searches all party types (customers, leads, deals); offline falls back to
+			// the locally-cached Customer directory so a visit can still be attached to a dealer.
+			results.value = (await searchDealers(query.value, "", 15)) || []
 		} catch (e) {
 			results.value = []
 		} finally {

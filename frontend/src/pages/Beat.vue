@@ -136,6 +136,7 @@ import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
 import { callOrQueue } from "../data/offline"
+import { searchDealers } from "../data/cache"
 import { getPosition } from "../utils/geo"
 import { toast } from "../utils/toast"
 
@@ -261,9 +262,10 @@ function onSearch() {
 	clearTimeout(timer)
 	if (q.value.trim().length < 2) { results.value = []; return }
 	timer = setTimeout(async () => {
-		// try/catch: offline or a dropped search must not throw an unhandled rejection.
+		// searchDealers = live search online, local cached-list filter offline; try/catch so a
+		// dropped search never throws an unhandled rejection.
 		try {
-			results.value = (await call("crm_app.customers.search_parties", { query: q.value, party_type: "Customer", limit: 10 })) || []
+			results.value = (await searchDealers(q.value, "Customer", 10)) || []
 		} catch (e) {
 			results.value = []
 		}

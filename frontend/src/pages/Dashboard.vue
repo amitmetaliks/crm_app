@@ -110,6 +110,7 @@ import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { session } from "../data/session"
 import { call } from "../data/api"
+import { callCached } from "../data/cache"
 import { inrShort } from "../utils/money"
 import wordmark from "../assets/logo-wordmark.png"
 
@@ -135,6 +136,6 @@ function fmtTime(t) { return t ? dayjs(t).format("h:mm A") : "" }
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 
 onMounted(async () => {
-	try { home.value = await call("crm_app.sfa.get_home_summary") } catch (e) { /* */ }
+	try { home.value = await callCached("crm_app.sfa.get_home_summary") } catch (e) { /* */ }
 })
 </script>

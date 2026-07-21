@@ -46,6 +46,41 @@ def search_parties(query=None, party_type=None, limit=20):
 	return results[: limit * 2]
 
 
+@frappe.whitelist()
+def list_my_parties(limit=800):
+	"""The rep's own dealers as a flat {party_type,id,label,sub,phone} list.
+
+	Cached by the app on load so the rep can still PICK a dealer for a visit when offline
+	(the live search_parties needs a connection). Scoped to rep_customers — the dealers he
+	actually deals with — so the payload stays small enough to hold on a cheap phone.
+	"""
+	employee = get_current_employee()
+	if not _exists("Customer"):
+		return []
+	from crm_app.sales_attr import rep_customers
+
+	names = list(rep_customers(employee))
+	if not names:
+		return []
+	fields = ["name", "customer_name"]
+	for f in ("customer_group", "territory", "mobile_no"):
+		if _has("Customer", f):
+			fields.append(f)
+	rows = frappe.get_all(
+		"Customer", filters={"name": ["in", names]}, fields=fields, order_by="customer_name asc", limit=int(limit)
+	)
+	return [
+		{
+			"party_type": "Customer",
+			"id": r.name,
+			"label": r.get("customer_name") or r.name,
+			"sub": r.get("territory") or r.get("customer_group") or "",
+			"phone": r.get("mobile_no") or "",
+		}
+		for r in rows
+	]
+
+
 def _search_customer(query, limit):
 	filters = {"disabled": 0} if _has("Customer", "disabled") else {}
 	or_filters = None

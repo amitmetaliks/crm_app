@@ -34,6 +34,7 @@ import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import VisitRow from "../components/VisitRow.vue"
 import { call } from "../data/api"
+import { callCached } from "../data/cache"
 import { session } from "../data/session"
 
 const filters = [
@@ -55,7 +56,7 @@ async function load() {
 	loading.value = true
 	try {
 		visits.value =
-			(await call("crm_app.field_visit.get_my_visits", {
+			(await callCached("crm_app.field_visit.get_my_visits", {
 				scope: teamScope.value ? "team" : "mine",
 				status: status.value || undefined,
 				limit: 200,

@@ -47,6 +47,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { callCached } from "../data/cache"
 import { openWhatsApp } from "../utils/wa"
 import { toast } from "../utils/toast"
 import { inrShort } from "../utils/money"
@@ -70,7 +71,7 @@ async function remind(c) {
 
 onMounted(async () => {
 	try {
-		data.value = await call("crm_app.collections.get_my_collections", { scope: "mine" })
+		data.value = await callCached("crm_app.collections.get_my_collections", { scope: "mine" })
 	} finally {
 		loading.value = false
 	}

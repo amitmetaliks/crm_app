@@ -30,11 +30,12 @@ import { ref, onMounted } from "vue"
 import { ChevronLeft } from "lucide-vue-next"
 import Skeleton from "../components/Skeleton.vue"
 import { call } from "../data/api"
+import { callCached } from "../data/cache"
 
 const rows = ref([])
 const loading = ref(true)
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 onMounted(async () => {
-	try { rows.value = (await call("crm_app.sfa.get_kra")) || [] } finally { loading.value = false }
+	try { rows.value = (await callCached("crm_app.sfa.get_kra")) || [] } finally { loading.value = false }
 })
 </script>

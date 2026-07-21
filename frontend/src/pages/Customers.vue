@@ -39,6 +39,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { searchDealers } from "../data/cache"
 
 const query = ref("")
 const rows = ref([])
@@ -48,7 +49,9 @@ let timer = null
 async function load() {
 	loading.value = true
 	try {
-		rows.value = (await call("crm_app.customers.search_parties", { query: query.value, limit: 25 })) || []
+		// Live search online; offline, filter the cached dealer directory so the rep can still
+		// find any of their dealers with no signal.
+		rows.value = (await searchDealers(query.value, "", 25)) || []
 	} catch (e) {
 		rows.value = []
 	} finally {

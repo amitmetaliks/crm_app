@@ -122,6 +122,7 @@ import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { callCached } from "../data/cache"
 import { callOrQueue } from "../data/offline"
 import { getPosition, mapsLink } from "../utils/geo"
 import { openWhatsApp } from "../utils/wa"
@@ -164,7 +165,7 @@ function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 async function load() {
 	loading.value = true
 	try {
-		const d = await call("crm_app.field_visit.get_visit", { name: props.name })
+		const d = await callCached("crm_app.field_visit.get_visit", { name: props.name })
 		v.value = d.visit
 		photos.value = d.photos || []
 		orders.value = d.order_items || []
