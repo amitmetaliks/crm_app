@@ -103,6 +103,7 @@ import { ChevronLeft, Plus, Trash2, CheckCircle2 } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { toast } from "../utils/toast"
 import { num } from "../utils/money"
 
@@ -136,13 +137,19 @@ function reset() {
 async function save() {
 	busy.value = true
 	try {
-		done.value = await call("crm_app.dms.record_stock", {
+		const res = await callOrQueue("crm_app.dms.record_stock", {
 			customer,
 			visit,
 			remarks: remarks.value || null,
 			items: JSON.stringify(rows.value.filter((r) => (r.item_code || "").trim())),
 		})
-		toast.success("Stock check saved")
+		if (res?.queued) {
+			toast.success("Saved offline — will sync when you're back online")
+			done.value = null
+		} else {
+			done.value = res
+			toast.success("Stock check saved")
+		}
 	} catch (err) {
 		toast.error(err?.messages?.[0] || err?.message || "Could not save the stock check")
 	} finally {

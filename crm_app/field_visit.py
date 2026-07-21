@@ -81,13 +81,19 @@ def _haversine_m(lat1, lng1, lat2, lng2):
 	return 2 * R * math.asin(math.sqrt(a))
 
 
-def _geofence(party_type, customer, lat, lng, radius_m=300):
+def _geofence(party_type, customer, lat, lng, radius_m=None):
 	"""Return (within(0/1), distance_m) vs the dealer's location, or (None, None).
 
 	Coordinates come from geo_resolve, which also reads the linked ERPNext Address —
 	that is where 1843 of 1970 real dealers actually have coordinates. Reading only our
 	own custom field (empty on every real customer) made this check silently no-op.
+
+	Radius defaults to 300 m but is configurable via ``crm_geofence_radius_m`` in site config
+	— many dealers' Address is a billing/accounts office, not the shop, so a site may need a
+	wider tolerance to avoid false 'outside geofence' flags.
 	"""
+	if radius_m is None:
+		radius_m = flt(frappe.conf.get("crm_geofence_radius_m")) or 300
 	if party_type != "Customer" or not customer or lat in (None, "") or lng in (None, ""):
 		return (None, None)
 	from crm_app.geo_resolve import customer_coords
@@ -175,6 +181,13 @@ def check_out(name, latitude=None, longitude=None):
 	employee = get_current_employee()
 	_require_access(name, employee)
 	doc = frappe.get_doc("CRM Visit", name)
+	# Precondition guards: a Cancelled/Missed visit must not receive a check-out, and a visit
+	# with no check-in produces a meaningless (0-clamped) duration — surface that instead of
+	# silently recording it.
+	if doc.visit_status in ("Cancelled", "Missed"):
+		frappe.throw(_("This visit was {0} — it can't be checked out.").format(doc.visit_status))
+	if not doc.check_in_time:
+		frappe.throw(_("Please check in before checking out."))
 	doc.check_out_time = now_datetime()
 	if latitude not in (None, ""):
 		doc.check_out_latitude = flt(latitude)
@@ -402,14 +415,31 @@ def submit_full_visit(payload):
 	data = _parse(payload) or {}
 
 	client_ref = data.get("client_ref")
-	if client_ref:
+	visit_name = data.get("visit_name")
+
+	# Update the visit that was created online at check-in, if its name was passed and it is
+	# ours — this is what stops an online check-in followed by an OFFLINE check-out from
+	# creating a SECOND visit. Otherwise dedupe replays by client_ref; otherwise create fresh.
+	is_update = False
+	if (
+		visit_name
+		and frappe.db.exists("CRM Visit", visit_name)
+		and frappe.db.get_value("CRM Visit", visit_name, "sales_person") == employee
+	):
+		doc = frappe.get_doc("CRM Visit", visit_name)
+		doc.set("order_items", [])  # this submission carries the full, authoritative set
+		doc.set("competitors", [])
+		is_update = True
+	elif client_ref:
 		existing = frappe.db.get_value("CRM Visit", {"sales_person": employee, "client_ref": client_ref}, "name")
 		if existing:
 			return {"name": existing, "duplicate": True}
-
-	doc = frappe.new_doc("CRM Visit")
-	doc.sales_person = employee
-	doc.visit_date = data.get("visit_date") or frappe.utils.today()
+		doc = frappe.new_doc("CRM Visit")
+		doc.sales_person = employee
+	else:
+		doc = frappe.new_doc("CRM Visit")
+		doc.sales_person = employee
+	doc.visit_date = data.get("visit_date") or doc.get("visit_date") or frappe.utils.today()
 	_apply_party(
 		doc, data.get("party_type"), data.get("customer"), data.get("crm_lead"),
 		data.get("crm_deal"), data.get("prospect_name"),
@@ -437,7 +467,10 @@ def submit_full_visit(payload):
 		doc.append("order_items", _clean_order_row(row))
 	for row in data.get("competitors") or []:
 		doc.append("competitors", _clean_competitor_row(row))
-	doc.insert(ignore_permissions=True)
+	if is_update:
+		doc.save(ignore_permissions=True)
+	else:
+		doc.insert(ignore_permissions=True)
 
 	for ph in data.get("photos") or []:
 		b64 = ph.get("content_base64") if isinstance(ph, dict) else ph

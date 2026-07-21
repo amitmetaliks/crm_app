@@ -57,6 +57,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { toast } from "../utils/toast"
 
 const tab = ref("leads")
@@ -90,11 +91,11 @@ function onSearch() {
 async function createLead() {
 	busy.value = true
 	try {
-		await call("crm_app.leads.create_lead", { ...form })
-		toast.success("Lead created")
+		const res = await callOrQueue("crm_app.leads.create_lead", { ...form })
+		toast.success(res?.queued ? "Saved offline — will sync when you're back online" : "Lead created")
 		adding.value = false
 		form.lead_name = form.mobile_no = form.email = form.territory = ""
-		await load()
+		if (!res?.queued) await load()
 	} catch (e) {
 		toast.error(e?.messages?.[0] || "Could not create lead")
 	} finally {

@@ -60,5 +60,8 @@ export const logoutResource = createResource({
 		session.employee = null
 		session.hasEmployee = false
 		session.gateLoaded = false
+		// Stop the foreground GPS pings + resume listener; they must not keep reading the
+		// signed-out user's location.
+		import("./tracker").then((m) => m.stopTracking()).catch(() => {})
 	},
 })

@@ -162,20 +162,28 @@ def customer_orders(customer, limit=25) -> dict:
 
 @frappe.whitelist()
 def get_customer_orders(customer, limit=25) -> dict:
-	from crm_app.api import get_current_employee
+	from crm_app.api import assert_customer_access, get_current_employee
 
-	get_current_employee()
+	assert_customer_access(get_current_employee(), customer)
 	return customer_orders(customer, limit=limit)
 
 
 @frappe.whitelist()
 def get_order_payments(order_no) -> list:
 	"""Every payment posted against one order — the evidence behind the due figure."""
-	from crm_app.api import get_current_employee
+	from crm_app.api import assert_customer_access, get_current_employee, has_field
 
-	get_current_employee()
+	employee = get_current_employee()
 	if not available():
 		return []
+	# Gate on the dealer this order belongs to (resolved from the payment feed), so a rep
+	# can't pull another rep's dealer's payment ledger by walking order numbers.
+	if has_field("Customer", "custom_customer_sap_code"):
+		kunnr = frappe.db.sql(f"SELECT kunnr FROM `tab{PAY}` WHERE vbel2 = %s LIMIT 1", order_no)
+		if kunnr and kunnr[0][0]:
+			cust = frappe.db.get_value("Customer", {"custom_customer_sap_code": kunnr[0][0]}, "name")
+			if cust:
+				assert_customer_access(employee, cust)
 	return frappe.db.sql(
 		f"""
 		SELECT belnr AS document, budat AS date, ROUND(dmbtr, 2) AS amount, blart AS doc_type

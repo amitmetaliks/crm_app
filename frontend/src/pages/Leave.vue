@@ -54,6 +54,7 @@ import { ChevronLeft, Plus } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { toast } from "../utils/toast"
 
 const rows = ref([])
@@ -78,11 +79,11 @@ async function load() {
 async function apply() {
 	busy.value = true
 	try {
-		const res = await call("crm_app.leave.apply_leave", { ...form })
-		toast.success(res.submitted ? "Leave applied" : (res.message || "Saved"))
+		const res = await callOrQueue("crm_app.leave.apply_leave", { ...form })
+		toast.success(res?.queued ? "Saved offline — will sync when you're back online" : (res.submitted ? "Leave applied" : (res.message || "Saved")))
 		adding.value = false
 		Object.assign(form, { leave_type: "", from_date: "", to_date: "", description: "" })
-		await load()
+		if (!res?.queued) await load()
 	} catch (e) {
 		toast.error(e?.messages?.[0] || "Could not apply")
 	} finally { busy.value = false }

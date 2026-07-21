@@ -135,6 +135,7 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { getPosition } from "../utils/geo"
 import { toast } from "../utils/toast"
 
@@ -260,7 +261,12 @@ function onSearch() {
 	clearTimeout(timer)
 	if (q.value.trim().length < 2) { results.value = []; return }
 	timer = setTimeout(async () => {
-		results.value = (await call("crm_app.customers.search_parties", { query: q.value, party_type: "Customer", limit: 10 })) || []
+		// try/catch: offline or a dropped search must not throw an unhandled rejection.
+		try {
+			results.value = (await call("crm_app.customers.search_parties", { query: q.value, party_type: "Customer", limit: 10 })) || []
+		} catch (e) {
+			results.value = []
+		}
 	}, 300)
 }
 function addStop(r) {
@@ -271,7 +277,7 @@ function addStop(r) {
 async function saveBeat() {
 	busy.value = true
 	try {
-		await call("crm_app.beat.save_beat", {
+		const res = await callOrQueue("crm_app.beat.save_beat", {
 			name: beat.value.name || undefined,
 			plan_date: date.value,
 			title: title.value,
@@ -279,8 +285,12 @@ async function saveBeat() {
 			territory: territory.value,
 			entries: JSON.stringify(stops),
 		})
-		toast.success("Beat saved")
-		await load()
+		if (res?.queued) {
+			toast.success("Saved offline — will sync when you're back online")
+		} else {
+			toast.success("Beat saved")
+			await load()
+		}
 	} catch (e) {
 		toast.error(e?.messages?.[0] || "Could not save beat")
 	} finally {

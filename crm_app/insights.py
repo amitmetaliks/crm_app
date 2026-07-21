@@ -141,7 +141,13 @@ def sales_forecast(months=4, scope="mine"):
 	else:
 		return {"history": [], "forecast": 0, "available": False, "source": None}
 
+	# The last bucket is the current, still-accumulating month (the SAP feed also ends
+	# mid-month), so averaging it into the forecast biases next month LOW. Keep it visible in
+	# history but flag it partial, and forecast off the completed months only.
+	if hist:
+		hist[-1]["partial"] = True
 	vals = [h["value"] for h in hist]
-	last3 = vals[-3:] if vals else []
+	complete = vals[:-1] if len(vals) > 1 else vals
+	last3 = complete[-3:] if complete else []
 	forecast = flt(sum(last3) / len(last3), 2) if last3 else 0
 	return {"history": hist, "forecast": forecast, "available": True, "source": source}

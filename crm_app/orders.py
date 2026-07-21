@@ -72,10 +72,13 @@ def get_credit_status(customer):
 	SAP balance (positive = owes) is the real exposure; a credit balance is clamped to 0
 	owed. Sales Invoice stays as the fallback for a site where invoicing lands in ERPNext.
 	"""
-	get_current_employee()
+	employee = get_current_employee()
 	out = {"outstanding": 0.0, "credit_limit": 0.0, "available": 0.0, "has_limit": False}
 	if not customer:
 		return out
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(employee, customer)
 
 	outstanding = None
 	from crm_app import sap_receivables
@@ -114,6 +117,9 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	employee = get_current_employee()
 	if not _exists("Sales Order"):
 		frappe.throw(_("ERPNext selling is not available on this site."))
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(employee, customer)
 	if isinstance(items, str):
 		items = json.loads(items)
 	items = [i for i in (items or []) if i.get("item_code") and flt(i.get("qty"))]

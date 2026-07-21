@@ -122,6 +122,7 @@ import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { callOrQueue } from "../data/offline"
 import { getPosition, mapsLink } from "../utils/geo"
 import { openWhatsApp } from "../utils/wa"
 import { toast } from "../utils/toast"
@@ -226,9 +227,13 @@ async function checkout() {
 	busy.value = true
 	try {
 		const pos = await getPosition()
-		await call("crm_app.field_visit.check_out", { name: props.name, latitude: pos.latitude, longitude: pos.longitude })
-		toast.success("Checked out")
-		await load()
+		const res = await callOrQueue("crm_app.field_visit.check_out", { name: props.name, latitude: pos.latitude, longitude: pos.longitude })
+		if (res?.queued) {
+			toast.success("Saved offline — will sync when you're back online")
+		} else {
+			toast.success("Checked out")
+			await load()
+		}
 	} catch (e) {
 		toast.error(e?.messages?.[0] || "Could not check out")
 	} finally {

@@ -83,7 +83,9 @@ def _primary_between(customer, frm, to):
 @frappe.whitelist()
 def get_last_stock(customer):
 	"""Previous check for this dealer — reps re-count the same grades, so pre-fill them."""
-	get_current_employee()
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(get_current_employee(), customer)
 	last = _last_check(customer, frappe.utils.today())
 	if not last:
 		return {"exists": False, "items": [], "check_date": None}
@@ -111,6 +113,9 @@ def record_stock(customer, items, check_date=None, visit=None, remarks=None) -> 
 	employee = get_current_employee()
 	if not frappe.db.exists("Customer", customer):
 		frappe.throw(_("Dealer not found."), frappe.DoesNotExistError)
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(employee, customer)
 	if isinstance(items, str):
 		items = frappe.parse_json(items)
 	items = [i for i in (items or []) if (i.get("item_code") or "").strip()]
@@ -187,7 +192,9 @@ def _roll_up(doc):
 @frappe.whitelist()
 def get_dealer_stock_history(customer, limit=10) -> list:
 	"""Stock checks for one dealer, newest first — the trend is the point."""
-	get_current_employee()
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(get_current_employee(), customer)
 	return frappe.get_all(
 		"CRM Dealer Stock",
 		filters={"customer": customer},

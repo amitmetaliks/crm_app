@@ -346,7 +346,8 @@ async function onPhoto(e) {
 		].filter(Boolean)
 		dataUrl = await watermark(dataUrl, stamp)
 		photoData.value.push(dataUrl) // kept for offline one-shot submit
-		photos.value.push({ thumb: dataUrl })
+		photos.value.push({ thumb: dataUrl, uploaded: false })
+		const idx = photoData.value.length - 1
 		// Live-upload when we have an online visit; otherwise it rides along on sync.
 		if (!offlineMode.value && visitName.value && navigator.onLine) {
 			try {
@@ -357,6 +358,9 @@ async function onPhoto(e) {
 					latitude: pos.latitude,
 					longitude: pos.longitude,
 				})
+				// Uploaded already — must NOT ride along in the offline payload too, or a
+				// later offline save would attach it a second time.
+				photos.value[idx].uploaded = true
 			} catch (err) {
 				/* keep base64 for offline sync */
 			}
@@ -415,6 +419,10 @@ async function save(checkout) {
 			const pos = checkout ? await getPosition() : {}
 			const payload = {
 				client_ref: clientRef,
+				// If the visit was already created online (check-in) before we went offline,
+				// pass its name so the server UPDATES that record instead of creating a second
+				// one — the online-checkin + offline-checkout duplicate.
+				visit_name: visitName.value || null,
 				...partyParams(),
 				visit_purpose: purpose.value,
 				contact_name: contactName.value,
@@ -432,7 +440,11 @@ async function save(checkout) {
 				next_visit_date: nextVisitDate.value || null,
 				order_items: cleanOrders,
 				competitors: cleanComps,
-				photos: photoData.value.map((b) => ({ content_base64: b })),
+				// Only photos not already live-uploaded, so sync doesn't attach them twice.
+				photos: photoData.value
+					.map((b, i) => ({ content_base64: b, uploaded: photos.value[i]?.uploaded }))
+					.filter((p) => !p.uploaded)
+					.map((p) => ({ content_base64: p.content_base64 })),
 			}
 			await enqueue("crm_app.field_visit.submit_full_visit", { payload: JSON.stringify(payload) }, "Visit: " + (selected.value?.label || ""))
 			toast.success("Saved offline — will sync automatically")

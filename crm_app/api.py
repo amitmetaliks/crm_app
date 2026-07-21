@@ -46,6 +46,37 @@ def is_sales_manager(user: str | None = None) -> bool:
 	return any(r in roles for r in ("Sales Manager", "Sales Master Manager", "System Manager"))
 
 
+def owns_customer(employee: str, customer: str) -> bool:
+	"""May this rep act on / see this dealer's private data (balances, ledger, receipts)?
+
+	True when the caller is a manager; the dealer is attributed to this rep (rep_customers —
+	SAP-invoiced, explicitly assigned, or ordered); OR the dealer is not explicitly assigned
+	to anyone. The last clause keeps new/unassigned dealers open — today EVERY dealer is
+	unassigned, so this is a no-op that costs the pilot nothing, and it tightens automatically
+	into a real cross-rep control as ``custom_assigned_sales_person`` gets populated. A rep is
+	blocked only from a dealer explicitly assigned to a DIFFERENT rep whom he never invoiced.
+	"""
+	if not customer:
+		return False
+	if is_sales_manager():
+		return True
+	if has_field("Customer", "custom_assigned_sales_person"):
+		assigned = frappe.db.get_value("Customer", customer, "custom_assigned_sales_person")
+		if not assigned or assigned == employee:
+			return True
+		from crm_app.sales_attr import rep_customers
+
+		return customer in rep_customers(employee)
+	# No assignment model on this site — ownership can't be scoped, so don't pretend to.
+	return True
+
+
+def assert_customer_access(employee: str, customer: str):
+	"""Guard a dealer-scoped read/write; raises PermissionError if the rep may not touch it."""
+	if not owns_customer(employee, customer):
+		frappe.throw(_("This dealer is assigned to a different sales person."), frappe.PermissionError)
+
+
 def has_field(doctype: str, fieldname: str) -> bool:
 	"""Does this SITE have that field?
 

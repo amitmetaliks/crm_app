@@ -69,9 +69,10 @@ def get_manager_dashboard(period="mtd") -> dict:
 		sales["available"] = True
 		emps = _team_employees()
 		by_name = {e.name: e.employee_name for e in emps}
+		board = sap_sales.rep_leaderboard(frm_d, to_d)  # one GROUP BY, not one query per employee
 		for e in emps:
-			r = sap_sales.rep_sales(e.name, frm_d, to_d)
-			if not r["invoices"]:
+			r = board.get(e.name)
+			if not r or not r["invoices"]:
 				continue
 			sales["amount"] += r["amount"]
 			sales["qty_mt"] += r["qty"]
@@ -115,10 +116,15 @@ def get_manager_dashboard(period="mtd") -> dict:
 		):
 			target_amount += flt(t.target_amount)
 			target_qty += flt(t.target_qty_mt)
+	# Achievement % is measured against ALL invoicing (all_invoiced), not just the half we can
+	# attribute to a mapped rep code — otherwise a team that hit target reads as ~50% purely
+	# because the other half is under unmapped codes. attributed_pct (above) keeps the
+	# attribution quality visible separately.
+	achieved_for_target = flt(sales.get("all_invoiced", sales["amount"]))
 	out["target"] = {
 		"amount": flt(target_amount, 2),
 		"qty_mt": flt(target_qty, 3),
-		"amount_pct": flt(sales["amount"] / target_amount * 100, 1) if target_amount else 0.0,
+		"amount_pct": flt(achieved_for_target / target_amount * 100, 1) if target_amount else 0.0,
 	}
 
 	# ── Money owed ───────────────────────────────────────────────────────────

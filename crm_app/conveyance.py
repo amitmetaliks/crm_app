@@ -177,17 +177,24 @@ def claim_conveyance(date=None, claimed_km=None, remarks=None, attachment_base64
 			}
 		).insert(ignore_permissions=True)
 
+	submit_error = None
 	try:
 		doc.submit()
 		frappe.db.commit()
 		submitted = True
-	except Exception:
+	except Exception as e:
+		# Leave the claim as a draft rather than failing the whole call, but DON'T swallow the
+		# reason: log it and hand it back, so a claim that silently didn't submit (missing
+		# approver / payable account on a customised site) is diagnosable, not an orphan.
 		frappe.db.commit()
 		submitted = False
+		submit_error = str(e)
+		frappe.log_error(title="Conveyance claim submit failed", message=frappe.get_traceback())
 
 	return {
 		"name": doc.name,
 		"submitted": submitted,
+		"message": submit_error,
 		"km": final_km,
 		"gps_km": gps_km,
 		"rate_per_km": rate,

@@ -73,11 +73,16 @@ def get_deals(scope="mine", status=None, search=None, limit=100):
 
 
 @frappe.whitelist()
-def create_lead(lead_name=None, organization=None, mobile_no=None, email=None, source=None, territory=None, notes=None):
+def create_lead(lead_name=None, organization=None, mobile_no=None, email=None, source=None, territory=None, notes=None, idempotency_key=None):
 	"""Create a CRM Lead owned by the current user (inside-sales capture)."""
-	get_current_employee()
+	employee = get_current_employee()
 	if not _exists("CRM Lead"):
 		frappe.throw(_("Frappe CRM is not installed on this site."))
+	from crm_app import idempotency
+
+	prior = idempotency.replay(idempotency_key, employee)
+	if prior is not None:
+		return prior
 
 	doc = frappe.new_doc("CRM Lead")
 	name = (lead_name or organization or "New Lead").strip()
@@ -109,8 +114,10 @@ def create_lead(lead_name=None, organization=None, mobile_no=None, email=None, s
 		if st:
 			doc.status = st
 	doc.insert(ignore_permissions=True)
+	result = {"name": doc.name, "lead_name": name}
+	idempotency.record(idempotency_key, "leads.create_lead", result, employee)
 	frappe.db.commit()
-	return {"name": doc.name, "lead_name": name}
+	return result
 
 
 @frappe.whitelist()

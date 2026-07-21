@@ -245,8 +245,13 @@ def record_payment(
 	employee = get_current_employee()
 	if not _exists("Payment Entry"):
 		frappe.throw(_("Payments are not available on this site."))
+	# A rep may only record a receipt against a dealer that is his (or unassigned); managers,
+	# anyone. Prevents self-attributed receipts posted against another rep's dealer.
+	from crm_app.api import assert_customer_access
 
-	prior = idempotency.replay(idempotency_key)
+	assert_customer_access(employee, customer)
+
+	prior = idempotency.replay(idempotency_key, employee)
 	if prior is not None:
 		return prior
 	if not frappe.db.exists("Customer", customer):

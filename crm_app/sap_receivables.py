@@ -164,6 +164,22 @@ def outstanding_for(customers) -> dict:
 	return out
 
 
+def collected_for_codes(codes, frm, to) -> float:
+	"""Total received (receipts) from a set of dealer codes in a window — one SUM query.
+
+	``dmbtr`` is the per-row payment amount and IS summable (unlike ``cust_bal``); ``shkzg='H'``
+	is the credit/receipt side (the 1,662 customer receipts). Used by the KRA collection ratio.
+	"""
+	if not available() or not codes:
+		return 0.0
+	amt = frappe.db.sql(
+		f"""SELECT COALESCE(SUM(dmbtr), 0) FROM `tab{DOCTYPE}`
+		    WHERE kunnr IN %(codes)s AND shkzg = 'H' AND budat BETWEEN %(frm)s AND %(to)s""",
+		{"codes": tuple(codes), "frm": getdate(frm), "to": getdate(to)},
+	)[0][0]
+	return flt(amt, 2)
+
+
 @frappe.whitelist()
 def last_synced() -> dict:
 	"""Freshness of the payment feed, surfaced so a stalled sync shows as a date."""

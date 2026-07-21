@@ -125,23 +125,37 @@ def get_analytics() -> dict:
 		with_orders = len({p.parent for p in parents})
 	conversion_pct = round(with_orders / len(completed_names) * 100, 1) if completed_names else 0
 
-	# Beat adherence (this month)
+	# Beat adherence (this month). Batched to 3 queries — was an N+1 that ran one
+	# db.exists("CRM Visit") per planned stop (thousands for a team-month).
 	beats = frappe.get_all(
 		"CRM Beat Plan", filters={"plan_date": ["between", [mstart, day]]}, fields=["name", "sales_person", "plan_date"]
 	)
 	planned = visited = 0
-	for b in beats:
-		entries = frappe.get_all("CRM Beat Plan Entry", filters={"parent": b.name}, fields=["customer"])
-		for e in entries:
-			if not e.customer:
-				continue
-			planned += 1
-			if frappe.db.exists(
+	if beats:
+		beat_by_name = {b.name: b for b in beats}
+		entries = frappe.get_all(
+			"CRM Beat Plan Entry", filters={"parent": ["in", list(beat_by_name)]}, fields=["parent", "customer"]
+		)
+		stops = [
+			(beat_by_name[e.parent].sales_person, e.customer, str(beat_by_name[e.parent].plan_date))
+			for e in entries
+			if e.customer and e.parent in beat_by_name
+		]
+		planned = len(stops)
+		if stops:
+			vis = frappe.get_all(
 				"CRM Visit",
-				{"sales_person": b.sales_person, "customer": e.customer, "visit_date": b.plan_date,
-				 "visit_status": ["in", ["In Progress", "Completed"]]},
-			):
-				visited += 1
+				filters={
+					"sales_person": ["in", list({s[0] for s in stops})],
+					"customer": ["in", list({s[1] for s in stops})],
+					"visit_date": ["between", [mstart, day]],
+					"visit_status": ["in", ["In Progress", "Completed"]],
+				},
+				fields=["sales_person", "customer", "visit_date"],
+				limit=0,
+			)
+			vset = {(v.sales_person, v.customer, str(v.visit_date)) for v in vis}
+			visited = sum(1 for s in stops if s in vset)
 	adherence_pct = round(visited / planned * 100, 1) if planned else 0
 
 	# Attendance today (distinct employees with an IN today) + expense pending

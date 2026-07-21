@@ -158,7 +158,9 @@ def get_home_summary():
 			"skipped": skipped,
 			"strike_rate": strike,
 		},
-		"order_summary": _order_agg(names),
+		# Completed-only, to match productive/strike above — an order captured on an
+		# In Progress/Cancelled/Missed visit shouldn't inflate the day's booked value.
+		"order_summary": _order_agg(completed_names),
 		"sales_target": {
 			"target": flt(tgt.get("target_amount")) if tgt else 0,
 			"achieved": ach["amount"],
@@ -191,25 +193,34 @@ def get_kra():
 	productive = len([n for n in completed_names if n in with_orders])
 	ach = _achievement(emp, mstart, day)
 
-	# Collection ratio: paid vs billed (this month, rep's customers).
-	# NOTE: billed/paid still read ERPNext Sales Invoices, which are empty on this site, so
-	# this ratio reads 0 until invoicing lands in ERPNext (a separate item — the SAP-based
-	# collection ratio). The customer set is corrected here regardless via rep_customers().
+	# Collection ratio: collected vs billed this month, for the rep's dealers. Read from SAP
+	# (register invamt billed, Payment dmbtr receipts) because ERPNext Sales Invoices are empty
+	# here — the old Sales-Invoice path scored every rep 0%. Falls back to Sales Invoices on a
+	# site where invoicing lands in ERPNext.
 	coll_ratio = 0.0
-	if _hrms("Sales Invoice"):
-		from crm_app.sales_attr import rep_customers
+	from crm_app import sap_receivables, sap_sales
+	from crm_app.sales_attr import rep_customers
 
-		custs = list(rep_customers(emp))
-		if custs:
-			inv = frappe.get_all(
-				"Sales Invoice",
-				filters={"customer": ["in", custs], "posting_date": ["between", [mstart, day]], "docstatus": 1},
-				fields=["grand_total", "outstanding_amount"],
-				limit=5000,
-			)
-			billed = sum(flt(i.grand_total) for i in inv)
-			paid = sum(flt(i.grand_total) - flt(i.outstanding_amount) for i in inv)
-			coll_ratio = round(paid / billed * 100, 1) if billed else 0.0
+	custs = list(rep_customers(emp))
+	if custs and sap_sales.available() and has_field("Customer", "custom_customer_sap_code"):
+		codes = frappe.get_all(
+			"Customer",
+			filters={"name": ["in", custs], "custom_customer_sap_code": ["!=", ""]},
+			pluck="custom_customer_sap_code",
+		)
+		billed = sap_sales.billed_for_codes(codes, mstart, day)
+		collected = sap_receivables.collected_for_codes(codes, mstart, day)
+		coll_ratio = round(collected / billed * 100, 1) if billed else 0.0
+	elif custs and _hrms("Sales Invoice"):
+		inv = frappe.get_all(
+			"Sales Invoice",
+			filters={"customer": ["in", custs], "posting_date": ["between", [mstart, day]], "docstatus": 1},
+			fields=["grand_total", "outstanding_amount"],
+			limit=5000,
+		)
+		billed = sum(flt(i.grand_total) for i in inv)
+		paid = sum(flt(i.grand_total) - flt(i.outstanding_amount) for i in inv)
+		coll_ratio = round(paid / billed * 100, 1) if billed else 0.0
 
 	def kra(label, achieved, target, unit=""):
 		t = flt(target)

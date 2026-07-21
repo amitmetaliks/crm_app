@@ -67,7 +67,7 @@ def create_expense_claim(items, receipt_base64=None, receipt_filename=None, idem
 	if not _hrms_ready():
 		frappe.throw(_("Expense claims are not available on this site (HR module missing)."))
 
-	prior = idempotency.replay(idempotency_key)
+	prior = idempotency.replay(idempotency_key, employee)
 	if prior is not None:
 		return prior
 	company = frappe.db.get_value("Employee", employee, "company")

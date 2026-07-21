@@ -33,7 +33,7 @@ def check_in_out(latitude=None, longitude=None, selfie_base64=None, address=None
 	if not _hrms_ready():
 		frappe.throw(_("Attendance is not available on this site (HR module missing)."))
 
-	prior = idempotency.replay(idempotency_key)
+	prior = idempotency.replay(idempotency_key, employee)
 	if prior is not None:
 		return prior
 

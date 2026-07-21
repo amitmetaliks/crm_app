@@ -116,9 +116,12 @@ def _search_crm(doctype, query, limit):
 @frappe.whitelist()
 def get_customer(name):
 	"""Customer detail card: profile, recent visits, and current outstanding."""
-	get_current_employee()
+	employee = get_current_employee()
 	if not frappe.db.exists("Customer", name):
 		frappe.throw(_("Customer not found."), frappe.DoesNotExistError)
+	from crm_app.api import assert_customer_access
+
+	assert_customer_access(employee, name)
 
 	fields = ["name", "customer_name"]
 	for f in ("customer_group", "territory", "mobile_no", "email_id", "customer_primary_address"):
@@ -326,7 +329,19 @@ def pin_shop(customer, latitude, longitude):
 
 
 def _customer_outstanding(customer: str) -> float:
-	"""Total submitted, unpaid Sales Invoice amount for the customer."""
+	"""Current amount the dealer owes.
+
+	SAP-first (positive balance = owes), because ERPNext holds 0 Sales Invoices here so the
+	old Sales-Invoice sum was always ₹0 — get_customer_360 overrode it, but get_customer
+	called directly still returned ₹0. Now correct at the source, with Sales Invoice as the
+	fallback for a site where invoicing lands in ERPNext.
+	"""
+	from crm_app import sap_receivables
+
+	if sap_receivables.available():
+		bal = sap_receivables.customer_balance(customer)
+		if bal is not None:
+			return flt(bal.get("balance"), 2) if flt(bal.get("balance")) > 0 else 0.0
 	if not _exists("Sales Invoice"):
 		return 0.0
 	rows = frappe.get_all(

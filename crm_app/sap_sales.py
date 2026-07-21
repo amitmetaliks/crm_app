@@ -138,6 +138,55 @@ def rep_sales(employee, frm, to) -> dict:
 	}
 
 
+def rep_leaderboard(frm, to) -> dict:
+	"""``{rep_code: {amount, qty, invoices}}`` for ALL reps in a single GROUP BY.
+
+	Replaces an N+1 on the manager dashboard, which called rep_sales() once per Employee
+	(up to 5000 full-table scans of the register on every dashboard open). rep_code is the
+	zero-trimmed match key, so it lines up with Employee.name exactly as rep_sales did.
+	"""
+	t = _table()
+	if not t:
+		return {}
+	c = COLS[t]
+	rows = frappe.db.sql(
+		f"""
+		SELECT {c['rep_match']} AS code,
+		       COALESCE(SUM({c['amount']}), 0) AS amount,
+		       COALESCE(SUM({c['qty']}), 0) AS qty,
+		       COUNT(DISTINCT {c['inv']}) AS invoices
+		FROM `tab{t}`
+		WHERE {c['date']} BETWEEN %(frm)s AND %(to)s AND COALESCE({c['rep']}, '') != ''
+		GROUP BY {c['rep_match']}
+		""",
+		{"frm": getdate(frm), "to": getdate(to)},
+		as_dict=True,
+	)
+	return {
+		r.code: {"amount": flt(r.amount, 2), "qty": flt(r.qty, 3), "invoices": int(r.invoices or 0)}
+		for r in rows
+		if r.code
+	}
+
+
+def billed_for_codes(codes, frm, to) -> float:
+	"""Total SAP-invoiced amount for a set of dealer codes in a window — one SUM query.
+
+	Used by the KRA collection ratio, which must read SAP (ERPNext Sales Invoices are empty
+	here) rather than reporting every rep 0%.
+	"""
+	t = _table()
+	if not t or not codes:
+		return 0.0
+	c = COLS[t]
+	amt = frappe.db.sql(
+		f"""SELECT COALESCE(SUM({c['amount']}), 0) FROM `tab{t}`
+		    WHERE {c['cust']} IN %(codes)s AND {c['date']} BETWEEN %(frm)s AND %(to)s""",
+		{"codes": tuple(codes), "frm": getdate(frm), "to": getdate(to)},
+	)[0][0]
+	return flt(amt, 2)
+
+
 def customer_sales(customer, frm=None, to=None) -> dict:
 	"""What this dealer actually bought."""
 	empty = {"amount": 0.0, "qty": 0.0, "invoices": 0, "last_date": None}

@@ -3,6 +3,7 @@ import { call } from "./api"
 // Foreground location tracking (PWA limitation: only while the app is open).
 // Pings now + every 10 min + on resume. Failures are silent (e.g. no Employee).
 let timer = null
+let visHandler = null
 
 function ping(source = "ping") {
 	if (!navigator.geolocation || !navigator.onLine) return
@@ -29,7 +30,23 @@ export function startTracking() {
 	ping("start")
 	if (timer) clearInterval(timer)
 	timer = setInterval(() => ping("interval"), 10 * 60 * 1000)
-	document.addEventListener("visibilitychange", () => {
-		if (!document.hidden) ping("resume")
-	})
+	// Named handler so stopTracking can remove it — otherwise the resume-ping listener (and
+	// the GPS reads it triggers) keep firing after logout.
+	if (!visHandler) {
+		visHandler = () => {
+			if (!document.hidden) ping("resume")
+		}
+		document.addEventListener("visibilitychange", visHandler)
+	}
+}
+
+export function stopTracking() {
+	if (timer) {
+		clearInterval(timer)
+		timer = null
+	}
+	if (visHandler) {
+		document.removeEventListener("visibilitychange", visHandler)
+		visHandler = null
+	}
 }

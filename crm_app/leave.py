@@ -46,10 +46,15 @@ def get_my_leaves(limit=30) -> list:
 
 
 @frappe.whitelist()
-def apply_leave(leave_type, from_date, to_date, half_day=0, description=None) -> dict:
+def apply_leave(leave_type, from_date, to_date, half_day=0, description=None, idempotency_key=None) -> dict:
 	employee = get_current_employee()
 	if not _hrms_ready():
 		frappe.throw(_("Leave is not available on this site (HR module missing)."))
+	from crm_app import idempotency
+
+	prior = idempotency.replay(idempotency_key, employee)
+	if prior is not None:
+		return prior
 	company = frappe.db.get_value("Employee", employee, "company")
 	approver = frappe.db.get_value("Employee", employee, "leave_approver")
 	doc = frappe.get_doc(
@@ -70,8 +75,9 @@ def apply_leave(leave_type, from_date, to_date, half_day=0, description=None) ->
 	doc.insert(ignore_permissions=True)
 	try:
 		doc.submit()
-		frappe.db.commit()
-		return {"name": doc.name, "submitted": True, "status": doc.status}
+		result = {"name": doc.name, "submitted": True, "status": doc.status}
 	except Exception as e:
-		frappe.db.commit()
-		return {"name": doc.name, "submitted": False, "message": str(e)}
+		result = {"name": doc.name, "submitted": False, "message": str(e)}
+	idempotency.record(idempotency_key, "leave.apply_leave", result, employee)
+	frappe.db.commit()
+	return result

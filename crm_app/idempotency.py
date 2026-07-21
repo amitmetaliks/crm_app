@@ -31,15 +31,19 @@ def _available() -> bool:
 		return False
 
 
-def replay(key):
-	"""If this key was already processed, return the stored response; else None.
+def replay(key, employee=None):
+	"""If this key was already processed BY THIS employee, return the stored response; else None.
 
 	A non-None return means "already done, don't do it again" — the caller must return it
-	verbatim instead of repeating its write.
+	verbatim instead of repeating its write. Scoping the lookup to the employee means a leaked
+	or reused key can never hand user B the response (and doc name) of user A's write.
 	"""
 	if not key or not _available():
 		return None
-	resp = frappe.db.get_value(DOCTYPE, {"idempotency_key": str(key)}, "response")
+	filt = {"idempotency_key": str(key)}
+	if employee:
+		filt["employee"] = employee
+	resp = frappe.db.get_value(DOCTYPE, filt, "response")
 	if resp is None:
 		return None
 	try:
