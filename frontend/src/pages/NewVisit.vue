@@ -193,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from "vue"
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { saveDraft, loadDraft, clearDraft } from "../data/draft"
 import {
@@ -331,6 +331,13 @@ watch(
 	},
 	{ deep: true }
 )
+// Clear the draft AND cancel any pending debounced save — otherwise a save within the debounce
+// window lets the timer fire after clearDraft() and resurrect the just-completed visit's draft.
+function dropDraft() {
+	clearTimeout(draftTimer)
+	clearDraft()
+}
+onBeforeUnmount(() => clearTimeout(draftTimer))
 
 const canCheckIn = computed(() => !!selected.value)
 const checkInLabel = computed(() => (checkInTime.value ? dayjs(checkInTime.value).format("h:mm A") : ""))
@@ -497,7 +504,7 @@ async function save(checkout) {
 			} else {
 				toast.success("Saved")
 			}
-			clearDraft() // visit saved — the draft has served its purpose
+			dropDraft() // visit saved — cancel any pending debounce + clear
 			router.replace({ name: "VisitDetail", params: { name: visitName.value } })
 		} else {
 			// OFFLINE: queue the whole visit as a single submission (syncs later).
@@ -532,7 +539,7 @@ async function save(checkout) {
 					.map((p) => ({ content_base64: p.content_base64 })),
 			}
 			await enqueue("crm_app.field_visit.submit_full_visit", { payload: JSON.stringify(payload) }, "Visit: " + (selected.value?.label || ""))
-			clearDraft() // queued for sync — the draft has served its purpose
+			dropDraft() // queued for sync — cancel any pending debounce + clear
 			toast.success("Saved offline — will sync automatically")
 			router.replace({ name: "Visits" })
 		}
