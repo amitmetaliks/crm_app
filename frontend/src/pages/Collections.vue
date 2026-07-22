@@ -72,6 +72,8 @@ async function remind(c) {
 onMounted(async () => {
 	try {
 		data.value = await callCached("crm_app.collections.get_my_collections", { scope: "mine" })
+	} catch (e) {
+		/* offline with nothing cached — keep the empty state, don't leak a rejection */
 	} finally {
 		loading.value = false
 	}

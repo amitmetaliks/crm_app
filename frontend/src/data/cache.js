@@ -5,10 +5,16 @@
 // callCached() serves live data when possible and the last cached copy when the network is
 // gone. A separate IndexedDB database keeps it isolated from the write queue.
 
+import { reactive } from "vue"
 import { call } from "./api"
 
 const DB = "triam-crm-cache"
 const STORE = "reads"
+
+// Surfaced to the UI so a screen served from cache doesn't masquerade as live. `stale` flips
+// true whenever the most recent read came from the cache (offline OR a failed live request on
+// flaky signal), and false on a fresh success. App.vue shows a "showing saved data" banner.
+export const cacheState = reactive({ stale: false, at: 0 })
 
 function openDb() {
 	return new Promise((resolve, reject) => {
@@ -19,11 +25,13 @@ function openDb() {
 	})
 }
 async function idbGet(key) {
+	// Returns the full row {key, value, at} (or undefined) so callers can read the cached-at
+	// timestamp, not just the value.
 	try {
 		const db = await openDb()
 		return await new Promise((res) => {
 			const r = db.transaction(STORE, "readonly").objectStore(STORE).get(key)
-			r.onsuccess = () => res(r.result ? r.result.value : undefined)
+			r.onsuccess = () => res(r.result || undefined)
 			r.onerror = () => res(undefined)
 		})
 	} catch (e) {
@@ -43,7 +51,14 @@ function isNetworkError(e) {
 	return e?.name === "TypeError" || /network|fetch|failed to fetch|load failed/i.test(m)
 }
 function keyOf(method, params) {
-	return method + ":" + JSON.stringify(params || {})
+	// Sort keys so a call site that orders params differently still hits the same cache entry
+	// (JSON.stringify is order-sensitive). undefined-valued keys are dropped, as before.
+	const p = params && typeof params === "object" ? params : {}
+	const sorted = Object.keys(p)
+		.filter((k) => p[k] !== undefined)
+		.sort()
+		.reduce((o, k) => ((o[k] = p[k]), o), {})
+	return method + ":" + JSON.stringify(sorted)
 }
 
 // Live when possible, last-known when offline. Returns the SAME payload shape as call(), so a
@@ -55,18 +70,45 @@ export async function callCached(method, params) {
 		try {
 			const data = await call(method, params)
 			idbPut(key, data)
+			cacheState.stale = false
 			return data
 		} catch (e) {
 			if (isNetworkError(e)) {
-				const c = await idbGet(key)
-				if (c !== undefined) return c
+				const row = await idbGet(key)
+				if (row !== undefined) {
+					cacheState.stale = true
+					cacheState.at = row.at || 0
+					return row.value
+				}
 			}
 			throw e
 		}
 	}
-	const c = await idbGet(key)
-	if (c !== undefined) return c
+	const row = await idbGet(key)
+	if (row !== undefined) {
+		cacheState.stale = true
+		cacheState.at = row.at || 0
+		return row.value
+	}
 	throw new Error("You're offline and this screen hasn't been loaded yet.")
+}
+
+// Bound the cache: drop entries older than `maxAgeDays`. Called at startup. Cheap, and it
+// stops the per-visit VisitDetail keys from growing without limit on a long-lived install.
+export async function pruneCache(maxAgeDays = 21) {
+	try {
+		const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000
+		const db = await openDb()
+		const store = db.transaction(STORE, "readwrite").objectStore(STORE)
+		const req = store.getAll()
+		req.onsuccess = () => {
+			for (const row of req.result || []) {
+				if (!row.at || row.at < cutoff) store.delete(row.key)
+			}
+		}
+	} catch (e) {
+		/* best-effort */
+	}
 }
 
 // ── Dealer directory for offline visit-pick ────────────────────────────────────
@@ -94,7 +136,8 @@ export async function searchDealers(query, party_type = "Customer", limit = 10) 
 			if (!isNetworkError(e)) throw e
 		}
 	}
-	const list = (await idbGet(DEALERS_KEY)) || []
+	const row = await idbGet(DEALERS_KEY)
+	const list = (row && row.value) || []
 	const ql = q.toLowerCase()
 	const filtered = ql
 		? list.filter((d) => (d.label || "").toLowerCase().includes(ql) || (d.id || "").toLowerCase().includes(ql))

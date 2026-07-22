@@ -417,6 +417,16 @@ def submit_full_visit(payload):
 	client_ref = data.get("client_ref")
 	visit_name = data.get("visit_name")
 
+	# Replay safety for the whole submission. The offline queue retries a write whose response
+	# was lost; keyed on the stable client_ref, a retry returns the prior result instead of
+	# re-running — which on the UPDATE path below would otherwise re-attach every photo again.
+	from crm_app import idempotency
+
+	if client_ref:
+		prior = idempotency.replay(client_ref, employee)
+		if prior is not None:
+			return prior
+
 	# Update the visit that was created online at check-in, if its name was passed and it is
 	# ours — this is what stops an online check-in followed by an OFFLINE check-out from
 	# creating a SECOND visit. Otherwise dedupe replays by client_ref; otherwise create fresh.
@@ -427,8 +437,12 @@ def submit_full_visit(payload):
 		and frappe.db.get_value("CRM Visit", visit_name, "sales_person") == employee
 	):
 		doc = frappe.get_doc("CRM Visit", visit_name)
-		doc.set("order_items", [])  # this submission carries the full, authoritative set
-		doc.set("competitors", [])
+		# Replace ONLY the child tables the payload actually carries, so a partial payload
+		# can't silently wipe order lines/competitors captured elsewhere on the visit.
+		if data.get("order_items") is not None:
+			doc.set("order_items", [])
+		if data.get("competitors") is not None:
+			doc.set("competitors", [])
 		is_update = True
 	elif client_ref:
 		existing = frappe.db.get_value("CRM Visit", {"sales_person": employee, "client_ref": client_ref}, "name")
@@ -488,8 +502,11 @@ def submit_full_visit(payload):
 			frappe.log_error(title="offline visit photo failed", message=frappe.get_traceback())
 	if doc.photos:
 		doc.save(ignore_permissions=True)
+	result = {"name": doc.name, "updated": is_update}
+	# Remember this submission so a queue retry replays it instead of re-attaching photos.
+	idempotency.record(client_ref, "field_visit.submit_full_visit", result, employee)
 	frappe.db.commit()
-	return {"name": doc.name}
+	return result
 
 
 @frappe.whitelist()

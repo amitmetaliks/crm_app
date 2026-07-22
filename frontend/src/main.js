@@ -5,7 +5,7 @@ import App from "./App.vue"
 import "./index.css"
 import { applyStoredTheme } from "./utils/theme"
 import { initOffline } from "./data/offline"
-import { prefetchDealers } from "./data/cache"
+import { prefetchDealers, pruneCache } from "./data/cache"
 import { startTracking } from "./data/tracker"
 import { initLock } from "./data/lock"
 import { resumeDutyTracking } from "./data/native"
@@ -17,6 +17,7 @@ initOffline()
 startTracking()
 resumeDutyTracking()
 prefetchDealers() // cache the rep's dealer list so visits can be started offline
+pruneCache() // drop read-cache entries older than a few weeks (bounds IndexedDB growth)
 
 // Route all frappe-ui resources through the Frappe request helper (cookie/session auth)
 setConfig("resourceFetcher", frappeRequest)

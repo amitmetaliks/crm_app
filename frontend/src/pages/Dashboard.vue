@@ -109,7 +109,6 @@ import { Bell, MapPin, CalendarCheck, Award, Clock, IndianRupee, Store } from "l
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { session } from "../data/session"
-import { call } from "../data/api"
 import { callCached } from "../data/cache"
 import { inrShort } from "../utils/money"
 import wordmark from "../assets/logo-wordmark.png"

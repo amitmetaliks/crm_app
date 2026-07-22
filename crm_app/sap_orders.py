@@ -178,6 +178,13 @@ def get_order_payments(order_no) -> list:
 		return []
 	# Gate on the dealer this order belongs to (resolved from the payment feed), so a rep
 	# can't pull another rep's dealer's payment ledger by walking order numbers.
+	#
+	# When the order's SAP customer maps to an ERPNext Customer we enforce ownership. When it
+	# does NOT map (about half of SAP parties have no Customer record yet) there is no dealer
+	# to scope against, so this allows it — a deliberate choice: deny-by-default would block
+	# the many reps whose real dealers aren't SAP-mapped from their OWN orders. This is inert
+	# today (ownership is a global no-op until assignments are populated); revisit the
+	# unresolved branch once custom_customer_sap_code coverage is complete.
 	if has_field("Customer", "custom_customer_sap_code"):
 		kunnr = frappe.db.sql(f"SELECT kunnr FROM `tab{PAY}` WHERE vbel2 = %s LIMIT 1", order_no)
 		if kunnr and kunnr[0][0]:

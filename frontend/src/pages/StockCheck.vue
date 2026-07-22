@@ -9,8 +9,15 @@
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-4 p-4">
+			<!-- Saved offline (queued) -->
+			<div v-if="done && done.queued" class="aa-card text-center">
+				<CheckCircle2 class="mx-auto h-10 w-10 text-green-500" />
+				<p class="mt-2 font-semibold text-navy-700 dark:text-white">{{ $t("Saved offline") }}</p>
+				<p class="mt-1 text-sm text-gray-500">{{ $t("Will sync when you're back online.") }}</p>
+				<button class="aa-btn-primary mt-3 w-full" @click="reset">{{ $t("Done") }}</button>
+			</div>
 			<!-- Saved -->
-			<div v-if="done" class="aa-card text-center">
+			<div v-else-if="done" class="aa-card text-center">
 				<CheckCircle2 class="mx-auto h-10 w-10 text-green-500" />
 				<p class="mt-2 font-semibold text-navy-700 dark:text-white">{{ $t("Stock recorded") }}</p>
 				<div class="mt-3 grid grid-cols-3 gap-2 text-center">
@@ -145,7 +152,7 @@ async function save() {
 		})
 		if (res?.queued) {
 			toast.success("Saved offline — will sync when you're back online")
-			done.value = null
+			done.value = { queued: true } // show a confirmation so the rep doesn't re-tap and double-queue
 		} else {
 			done.value = res
 			toast.success("Stock check saved")

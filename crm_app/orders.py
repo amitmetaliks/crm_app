@@ -141,6 +141,11 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 					"Item Price", {"item_code": i["item_code"], "price_list": pl, "selling": 1}, "price_list_rate"
 				)
 			)
+		if not r and _exists("Item"):
+			# Last-resort valuation so a missing price-list row can't zero the line and slip an
+			# order past the credit gate.
+			m = frappe.db.get_value("Item", i["item_code"], ["standard_rate", "valuation_rate"], as_dict=True) or {}
+			r = flt(m.get("standard_rate") or m.get("valuation_rate"))
 		return flt(i.get("qty")) * r
 
 	order_value = sum(_line_value(i) for i in items)
@@ -152,6 +157,12 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	allow_ignore = bool(int(ignore_credit or 0)) and is_sales_manager()
 	credit = get_credit_status(customer)
 	if credit["has_limit"] and not allow_ignore:
+		if order_value <= 0:
+			# Could not value any line — do NOT treat that as "₹0, within limit" (the old
+			# bypass). Make the rep price it or get a manager override.
+			frappe.throw(
+				_("Couldn't price this order to check the credit limit — enter a rate on each line, or ask a manager to override.")
+			)
 		if order_value > credit["available"]:
 			frappe.throw(
 				_("Credit limit exceeded: order ₹{0} but only ₹{1} available (outstanding ₹{2}).").format(

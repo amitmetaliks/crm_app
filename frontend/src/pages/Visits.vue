@@ -33,7 +33,6 @@ import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import VisitRow from "../components/VisitRow.vue"
-import { call } from "../data/api"
 import { callCached } from "../data/cache"
 import { session } from "../data/session"
 

@@ -38,7 +38,6 @@ import { ChevronRight } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
-import { call } from "../data/api"
 import { searchDealers } from "../data/cache"
 
 const query = ref("")
