@@ -9,6 +9,7 @@
 			<!-- Resume an unsaved visit the app killed before Save -->
 			<div v-if="resumable" class="aa-card border border-amber-200 bg-amber-50 dark:border-amber-900/40">
 				<p class="text-sm text-amber-900">{{ $t("You have an unsaved visit for") }} <strong>{{ resumable.selected?.label }}</strong>.</p>
+				<p class="mt-0.5 text-xs text-amber-800">{{ $t("Your notes and orders were saved; any photos need to be retaken.") }}</p>
 				<div class="mt-2 flex gap-2">
 					<button @click="resumeDraft" class="aa-btn-primary !py-2">{{ $t("Resume") }}</button>
 					<button @click="discardDraft" class="aa-btn-ghost !py-2">{{ $t("Discard") }}</button>
@@ -223,11 +224,11 @@ onMounted(() => {
 		}
 	}
 	if (route.query.purpose) purpose.value = route.query.purpose
-	// A saved draft from a visit the app killed before Save — offer to resume it.
-	if (!route.query.id) {
-		const d = loadDraft()
-		if (d && d.selected) resumable.value = d
-	}
+	// A saved draft from a visit the app killed before Save — offer to resume it. Surfaced even
+	// when arriving for a different dealer (route.query.id present), so an unsaved write-up for
+	// dealer A isn't silently overwritten when the rep jumps to dealer B.
+	const d = loadDraft()
+	if (d && d.selected) resumable.value = d
 })
 
 // The serializable write-up (no photos — see draft.js). Snapshotted as the rep types so an
@@ -257,6 +258,10 @@ function applyDraft(d) {
 	visitName.value = d.visitName || null
 	checkInTime.value = d.checkInTime || null
 	checkInData.value = d.checkInData || {}
+	// If the draft was already checked in, restore that state — otherwise the write-up UI
+	// (orders/notes/Save, all under v-if="checkedIn") stays hidden and the only control is
+	// "Check in" again, which would mint a duplicate visit.
+	checkedIn.value = !!d.checkInTime
 	orders.splice(0, orders.length, ...(d.orders || []))
 	competitors.splice(0, competitors.length, ...(d.competitors || []))
 	notes.value = d.notes || ""
@@ -272,18 +277,6 @@ function discardDraft() {
 	clearDraft()
 	resumable.value = null
 }
-
-// Persist the draft whenever there's real content to lose (a dealer plus a check-in or any
-// captured write-up). Deep so order/competitor row edits are caught.
-watch(
-	[selected, purpose, contactName, contactPhone, visitName, checkInTime, notes, outcome, nextAction, nextVisitDate, orders, competitors],
-	() => {
-		if (selected.value && (checkInTime.value || orders.length || competitors.length || notes.value || outcome.value)) {
-			saveDraft(snapshot())
-		}
-	},
-	{ deep: true }
-)
 
 const PURPOSES = [
 	"New Dealer Onboarding", "Follow-up", "Order Booking", "Payment Collection",
@@ -322,6 +315,22 @@ const notes = ref("")
 const outcome = ref("")
 const nextAction = ref("")
 const nextVisitDate = ref("")
+
+// Persist the draft whenever there's real content to lose (a dealer plus a check-in or any
+// captured write-up). Declared AFTER the refs it watches (a watch evaluates its source array
+// immediately, so referencing a not-yet-declared const here would crash the page on mount).
+// Debounced so a long note doesn't run a synchronous localStorage write on every keystroke.
+let draftTimer = null
+watch(
+	[selected, purpose, contactName, contactPhone, visitName, checkInTime, notes, outcome, nextAction, nextVisitDate, orders, competitors],
+	() => {
+		if (!selected.value) return
+		if (!(checkInTime.value || orders.length || competitors.length || notes.value || outcome.value)) return
+		clearTimeout(draftTimer)
+		draftTimer = setTimeout(() => saveDraft(snapshot()), 600)
+	},
+	{ deep: true }
+)
 
 const canCheckIn = computed(() => !!selected.value)
 const checkInLabel = computed(() => (checkInTime.value ? dayjs(checkInTime.value).format("h:mm A") : ""))
