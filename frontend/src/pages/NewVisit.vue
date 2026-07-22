@@ -6,6 +6,15 @@
 		</header>
 
 		<div class="mx-auto max-w-xl space-y-4 p-4">
+			<!-- Resume an unsaved visit the app killed before Save -->
+			<div v-if="resumable" class="aa-card border border-amber-200 bg-amber-50 dark:border-amber-900/40">
+				<p class="text-sm text-amber-900">{{ $t("You have an unsaved visit for") }} <strong>{{ resumable.selected?.label }}</strong>.</p>
+				<div class="mt-2 flex gap-2">
+					<button @click="resumeDraft" class="aa-btn-primary !py-2">{{ $t("Resume") }}</button>
+					<button @click="discardDraft" class="aa-btn-ghost !py-2">{{ $t("Discard") }}</button>
+				</div>
+			</div>
+
 			<!-- STEP 1: choose party (locked once checked in) -->
 			<div class="aa-card">
 				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Who are you visiting?") }}</p>
@@ -183,8 +192,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue"
+import { ref, reactive, computed, onMounted, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
+import { saveDraft, loadDraft, clearDraft } from "../data/draft"
 import {
 	ChevronLeft, ChevronRight, MapPin, Camera, Trash2, CheckCircle2,
 } from "lucide-vue-next"
@@ -201,6 +211,8 @@ const router = useRouter()
 const route = useRoute()
 
 // Pre-select a dealer when arriving from a customer card (?ptype&id&label).
+const resumable = ref(null)
+
 onMounted(() => {
 	if (route.query.id && route.query.ptype) {
 		selected.value = {
@@ -211,7 +223,67 @@ onMounted(() => {
 		}
 	}
 	if (route.query.purpose) purpose.value = route.query.purpose
+	// A saved draft from a visit the app killed before Save — offer to resume it.
+	if (!route.query.id) {
+		const d = loadDraft()
+		if (d && d.selected) resumable.value = d
+	}
 })
+
+// The serializable write-up (no photos — see draft.js). Snapshotted as the rep types so an
+// app-kill can't lose the orders/notes/competitors they entered at the counter.
+function snapshot() {
+	return {
+		selected: selected.value,
+		purpose: purpose.value,
+		contactName: contactName.value,
+		contactPhone: contactPhone.value,
+		visitName: visitName.value,
+		checkInTime: checkInTime.value,
+		checkInData: checkInData.value,
+		orders: [...orders],
+		competitors: [...competitors],
+		notes: notes.value,
+		outcome: outcome.value,
+		nextAction: nextAction.value,
+		nextVisitDate: nextVisitDate.value,
+	}
+}
+function applyDraft(d) {
+	if (d.selected) selected.value = d.selected
+	purpose.value = d.purpose || "Follow-up"
+	contactName.value = d.contactName || ""
+	contactPhone.value = d.contactPhone || ""
+	visitName.value = d.visitName || null
+	checkInTime.value = d.checkInTime || null
+	checkInData.value = d.checkInData || {}
+	orders.splice(0, orders.length, ...(d.orders || []))
+	competitors.splice(0, competitors.length, ...(d.competitors || []))
+	notes.value = d.notes || ""
+	outcome.value = d.outcome || ""
+	nextAction.value = d.nextAction || ""
+	nextVisitDate.value = d.nextVisitDate || ""
+}
+function resumeDraft() {
+	if (resumable.value) applyDraft(resumable.value)
+	resumable.value = null
+}
+function discardDraft() {
+	clearDraft()
+	resumable.value = null
+}
+
+// Persist the draft whenever there's real content to lose (a dealer plus a check-in or any
+// captured write-up). Deep so order/competitor row edits are caught.
+watch(
+	[selected, purpose, contactName, contactPhone, visitName, checkInTime, notes, outcome, nextAction, nextVisitDate, orders, competitors],
+	() => {
+		if (selected.value && (checkInTime.value || orders.length || competitors.length || notes.value || outcome.value)) {
+			saveDraft(snapshot())
+		}
+	},
+	{ deep: true }
+)
 
 const PURPOSES = [
 	"New Dealer Onboarding", "Follow-up", "Order Booking", "Payment Collection",
@@ -416,6 +488,7 @@ async function save(checkout) {
 			} else {
 				toast.success("Saved")
 			}
+			clearDraft() // visit saved — the draft has served its purpose
 			router.replace({ name: "VisitDetail", params: { name: visitName.value } })
 		} else {
 			// OFFLINE: queue the whole visit as a single submission (syncs later).
@@ -450,6 +523,7 @@ async function save(checkout) {
 					.map((p) => ({ content_base64: p.content_base64 })),
 			}
 			await enqueue("crm_app.field_visit.submit_full_visit", { payload: JSON.stringify(payload) }, "Visit: " + (selected.value?.label || ""))
+			clearDraft() // queued for sync — the draft has served its purpose
 			toast.success("Saved offline — will sync automatically")
 			router.replace({ name: "Visits" })
 		}
