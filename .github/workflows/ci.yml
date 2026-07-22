@@ -21,9 +21,15 @@ jobs:
           MARIADB_ROOT_PASSWORD: root
         ports:
           - 3306:3306
+        # Health check must AUTHENTICATE, or it never goes healthy and the runner marks the
+        # service "failed" before any step runs. `healthcheck.sh --connect` tries to connect
+        # without the root password and fails; `mariadb-admin ping -proot` passes it. This is
+        # the exact config proven working in the sibling hr_app CI.
         options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=5s --health-timeout=5s --health-retries=15
+          --health-cmd="mariadb-admin ping -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
       redis:
         image: redis:alpine
