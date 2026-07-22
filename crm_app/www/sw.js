@@ -10,11 +10,44 @@
 // at all, which made the whole IndexedDB offline queue moot. This caches the shell + hashed
 // assets so the app boots offline; the IndexedDB queue then handles the writes.
 
-const CACHE = "triam-crm-shell-v1"
+const CACHE = "triam-crm-shell-v2"
 const SHELL = "/amit-crm" // the SPA entry HTML; served for every /amit-crm/* deep link
 const ASSET_PREFIX = "/assets/crm_app/frontend/"
+const BUILD_MANIFEST = ASSET_PREFIX + ".vite/manifest.json"
 
-self.addEventListener("install", () => self.skipWaiting())
+async function refreshPrecache() {
+	try {
+		const manifestResponse = await fetch(BUILD_MANIFEST, { cache: "no-store" })
+		if (!manifestResponse.ok) return
+		const manifest = await manifestResponse.json()
+		const urls = new Set()
+		for (const entry of Object.values(manifest || {})) {
+			if (entry.file) urls.add(ASSET_PREFIX + entry.file)
+			for (const file of entry.css || []) urls.add(ASSET_PREFIX + file)
+			for (const file of entry.assets || []) urls.add(ASSET_PREFIX + file)
+		}
+		const cache = await caches.open(CACHE)
+		// Populate the complete new build before pruning anything from the working cache.
+		await cache.addAll([...urls])
+		const keep = new Set([...urls, SHELL])
+		const cached = await cache.keys()
+		await Promise.all(
+			cached
+				.filter((request) => {
+					const url = new URL(request.url)
+					return url.pathname.startsWith(ASSET_PREFIX) && !keep.has(url.pathname)
+				})
+				.map((request) => cache.delete(request))
+		)
+	} catch (e) {
+		// Keep the last complete build if the connection drops during refresh.
+	}
+}
+
+self.addEventListener("install", (event) => {
+	self.skipWaiting()
+	event.waitUntil(refreshPrecache())
+})
 
 self.addEventListener("activate", (event) => {
 	event.waitUntil(
@@ -42,6 +75,8 @@ self.addEventListener("fetch", (event) => {
 	// fall back to the cached shell when offline so the app still opens. One cached entry
 	// (SHELL) serves every /amit-crm/* client route — the SPA does the in-app routing.
 	if (req.mode === "navigate") {
+		// Refresh every lazy route in the background whenever an online launch succeeds.
+		event.waitUntil(refreshPrecache())
 		event.respondWith(
 			(async () => {
 				try {

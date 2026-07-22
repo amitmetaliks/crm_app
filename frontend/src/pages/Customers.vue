@@ -1,32 +1,43 @@
 <template>
-	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="aa-page-header">
-			<h1 class="text-xl font-bold">{{ $t("Dealers & Customers") }}</h1>
-			<input
-				v-model="query"
-				@input="onSearch"
-				class="mt-3 w-full rounded-xl border-0 px-4 py-2.5 text-sm text-navy-700"
-				:placeholder='$t("Search dealers, leads…")'
-			/>
+	<div class="aa-workspace">
+		<header class="aa-topbar !items-end">
+			<div><p class="aa-kicker">Your territory</p><h1 class="aa-display mt-1">Dealers</h1><p class="aa-subtitle">Find the account before you arrive.</p></div>
+			<router-link :to="{ name: 'NewVisit' }" class="aa-back" aria-label="New prospect"><UserRoundPlus class="h-5 w-5" /></router-link>
 		</header>
 
-		<div class="mx-auto max-w-xl space-y-2 p-4">
-			<Skeleton v-if="loading" :count="6" />
-			<EmptyState v-else-if="!rows.length" :title='$t("No matches")' :subtitle='$t("Try another name.")' />
-			<router-link
-				v-for="r in rows"
-				v-else
-				:key="r.party_type + r.id"
-				:to="r.party_type === 'Customer' ? { name: 'CustomerDetail', params: { name: r.id } } : { name: 'NewVisit', query: { ptype: r.party_type, id: r.id, label: r.label } }"
-				class="aa-card flex items-center justify-between"
-			>
-				<div class="min-w-0">
-					<p class="truncate font-semibold text-navy-700 dark:text-white">{{ r.label }}</p>
-					<p class="text-xs text-gray-400">{{ r.party_type }}{{ r.sub ? " · " + r.sub : "" }}</p>
-				</div>
-				<ChevronRight class="h-5 w-5 text-gray-300" />
-			</router-link>
-		</div>
+		<main class="aa-content pt-3">
+			<div class="relative">
+				<Search class="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+				<input v-model="query" @input="onSearch" class="aa-search" :placeholder='$t("Search name, area or account")' />
+			</div>
+
+			<div class="mb-3 mt-6 flex items-center justify-between">
+				<h2 class="aa-section-heading">{{ query ? "Search results" : "My accounts" }}</h2>
+				<span class="text-xs font-medium text-gray-400">{{ rows.length }} shown</span>
+			</div>
+
+			<div class="aa-panel overflow-hidden">
+				<Skeleton v-if="loading" class="p-4" :count="6" />
+				<EmptyState v-else-if="!rows.length" class="p-6" :title='$t("No matches")' :subtitle='$t("Try a dealer name, area or account code.")' />
+				<router-link
+					v-for="r in rows"
+					v-else
+					:key="r.party_type + r.id"
+					:to="r.party_type === 'Customer' ? { name: 'CustomerDetail', params: { name: r.id } } : { name: 'NewVisit', query: { ptype: r.party_type, id: r.id, label: r.label } }"
+					class="aa-data-row group"
+				>
+					<span class="aa-avatar-mark">{{ initials(r.label) }}</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-sm font-semibold text-navy-800 group-active:text-saffron dark:text-white">{{ r.label }}</span>
+						<span class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-400">
+							<MapPin v-if="r.sub" class="h-3 w-3" /> {{ r.sub || r.party_type }}
+						</span>
+					</span>
+					<span class="aa-pill aa-pill-gray">{{ r.party_type === "Customer" ? "Dealer" : r.party_type }}</span>
+					<ChevronRight class="h-4 w-4 text-gray-300" />
+				</router-link>
+			</div>
+		</main>
 
 		<BottomNav />
 	</div>
@@ -34,7 +45,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue"
-import { ChevronRight } from "lucide-vue-next"
+import { ChevronRight, Search, UserRoundPlus, MapPin } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
@@ -45,17 +56,14 @@ const rows = ref([])
 const loading = ref(true)
 let timer = null
 
+function initials(label) {
+	return (label || "?").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()
+}
 async function load() {
 	loading.value = true
-	try {
-		// Live search online; offline, filter the cached dealer directory so the rep can still
-		// find any of their dealers with no signal.
-		rows.value = (await searchDealers(query.value, "", 25)) || []
-	} catch (e) {
-		rows.value = []
-	} finally {
-		loading.value = false
-	}
+	try { rows.value = (await searchDealers(query.value, "", 25)) || [] }
+	catch (e) { rows.value = [] }
+	finally { loading.value = false }
 }
 function onSearch() {
 	clearTimeout(timer)

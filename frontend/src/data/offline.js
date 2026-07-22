@@ -1,13 +1,25 @@
 import { reactive } from "vue"
 import { call } from "./api"
+import { currentUser, requireCurrentUser } from "./identity"
 
 // Reactive network/sync state for the UI banner.
 //   pending — queued writes still waiting to sync
 //   failed  — writes the SERVER rejected (validation); held for the rep to see, not dropped
-export const net = reactive({ online: navigator.onLine, pending: 0, failed: 0, syncing: false })
+export const net = reactive({ online: navigator.onLine, pending: 0, failed: 0, syncing: false, lastSynced: 0 })
 
 const DB_NAME = "triam-crm"
 const STORE = "queue"
+
+function syncStampKey(owner = currentUser()) { return owner ? `triam-crm-last-sync:${encodeURIComponent(owner)}` : null }
+function loadSyncStamp() {
+	const key = syncStampKey()
+	if (!key) { net.lastSynced = 0; return }
+	try { net.lastSynced = Number(localStorage.getItem(key) || 0) } catch (e) { net.lastSynced = 0 }
+}
+function markSynced() {
+	net.lastSynced = Date.now()
+	try { localStorage.setItem(syncStampKey(), String(net.lastSynced)) } catch (e) { /* best-effort */ }
+}
 
 function openDb() {
 	return new Promise((resolve, reject) => {
@@ -47,11 +59,16 @@ async function allRecs() {
 }
 async function delRec(id) {
 	const s = await store("readwrite")
-	s.delete(id)
+	return new Promise((res, rej) => {
+		const r = s.delete(id)
+		r.onsuccess = () => res()
+		r.onerror = () => rej(r.error)
+	})
 }
 async function refresh() {
 	try {
-		const all = await allRecs()
+		const owner = currentUser()
+		const all = (await allRecs()).filter((r) => owner && r.owner === owner)
 		net.pending = all.filter((r) => !r.failed).length
 		net.failed = all.filter((r) => r.failed).length
 	} catch (e) {
@@ -80,7 +97,8 @@ function ensureIdem(params) {
 }
 
 export async function enqueue(method, params, label) {
-	await addRec({ method, params: ensureIdem(params), label: label || method, ts: Date.now(), attempts: 0 })
+	const owner = requireCurrentUser()
+	await addRec({ owner, method, params: ensureIdem(params), label: label || method, ts: Date.now(), attempts: 0 })
 	await refresh()
 }
 
@@ -158,14 +176,24 @@ export async function callOrQueue(method, params, label) {
 
 export async function flush() {
 	if (net.syncing || !navigator.onLine) return
+	const owner = currentUser()
+	if (!owner) { await refresh(); return }
 	net.syncing = true
+	let completed = 0
 	try {
-		const items = await allRecs()
+		// Never replay another account's work under the active Frappe session. Ownerless rows
+		// from versions before account isolation are deliberately quarantined instead of guessed.
+		const items = (await allRecs()).filter((r) => r.owner === owner)
 		for (const it of items) {
 			if (it.failed) continue // waiting for an explicit retry from the rep
+			// Re-check identity every iteration: if the account changed mid-flush, STOP rather
+			// than replay this owner's writes under a different Frappe session. (Belt-and-braces —
+			// login currently does a full reload that tears down this realm.)
+			if (currentUser() !== owner) break
 			try {
 				await call(it.method, it.params)
 				await delRec(it.id)
+				completed += 1
 			} catch (e) {
 				const kind = classify(e)
 				// Transient (network / server) or a dead session: stop the whole run and
@@ -182,6 +210,7 @@ export async function flush() {
 			}
 		}
 	} finally {
+		if (completed) markSynced()
 		net.syncing = false
 		await refresh()
 	}
@@ -189,11 +218,18 @@ export async function flush() {
 
 // ── For a "Sync errors" UI: list, retry, discard ────────────────────────────
 export async function failedRecs() {
-	return (await allRecs()).filter((r) => r.failed)
+	const owner = currentUser()
+	return (await allRecs()).filter((r) => owner && r.owner === owner && r.failed)
+}
+export async function queuedRecs() {
+	const owner = currentUser()
+	return (await allRecs())
+		.filter((r) => owner && r.owner === owner)
+		.sort((a, b) => (a.ts || 0) - (b.ts || 0))
 }
 export async function retryItem(id) {
 	const all = await allRecs()
-	const it = all.find((r) => r.id === id)
+	const it = all.find((r) => r.id === id && r.owner === currentUser())
 	if (it) {
 		delete it.failed
 		delete it.error
@@ -204,7 +240,8 @@ export async function retryItem(id) {
 }
 // Explicit, rep-initiated delete — the ONLY path that removes a record on purpose.
 export async function discardItem(id) {
-	await delRec(id)
+	const it = (await allRecs()).find((r) => r.id === id && r.owner === currentUser())
+	if (it) await delRec(id)
 	await refresh()
 }
 // Clear the failed flag on every held record and try again (e.g. after the rep fixed a
@@ -212,7 +249,7 @@ export async function discardItem(id) {
 export async function retryFailed() {
 	const all = await allRecs()
 	for (const it of all) {
-		if (it.failed) {
+		if (it.owner === currentUser() && it.failed) {
 			delete it.failed
 			delete it.error
 			await putRec(it)
@@ -225,8 +262,16 @@ export async function retryFailed() {
 export function initOffline() {
 	window.addEventListener("online", () => { net.online = true; flush() })
 	window.addEventListener("offline", () => { net.online = false })
+	loadSyncStamp()
 	refresh()
 	if (navigator.onLine) flush()
 	// Safety: periodic flush attempt.
 	setInterval(() => { if (navigator.onLine) flush() }, 30000)
+}
+
+// Called after login/logout so badges and replay immediately follow the active account.
+export async function onIdentityChanged() {
+	loadSyncStamp()
+	await refresh()
+	if (navigator.onLine && currentUser()) flush()
 }

@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build --base=/assets/crm_app/frontend/",
-    "preview": "vite preview"
-  },
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build --base=/assets/crm_app/frontend/",
+		"preview": "vite preview",
+		"test": "node --test tests/*.test.mjs"
+	},
   "dependencies": {
     "@capacitor/core": "^6.1.2",
     "@capacitor-community/background-geolocation": "^1.2.20",
     "dayjs": "^1.11.11",
-    "frappe-ui": "0.1.105",
     "leaflet": "^1.9.4",
     "lucide-vue-next": "^0.460.0",
     "vue": "^3.5.12",

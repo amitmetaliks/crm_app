@@ -1,22 +1,21 @@
 <template>
-	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="aa-page-header">
-			<div class="aa-logo-pill mb-4 inline-block">
-				<img :src="wordmark" alt="TRIAM A+" class="h-6" />
-			</div>
-			<div class="flex items-center gap-3">
-				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-saffron text-lg font-bold">
+	<div class="aa-workspace">
+		<header class="aa-topbar !items-end">
+			<div class="flex min-w-0 items-center gap-3">
+				<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy-700 text-lg font-bold text-white">
 					{{ initials }}
 				</div>
-				<div>
-					<p class="font-semibold">{{ session.employeeName || session.user }}</p>
-					<p class="text-xs text-navy-200">{{ session.isSalesManager ? "Sales Manager" : "Field Sales" }}</p>
+				<div class="min-w-0">
+					<p class="aa-kicker">Account</p>
+					<p class="truncate text-lg font-bold text-navy-800 dark:text-white">{{ session.employeeName || session.user }}</p>
+					<p class="text-xs text-gray-400">{{ session.isSalesManager ? "Sales Manager" : "Field Sales" }}</p>
 				</div>
 			</div>
+			<div class="aa-logo-pill !px-2.5 !py-1"><img :src="wordmark" alt="TRIAM A+" class="h-5" /></div>
 		</header>
 
-		<div class="mx-auto -mt-4 max-w-xl space-y-3 px-4">
-			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+		<div class="aa-content space-y-4 pt-3">
+			<div class="aa-panel divide-y divide-gray-100 overflow-hidden dark:divide-navy-700">
 				<router-link :to="{ name: 'Beat' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Route class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Beat plan") }}</span>
 				</router-link>
@@ -38,7 +37,7 @@
 			</div>
 
 			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("My workplace") }}</p>
-			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+			<div class="aa-panel divide-y divide-gray-100 overflow-hidden dark:divide-navy-700">
 				<router-link :to="{ name: 'Attendance' }" class="flex items-center gap-3 px-4 py-3.5">
 					<CalendarCheck class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Attendance") }}</span>
 				</router-link>
@@ -72,7 +71,7 @@
 			</div>
 
 			<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("Security") }}</p>
-			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+			<div class="aa-panel divide-y divide-gray-100 overflow-hidden dark:divide-navy-700">
 				<button @click="setupPin" class="flex w-full items-center gap-3 px-4 py-3.5 text-left">
 					<KeyRound class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ pinOn ? "Change app PIN" : "Set app PIN" }}</span>
 				</button>
@@ -86,7 +85,7 @@
 
 			<div v-if="session.isSalesManager">
 				<p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $t("Manager") }}</p>
-				<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+				<div class="aa-panel divide-y divide-gray-100 overflow-hidden dark:divide-navy-700">
 					<router-link :to="{ name: 'ManagerDashboard' }" class="flex items-center gap-3 px-4 py-3.5">
 						<TrendingUp class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Business dashboard") }}</span>
 					</router-link>
@@ -105,7 +104,10 @@
 				</div>
 			</div>
 
-			<div class="aa-card divide-y divide-gray-100 !p-0 dark:divide-navy-700">
+			<div class="aa-panel divide-y divide-gray-100 overflow-hidden dark:divide-navy-700">
+				<router-link :to="{ name: 'SyncCenter' }" class="flex items-center gap-3 px-4 py-3.5">
+					<CloudCog class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">Offline sync centre</span>
+				</router-link>
 				<router-link :to="{ name: 'Notifications' }" class="flex items-center gap-3 px-4 py-3.5">
 					<Bell class="h-5 w-5 text-saffron" /> <span class="text-sm text-navy-700 dark:text-white">{{ $t("Notifications") }}</span>
 				</router-link>
@@ -139,7 +141,7 @@
 <script setup>
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
-import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages, CalendarRange, Boxes, TrendingUp } from "lucide-vue-next"
+import { Bell, Moon, LogOut, Route, Target, IndianRupee, UserPlus, Users, CalendarCheck, Receipt, CalendarOff, Wallet, CheckSquare, BarChart3, Award, Clock, MapPin, Sparkles, KeyRound, Fingerprint, Tag, Fuel, Languages, CalendarRange, Boxes, TrendingUp, CloudCog } from "lucide-vue-next"
 import { LANGS, locale, setLocale } from "../data/i18n"
 import { hasPin, setPin, clearLock, bioSupported, bioEnabled, enableBio, disableBio } from "../data/lock"
 import { toast } from "../utils/toast"

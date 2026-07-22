@@ -1,5 +1,4 @@
 import { createApp } from "vue"
-import { setConfig, frappeRequest, resourcesPlugin } from "frappe-ui"
 import router from "./router"
 import App from "./App.vue"
 import "./index.css"
@@ -19,14 +18,10 @@ resumeDutyTracking()
 prefetchDealers() // cache the rep's dealer list so visits can be started offline
 pruneCache() // drop read-cache entries older than a few weeks (bounds IndexedDB growth)
 
-// Route all frappe-ui resources through the Frappe request helper (cookie/session auth)
-setConfig("resourceFetcher", frappeRequest)
-
 const app = createApp(App)
 // $t reads the locale ref during render, so switching language re-renders in place.
 app.config.globalProperties.$t = t
 app.use(router)
-app.use(resourcesPlugin)
 app.mount("#app")
 
 // Register the service worker (app-shell caching for offline open + web push).

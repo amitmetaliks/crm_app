@@ -1,28 +1,33 @@
 <template>
-	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
-			<button @click="$router.back()"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="truncate text-lg font-semibold">{{ c?.customer_name || name }}</h1>
+	<div class="aa-workspace">
+		<header class="aa-topbar">
+			<button class="aa-back" @click="$router.back()"><ChevronLeft class="h-5 w-5" /></button>
+			<div class="min-w-0 flex-1 px-1 text-center">
+				<p class="aa-kicker">Customer 360</p>
+				<h1 class="truncate text-base font-bold text-navy-800 dark:text-white">{{ c?.customer_name || name }}</h1>
+			</div>
+			<span class="aa-back text-xs font-bold">{{ initials }}</span>
 		</header>
 
 		<div v-if="loading" class="mx-auto max-w-xl p-4"><Skeleton :count="4" /></div>
 
-		<div v-else-if="c" class="mx-auto max-w-xl space-y-4 p-4">
+		<div v-else-if="c" class="aa-content space-y-5 pt-3">
 			<!-- Identity + risk flag -->
-			<div class="aa-card space-y-1">
+			<div class="aa-hero space-y-1 !p-5">
 				<div class="flex items-start justify-between gap-2">
 					<div class="min-w-0">
-						<p class="text-lg font-bold text-navy-700 dark:text-white">{{ c.customer_name }}</p>
-						<p v-if="c.territory || c.customer_group" class="text-sm text-gray-500">
+						<p class="aa-kicker !text-amber-200">Dealer account</p>
+						<p class="mt-1 text-[1.45rem] font-bold leading-tight tracking-tight text-white">{{ c.customer_name }}</p>
+						<p v-if="c.territory || c.customer_group" class="mt-1 text-sm text-white/60">
 							{{ [c.territory, c.customer_group].filter(Boolean).join(" · ") }}
 						</p>
-						<p v-if="d.geo?.city" class="text-xs text-gray-400">{{ d.geo.city }}</p>
+						<p v-if="d.geo?.city" class="mt-0.5 text-xs text-white/50">{{ d.geo.city }}</p>
 					</div>
 					<span v-if="d.at_risk" class="shrink-0 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">{{ $t("At risk") }}</span>
 				</div>
 
 				<!-- Quick actions -->
-				<div class="flex flex-wrap gap-2 pt-2">
+				<div class="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
 					<a v-if="c.mobile_no" :href="`tel:${c.mobile_no}`" class="chip"><Phone class="h-3.5 w-3.5" /> {{ $t("Call") }}</a>
 					<button v-if="c.mobile_no" class="chip" @click="wa"><MessageCircle class="h-3.5 w-3.5" /> {{ $t("WhatsApp") }}</button>
 					<button v-if="d.geo" class="chip chip-primary" @click="navigate"><Navigation class="h-3.5 w-3.5" /> {{ $t("Navigate") }}</button>
@@ -37,8 +42,8 @@
 			</div>
 
 			<!-- The numbers that matter at the door -->
-			<div class="grid grid-cols-2 gap-3">
-				<div class="aa-card">
+			<div class="aa-panel grid grid-cols-2 gap-0 overflow-hidden">
+				<div class="border-r border-[#e7e5df] p-4 dark:border-navy-700">
 					<p class="text-xs text-gray-400">{{ d.in_credit ? $t("In credit") : $t("Outstanding") }}</p>
 					<p class="text-xl font-bold" :class="d.in_credit ? 'text-green-600' : d.outstanding > 0 ? 'text-red-600' : 'text-green-600'">
 						{{ inrShort(d.in_credit ? Math.abs(d.balance) : d.outstanding) }}
@@ -48,7 +53,7 @@
 					     with a dealer using a stale number. -->
 					<p v-else-if="d.balance_as_of" class="text-xs text-gray-400">{{ $t("as of") }} {{ formatDate(d.balance_as_of) }}</p>
 				</div>
-				<div class="aa-card">
+				<div class="p-4">
 					<p class="text-xs text-gray-400">{{ $t("Business done") }}</p>
 					<p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(d.orders?.value) }}</p>
 					<p class="text-xs text-gray-400">{{ d.orders?.count || 0 }} orders · {{ num(d.orders?.qty_mt) }} MT</p>
@@ -56,7 +61,7 @@
 			</div>
 
 			<!-- Relationship pulse -->
-			<div class="aa-card grid grid-cols-3 gap-2 text-center">
+			<div class="aa-panel grid grid-cols-3 gap-2 p-4 text-center">
 				<div>
 					<p class="text-xs text-gray-400">{{ $t("Last visit") }}</p>
 					<p class="text-sm font-semibold text-navy-700 dark:text-white">{{ ago(d.days_since_visit) }}</p>
@@ -71,18 +76,28 @@
 				</div>
 			</div>
 
-			<div class="flex gap-2">
+			<router-link :to="nextBestAction.to" class="aa-panel flex items-center gap-3 p-4">
+				<span class="aa-icon-surface"><CalendarClock class="h-5 w-5" /></span>
+				<span class="min-w-0 flex-1">
+					<span class="aa-kicker">Next best action</span>
+					<span class="mt-1 block text-sm font-bold text-navy-800 dark:text-white">{{ nextBestAction.title }}</span>
+					<span class="mt-0.5 block text-xs text-gray-400">{{ nextBestAction.detail }}</span>
+				</span>
+				<ChevronRight class="h-5 w-5 text-gray-300" />
+			</router-link>
+
+			<div class="grid grid-cols-3 gap-2">
 				<router-link
 					:to="{ name: 'NewVisit', query: { ptype: 'Customer', id: name, label: c.customer_name } }"
-					class="aa-btn-primary flex-1 text-center"
+					class="aa-hero-action text-center"
 				>{{ $t("Start visit") }}</router-link>
 				<router-link
 					:to="{ name: 'StockCheck', query: { customer: name, label: c.customer_name } }"
-					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-navy-700 py-2.5 text-center text-sm font-semibold text-white dark:bg-navy-600"
+					class="aa-quiet-action !px-2 text-center"
 				><Boxes class="h-4 w-4" /> {{ $t("Stock") }}</router-link>
 				<router-link
 					:to="{ name: 'Collect', query: { customer: name, label: c.customer_name, phone: c.mobile_no || '' } }"
-					class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-2.5 text-center text-sm font-semibold text-white"
+					class="aa-quiet-action !border-green-200 !px-2 !text-green-700"
 				><IndianRupee class="h-4 w-4" /> {{ $t("Collect") }}</router-link>
 			</div>
 
@@ -202,11 +217,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue"
-import { ChevronLeft, Phone, MessageCircle, Navigation, MapPinOff, MapPin, IndianRupee, Boxes } from "lucide-vue-next"
+import { ChevronLeft, ChevronRight, Phone, MessageCircle, Navigation, MapPinOff, MapPin, IndianRupee, Boxes, CalendarClock } from "lucide-vue-next"
 import dayjs from "dayjs"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
 import { call } from "../data/api"
+import { session } from "../data/session"
 import { openWhatsApp } from "../utils/wa"
 import { getPosition } from "../utils/geo"
 import { toast } from "../utils/toast"
@@ -223,6 +239,18 @@ const isManager = ref(false)
 // Reps may pin only shops we cannot locate yet; re-pinning moves the geofence, so it
 // stays a manager action (see customers.pin_shop).
 const canPin = computed(() => !d.value.geo || isManager.value)
+const initials = computed(() => (c.value?.customer_name || props.name || "?").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase())
+const nextBestAction = computed(() => {
+	const visitTo = (purpose) => ({ name: "NewVisit", query: { ptype: "Customer", id: props.name, label: c.value?.customer_name || props.name, purpose } })
+	if (Number(d.value.overdue || 0) > 0) return {
+		title: `Collect ${inrShort(d.value.overdue)} overdue`,
+		detail: "Resolve the oldest risk before discussing new credit.",
+		to: { name: "Collect", query: { customer: props.name, label: c.value?.customer_name || props.name, phone: c.value?.mobile_no || "" } },
+	}
+	if (d.value.at_risk) return { title: "Re-engage this dealer", detail: "The account is going quiet. Capture the blocker and next commitment.", to: visitTo("Relationship") }
+	if (Number(d.value.days_since_visit || 0) >= 14) return { title: "Schedule a follow-up visit", detail: `Last field visit was ${ago(d.value.days_since_visit)}.`, to: visitTo("Follow-up") }
+	return { title: "Grow the next order", detail: "Account health is stable. Review stock and identify the next requirement.", to: visitTo("Order Booking") }
+})
 
 function formatDate(x) { return x ? dayjs(x).format("DD MMM YYYY") : "" }
 
@@ -276,11 +304,9 @@ async function load() {
 onMounted(async () => {
 	try {
 		await load()
-		try {
-			isManager.value = !!(await call("crm_app.api.whoami"))?.is_sales_manager
-		} catch (e) {
-			/* non-fatal: just hides the re-pin action */
-		}
+		// Manager flag is already loaded into the session at boot (refreshMe) — no need for a
+		// per-dealer whoami round-trip on weak signal.
+		isManager.value = !!session.isSalesManager
 	} catch (e) {
 		c.value = null
 	} finally {
@@ -291,7 +317,7 @@ onMounted(async () => {
 
 <style scoped>
 .chip {
-	@apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 dark:border-navy-700 dark:bg-navy-800 dark:text-white;
+	@apply inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-white;
 }
 .chip-primary {
 	@apply border-saffron bg-saffron;

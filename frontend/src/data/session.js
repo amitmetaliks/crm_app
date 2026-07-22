@@ -1,18 +1,9 @@
 import { reactive } from "vue"
-import { createResource } from "frappe-ui"
-
-function getCookie(name) {
-	const match = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)")
-	return match ? decodeURIComponent(match.pop()) : null
-}
-
-function currentUserFromCookie() {
-	const u = getCookie("user_id")
-	return u && u !== "Guest" ? u : null
-}
+import { createRequestResource } from "./api"
+import { currentUser } from "./identity"
 
 export const session = reactive({
-	user: currentUserFromCookie(),
+	user: currentUser(),
 	employee: null,
 	employeeName: "",
 	isSalesManager: false,
@@ -23,7 +14,7 @@ export const session = reactive({
 	},
 })
 
-const meRes = createResource({ url: "crm_app.api.whoami" })
+const meRes = createRequestResource({ url: "crm_app.api.whoami" })
 
 // Load the logged-in rep's profile (employee + manager flag). A user without an
 // Employee record can log in but cannot record visits — the UI surfaces this.
@@ -42,20 +33,23 @@ export async function refreshMe() {
 	}
 }
 
-export const loginResource = createResource({
+export const loginResource = createRequestResource({
 	url: "login",
 	makeParams({ email, password }) {
 		return { usr: email, pwd: password }
 	},
 	onSuccess() {
-		session.user = currentUserFromCookie()
+		session.user = currentUser()
 		session.gateLoaded = false
+		import("./offline").then((m) => m.onIdentityChanged()).catch(() => {})
+		import("./cache").then((m) => m.prefetchDealers()).catch(() => {})
 	},
 })
 
-export const logoutResource = createResource({
+export const logoutResource = createRequestResource({
 	url: "logout",
 	onSuccess() {
+		const signedOutUser = session.user
 		session.user = null
 		session.employee = null
 		session.hasEmployee = false
@@ -63,5 +57,10 @@ export const logoutResource = createResource({
 		// Stop the foreground GPS pings + resume listener; they must not keep reading the
 		// signed-out user's location.
 		import("./tracker").then((m) => m.stopTracking()).catch(() => {})
+		// Read caches and drafts may contain customer financial data. Remove them on explicit
+		// logout; the write queue is retained but remains sealed to its originating account.
+		import("./cache").then((m) => m.clearUserCache(signedOutUser)).catch(() => {})
+		import("./draft").then((m) => m.clearDraftForUser(signedOutUser)).catch(() => {})
+		import("./offline").then((m) => m.onIdentityChanged()).catch(() => {})
 	},
 })

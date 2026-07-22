@@ -7,6 +7,7 @@
 
 import { reactive } from "vue"
 import { call } from "./api"
+import { currentUser, userKey } from "./identity"
 
 const DB = "triam-crm-cache"
 const STORE = "reads"
@@ -58,7 +59,7 @@ function keyOf(method, params) {
 		.filter((k) => p[k] !== undefined)
 		.sort()
 		.reduce((o, k) => ((o[k] = p[k]), o), {})
-	return method + ":" + JSON.stringify(sorted)
+	return userKey() + ":" + method + ":" + JSON.stringify(sorted)
 }
 
 // Live when possible, last-known when offline. Returns the SAME payload shape as call(), so a
@@ -112,14 +113,14 @@ export async function pruneCache(maxAgeDays = 21) {
 }
 
 // ── Dealer directory for offline visit-pick ────────────────────────────────────
-const DEALERS_KEY = "dealers:list"
+function dealersKey() { return userKey() + ":dealers:list" }
 
 // Pull the rep's dealer list once (online) and keep it, so the picker works offline.
 export async function prefetchDealers() {
-	if (!navigator.onLine) return
+	if (!navigator.onLine || !currentUser()) return
 	try {
 		const list = await call("crm_app.customers.list_my_parties", {})
-		if (Array.isArray(list)) idbPut(DEALERS_KEY, list)
+		if (Array.isArray(list)) idbPut(dealersKey(), list)
 	} catch (e) {
 		/* best-effort */
 	}
@@ -136,11 +137,30 @@ export async function searchDealers(query, party_type = "Customer", limit = 10) 
 			if (!isNetworkError(e)) throw e
 		}
 	}
-	const row = await idbGet(DEALERS_KEY)
+	const row = await idbGet(dealersKey())
 	const list = (row && row.value) || []
 	const ql = q.toLowerCase()
 	const filtered = ql
 		? list.filter((d) => (d.label || "").toLowerCase().includes(ql) || (d.id || "").toLowerCase().includes(ql))
 		: list
 	return filtered.slice(0, limit)
+}
+
+// Explicit logout removes customer financial/read data for that account. Queued writes live
+// in a separate database and are retained under their immutable owner until they can sync.
+export async function clearUserCache(user) {
+	if (!user) return
+	try {
+		const prefix = userKey(user) + ":"
+		const db = await openDb()
+		const store = db.transaction(STORE, "readwrite").objectStore(STORE)
+		const req = store.getAll()
+		req.onsuccess = () => {
+			for (const row of req.result || []) if (String(row.key).startsWith(prefix)) store.delete(row.key)
+		}
+		cacheState.stale = false
+		cacheState.at = 0
+	} catch (e) {
+		/* best-effort privacy cleanup */
+	}
 }

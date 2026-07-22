@@ -11,11 +11,14 @@
 // (base64 would blow the ~5MB quota); a killed app loses only the photos, which are re-takeable,
 // never the write-up.
 
-const KEY = "triam-newvisit-draft"
+import { currentUser, userKey } from "./identity"
+
+function key(user = currentUser()) { return "triam-newvisit-draft:" + userKey(user) }
 
 export function saveDraft(data) {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ ...data, savedAt: Date.now() }))
+		if (!currentUser()) return
+		localStorage.setItem(key(), JSON.stringify({ ...data, savedAt: Date.now() }))
 	} catch (e) {
 		/* quota / disabled storage — a lost draft must never break the visit flow */
 	}
@@ -23,7 +26,8 @@ export function saveDraft(data) {
 
 export function loadDraft() {
 	try {
-		return JSON.parse(localStorage.getItem(KEY) || "null")
+		if (!currentUser()) return null
+		return JSON.parse(localStorage.getItem(key()) || "null")
 	} catch (e) {
 		return null
 	}
@@ -31,8 +35,13 @@ export function loadDraft() {
 
 export function clearDraft() {
 	try {
-		localStorage.removeItem(KEY)
+		localStorage.removeItem(key())
 	} catch (e) {
 		/* ignore */
 	}
+}
+
+export function clearDraftForUser(user) {
+	if (!user) return
+	try { localStorage.removeItem(key(user)) } catch (e) { /* ignore */ }
 }

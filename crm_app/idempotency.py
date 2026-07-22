@@ -1,27 +1,22 @@
-"""Server-side idempotency for the offline queue.
+"""Transactional idempotency for writes replayed by the field app.
 
-The rep app queues writes in IndexedDB and replays them when the network returns
-(`frontend/src/data/offline.js`). One replay case is genuinely dangerous: the request
-COMMITTED on the server but its RESPONSE was lost (dropped connection, timeout after the
-DB write). The client can't tell that from a request that never arrived, so it retries —
-and without a guard the retry creates a SECOND attendance punch or a SECOND expense claim.
-A duplicate expense claim is duplicate money; a duplicate check-in corrupts the day.
-
-Visits already dedupe on their own `client_ref` field. This module is the general
-equivalent for endpoints whose target is a stock HRMS doctype (Employee Checkin, Expense
-Claim) we don't want to add custom fields to: the client mints a stable key ONCE, before
-the first attempt, and reuses it on every retry; the server records key -> response in a
-tiny `CRM Idempotency Key` row that COMMITS in the same transaction as the business write.
-So either both persist or neither does — exactly the property that makes the retry safe.
-
-Degrades gracefully: on a bench where the doctype hasn't been migrated yet, `replay`
-returns None and `record` is a no-op, so the endpoints behave as before (no idempotency,
-but no crash) — the same defensive stance the rest of this app takes toward optional data.
+The browser assigns a stable key before its first attempt. ``replay`` reserves that key
+inside the caller's transaction before any business document is created; ``record`` stores
+the response in the same transaction. A concurrent retry blocks on the unique key and then
+replays the winner's response, so lost HTTP responses cannot create duplicate money or
+attendance records.
 """
 
 import frappe
 
 DOCTYPE = "CRM Idempotency Key"
+
+# A reservation with no response is normally a concurrent in-flight request. But if the owning
+# request died AFTER a nested commit persisted the empty placeholder (e.g. a frappe.log_error
+# inside the endpoint) and then rolled back its business write, the placeholder is orphaned. Without
+# a reclaim window every future retry of that key would throw forever — bricking the rep's action.
+# After this many seconds an empty reservation is treated as abandoned and reclaimed.
+STALE_RESERVATION_SECONDS = 180
 
 
 def _available() -> bool:
@@ -31,45 +26,98 @@ def _available() -> bool:
 		return False
 
 
-def replay(key, employee=None):
-	"""If this key was already processed BY THIS employee, return the stored response; else None.
+def _existing(key):
+	return frappe.db.get_value(
+		DOCTYPE, {"idempotency_key": key}, ["name", "employee", "response", "creation"], as_dict=True
+	)
 
-	A non-None return means "already done, don't do it again" — the caller must return it
-	verbatim instead of repeating its write. Scoping the lookup to the employee means a leaked
-	or reused key can never hand user B the response (and doc name) of user A's write.
+
+def replay(key, employee=None):
+	"""Atomically reserve ``key``, or return its completed response.
+
+	``None`` means this transaction owns the reservation and may perform the write. A response
+	means another attempt already completed and the endpoint must return it verbatim.
 	"""
 	if not key or not _available():
 		return None
-	filt = {"idempotency_key": str(key)}
-	if employee:
-		filt["employee"] = employee
-	resp = frappe.db.get_value(DOCTYPE, filt, "response")
-	if resp is None:
+	key = str(key)[:140]
+	row = _existing(key)
+	if not row:
+		try:
+			frappe.get_doc(
+				{
+					"doctype": DOCTYPE,
+					"idempotency_key": key,
+					"employee": employee,
+					"response": "",
+				}
+			).insert(ignore_permissions=True)
+			return None
+		except frappe.exceptions.DuplicateEntryError:
+			# The unique insert waits for the competing transaction to commit or roll back.
+			# After it loses the race, the winning response is safe to read.
+			row = _existing(key)
+
+	if not row:
+		frappe.throw("The request is being retried. Please try again.", frappe.TimestampMismatchError)
+	if employee and row.employee and row.employee != employee:
+		frappe.throw("This request key belongs to another user.", frappe.PermissionError)
+	if not row.response:
+		# Empty reservation. If it's fresh, a sibling request is genuinely in flight — tell the
+		# client to retry shortly. If it's stale, the owning request died and left an orphan;
+		# reclaim it (delete + let this transaction re-reserve) so the action isn't bricked forever.
+		from frappe.utils import get_datetime, now_datetime
+
+		age = (now_datetime() - get_datetime(row.creation)).total_seconds() if row.creation else 0
+		if age <= STALE_RESERVATION_SECONDS:
+			frappe.throw("This request is still being processed. Please retry shortly.", frappe.TimestampMismatchError)
+		frappe.delete_doc(DOCTYPE, row.name, ignore_permissions=True, force=True)
+		try:
+			frappe.get_doc(
+				{"doctype": DOCTYPE, "idempotency_key": key, "employee": employee, "response": ""}
+			).insert(ignore_permissions=True)
+		except frappe.exceptions.DuplicateEntryError:
+			# Another retry reclaimed it first; fall through and let them win.
+			return replay(key, employee)
 		return None
 	try:
-		return frappe.parse_json(resp)
+		return frappe.parse_json(row.response)
 	except Exception:
-		# The write definitely happened; we just can't reconstruct the payload.
 		return {"duplicate": True}
 
 
 def record(key, method, response, employee=None):
-	"""Persist key -> response. NOT committed here: it rides the caller's own commit so the
-	marker and the business write land together (or roll back together)."""
+	"""Finish a reservation with its response in the caller's transaction."""
 	if not key or not _available():
 		return
-	if frappe.db.exists(DOCTYPE, {"idempotency_key": str(key)}):
+	key = str(key)[:140]
+	row = _existing(key)
+	if row:
+		if employee and row.employee and row.employee != employee:
+			frappe.throw("This request key belongs to another user.", frappe.PermissionError)
+		frappe.db.set_value(
+			DOCTYPE,
+			row.name,
+			{
+				"method": (method or "")[:140],
+				"employee": employee,
+				"response": frappe.as_json(response),
+			},
+			update_modified=False,
+		)
 		return
+
+	# Compatibility for a caller that records without first invoking replay.
 	try:
 		frappe.get_doc(
 			{
 				"doctype": DOCTYPE,
-				"idempotency_key": str(key)[:140],
+				"idempotency_key": key,
 				"method": (method or "")[:140],
 				"employee": employee,
 				"response": frappe.as_json(response),
 			}
 		).insert(ignore_permissions=True)
 	except frappe.exceptions.DuplicateEntryError:
-		# A concurrent request beat us to the same key — that request's response stands.
+		# A concurrent path already reserved/recorded this key — that response stands.
 		pass

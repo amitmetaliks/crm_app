@@ -112,7 +112,8 @@ def get_credit_status(customer):
 def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	"""Create a Draft Quotation or Sales Order for the customer from item lines.
 
-	items: [{item_code, qty, rate?}]. Links the created doc back to the CRM Visit.
+	items: [{item_code, qty}]. Price is always resolved on the server; browser-provided
+	rates are display hints only and are never trusted for credit or order value.
 	"""
 	employee = get_current_employee()
 	if not _exists("Sales Order"):
@@ -129,26 +130,34 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	company = frappe.db.get_value("Customer", customer, "company") or frappe.defaults.get_global_default("company")
 	pl = _default_price_list()
 
-	# Order value for the credit check must use the REAL price, not the client's `rate`.
-	# The client normally omits rate (the Sales Order prices from the list below), so
-	# `qty * rate` was 0 for every line -> order_value 0 -> the gate always passed. Resolve
-	# the price-list rate for any line without one so the check reflects the true value.
-	def _line_value(i):
-		r = flt(i.get("rate"))
-		if not r and pl and _exists("Item Price"):
-			r = flt(
+	def _server_rate(item_code):
+		"""Resolve a selling rate from ERPNext-owned data, never request JSON."""
+		rate = 0
+		if pl and _exists("Item Price"):
+			rate = flt(
 				frappe.db.get_value(
-					"Item Price", {"item_code": i["item_code"], "price_list": pl, "selling": 1}, "price_list_rate"
+					"Item Price", {"item_code": item_code, "price_list": pl, "selling": 1}, "price_list_rate"
 				)
 			)
-		if not r and _exists("Item"):
-			# Last-resort valuation so a missing price-list row can't zero the line and slip an
-			# order past the credit gate.
-			m = frappe.db.get_value("Item", i["item_code"], ["standard_rate", "valuation_rate"], as_dict=True) or {}
-			r = flt(m.get("standard_rate") or m.get("valuation_rate"))
-		return flt(i.get("qty")) * r
+		if not rate and _exists("Item"):
+			master = frappe.db.get_value(
+				"Item", item_code, ["standard_rate", "valuation_rate"], as_dict=True
+			) or {}
+			rate = flt(master.get("standard_rate") or master.get("valuation_rate"))
+		return rate
 
-	order_value = sum(_line_value(i) for i in items)
+	server_items = []
+	for item in items:
+		rate = _server_rate(item["item_code"])
+		if rate <= 0:
+			frappe.throw(
+				_("No selling price is configured for item {0}. Ask a manager to update the ERPNext price list.").format(
+					frappe.bold(item["item_code"])
+				)
+			)
+		server_items.append({"item_code": item["item_code"], "qty": flt(item["qty"]), "rate": rate})
+
+	order_value = sum(item["qty"] * item["rate"] for item in server_items)
 
 	# Overriding the credit limit is a manager decision, not something any rep can pass as a
 	# flag: `ignore_credit` is only honoured for a Sales Manager.
@@ -183,10 +192,8 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 		doc.delivery_date = add_days(today(), 7)
 	if pl and _has(doc.doctype, "selling_price_list"):
 		doc.selling_price_list = pl
-	for i in items:
-		row = {"item_code": i["item_code"], "qty": flt(i["qty"])}
-		if flt(i.get("rate")):
-			row["rate"] = flt(i["rate"])
+	for i in server_items:
+		row = {"item_code": i["item_code"], "qty": i["qty"], "rate": i["rate"]}
 		if not as_quotation:
 			row["delivery_date"] = add_days(today(), 7)
 		doc.append("items", row)
@@ -196,6 +203,10 @@ def book_order(customer, items, visit=None, as_quotation=0, ignore_credit=0):
 	# Link back to the visit's order lines
 	if visit and frappe.db.exists("CRM Visit", visit):
 		v = frappe.get_doc("CRM Visit", visit)
+		if not is_sales_manager() and v.sales_person != employee:
+			frappe.throw(_("You do not have access to this visit."), frappe.PermissionError)
+		if v.party_type != "Customer" or v.customer != customer:
+			frappe.throw(_("The selected visit belongs to a different customer."))
 		for oi in v.order_items:
 			if not oi.sales_order:
 				oi.sales_order = doc.name

@@ -36,6 +36,7 @@ const routes = [
 	{ path: "/team-map", name: "TeamMap", component: () => import("./pages/TeamMap.vue") },
 	{ path: "/lock", name: "Lock", component: () => import("./pages/Lock.vue"), meta: { public: true } },
 	{ path: "/notifications", name: "Notifications", component: () => import("./pages/Notifications.vue") },
+	{ path: "/sync", name: "SyncCenter", component: () => import("./pages/SyncCenter.vue") },
 	{ path: "/more", name: "More", component: () => import("./pages/More.vue") },
 ]
 

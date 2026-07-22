@@ -1,111 +1,100 @@
 <template>
-	<div class="min-h-screen bg-gray-50 pb-24 dark:bg-navy-900">
-		<!-- Header -->
-		<header class="bg-gradient-to-b from-navy-700 to-navy-600 px-5 pb-6 pt-6 text-white">
-			<div class="flex items-center justify-between">
-				<div class="aa-logo-pill">
-					<img :src="wordmark" alt="TRIAM A+" class="h-6" />
-				</div>
-				<router-link :to="{ name: 'Notifications' }" class="rounded-full bg-white/10 p-2.5"><Bell class="h-5 w-5" /></router-link>
+	<div class="aa-workspace">
+		<header class="aa-topbar">
+			<div>
+				<p class="aa-kicker">{{ dayLabel }}</p>
+				<h1 class="mt-1 text-xl font-bold tracking-tight text-navy-800 dark:text-white">{{ greeting }}, {{ firstName }}</h1>
 			</div>
-			<div class="mt-4">
-				<p class="text-sm text-navy-200">{{ greeting }},</p>
-				<h1 class="text-xl font-bold">{{ home.employee_name || session.employeeName || "Field Sales" }}</h1>
-			</div>
-			<!-- Week strip -->
-			<div class="mt-4 flex justify-between gap-1">
-				<div v-for="d in week" :key="d.iso" class="flex flex-1 flex-col items-center rounded-xl py-2"
-					:class="d.isToday ? 'bg-white text-navy-700' : 'text-navy-100'">
-					<span class="text-xs">{{ d.dow }}</span>
-					<span class="text-sm font-bold">{{ d.day }}</span>
-				</div>
+			<div class="flex items-center gap-2">
+				<div class="aa-logo-pill !px-2.5 !py-1"><img :src="wordmark" alt="TRIAM A+" class="h-5" /></div>
+				<router-link :to="{ name: 'Notifications' }" class="aa-back relative" aria-label="Notifications">
+					<Bell class="h-5 w-5" />
+					<span class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-saffron" />
+				</router-link>
 			</div>
 		</header>
 
-		<div class="mx-auto -mt-3 max-w-xl space-y-4 px-4">
-			<p v-if="session.gateLoaded && !session.hasEmployee" class="aa-card border border-amber-200 bg-amber-50 text-sm text-amber-800">
-				Your login isn't linked to an Employee record yet, so data can't be saved. Please ask your admin to link your account.
+		<main class="aa-content space-y-6 pt-2">
+			<p v-if="session.gateLoaded && !session.hasEmployee" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+				Your login is not linked to an Employee record. Ask your administrator to link it before recording field activity.
 			</p>
 
-			<!-- Attendance -->
-			<router-link :to="{ name: 'Attendance' }" class="aa-card flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="flex h-10 w-10 items-center justify-center rounded-full" :class="home.attendance?.checked_in ? 'bg-green-100 text-green-600' : 'bg-navy-100 text-navy-700'">
-						<CalendarCheck class="h-5 w-5" />
+			<section class="aa-hero">
+				<div class="relative z-10">
+					<div class="flex items-center justify-between">
+						<span class="inline-flex items-center gap-2 text-xs font-semibold text-white/70">
+							<span class="h-2 w-2 rounded-full" :class="home.attendance?.checked_in ? 'bg-green-400' : 'bg-white/40'" />
+							{{ home.attendance?.checked_in ? "On duty" : "Not checked in" }}
+						</span>
+						<span class="text-xs font-medium text-white/60">Beat {{ home.beat?.visited || 0 }}/{{ home.beat?.planned || 0 }}</span>
 					</div>
-					<div>
-						<p class="font-semibold text-navy-700 dark:text-white">{{ home.attendance?.checked_in ? "On duty" : "Mark attendance" }}</p>
-						<p class="text-xs text-gray-400">
-							In {{ fmtTime(home.attendance?.first_in) || "--:--" }} · Out {{ fmtTime(home.attendance?.last_out) || "--:--" }}
-						</p>
+					<h2 class="mt-5 max-w-[17rem] text-[1.7rem] font-bold leading-[1.08] tracking-[-0.04em]">Make the next visit count.</h2>
+					<p class="mt-2 max-w-[18rem] text-sm leading-5 text-white/65">Capture the conversation, order and next action while you are still at the counter.</p>
+					<div class="mt-5 flex gap-2">
+						<router-link :to="{ name: 'NewVisit' }" class="aa-hero-action flex-1"><MapPin class="h-4 w-4" /> Start visit</router-link>
+						<router-link :to="{ name: 'Route' }" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-4 text-sm font-semibold text-white"><Navigation class="h-4 w-4" /> Route</router-link>
+					</div>
+					<router-link :to="{ name: 'Attendance' }" class="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+						<span class="flex items-center gap-2 text-sm text-white/80"><CalendarCheck class="h-4 w-4" /> In {{ fmtTime(home.attendance?.first_in) || "--:--" }}</span>
+						<span class="text-xs font-semibold text-amber-200">{{ home.attendance?.checked_in ? "Manage duty" : "Check in" }} →</span>
+					</router-link>
+				</div>
+			</section>
+
+			<section>
+				<div class="aa-section-head">
+					<div><p class="aa-kicker">Today</p><h2 class="aa-section-heading mt-0.5">Field progress</h2></div>
+					<router-link :to="{ name: 'Beat' }" class="aa-section-link">Open beat →</router-link>
+				</div>
+				<div class="aa-panel overflow-hidden">
+					<div class="grid grid-cols-4 divide-x divide-[#e7e5df] p-4 dark:divide-navy-700">
+						<div class="text-center"><p class="aa-metric-number">{{ v.total || 0 }}</p><p class="aa-metric-caption">Visits</p></div>
+						<div class="text-center"><p class="aa-metric-number text-green-600">{{ v.productive || 0 }}</p><p class="aa-metric-caption">Productive</p></div>
+						<div class="text-center"><p class="aa-metric-number">{{ v.zero_order || 0 }}</p><p class="aa-metric-caption">No order</p></div>
+						<div class="text-center"><p class="aa-metric-number">{{ v.strike_rate || 0 }}%</p><p class="aa-metric-caption">Strike</p></div>
+					</div>
+					<div class="border-t border-[#e7e5df] px-4 py-3 dark:border-navy-700">
+						<div class="flex justify-between text-xs font-medium text-gray-500"><span>Beat completion</span><span>{{ beatPct }}%</span></div>
+						<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700"><div class="h-full rounded-full bg-saffron" :style="{ width: beatPct + '%' }" /></div>
 					</div>
 				</div>
-				<span class="aa-pill-btn !rounded-lg !px-3 !py-1.5 !text-xs">{{ home.attendance?.checked_in ? "Check out" : "Check in" }}</span>
+			</section>
+
+			<section>
+				<div class="aa-section-head"><h2 class="aa-section-heading">Business pulse</h2><router-link :to="{ name: 'Analytics' }" class="aa-section-link">View insights</router-link></div>
+				<div class="aa-panel grid grid-cols-2 overflow-hidden">
+					<div class="border-b border-r border-[#e7e5df] p-4 dark:border-navy-700"><p class="aa-metric-number">{{ inrShort(o.value) }}</p><p class="aa-metric-caption">Order value today</p></div>
+					<div class="border-b border-[#e7e5df] p-4 dark:border-navy-700"><p class="aa-metric-number">{{ o.orders || 0 }}</p><p class="aa-metric-caption">Orders booked</p></div>
+					<div class="border-r border-[#e7e5df] p-4 dark:border-navy-700"><p class="aa-metric-number">{{ fmt(o.qty) }}</p><p class="aa-metric-caption">Metric tonnes</p></div>
+					<div class="p-4"><p class="aa-metric-number">{{ home.new_retailers || 0 }}</p><p class="aa-metric-caption">New retailers</p></div>
+				</div>
+			</section>
+
+			<router-link :to="{ name: 'Targets' }" class="aa-panel block p-4">
+				<div class="flex items-start justify-between gap-4">
+					<div><p class="aa-kicker">Monthly target</p><p class="mt-1 text-lg font-bold text-navy-800 dark:text-white">{{ inrShort(home.sales_target?.achieved) }}</p><p class="text-xs text-gray-400">of {{ inrShort(home.sales_target?.target) }}</p></div>
+					<div class="flex h-14 w-14 items-center justify-center rounded-full bg-saffron/15 text-sm font-bold text-saffron">{{ home.sales_target?.pct || 0 }}%</div>
+				</div>
+				<div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700"><div class="h-full rounded-full bg-saffron" :style="{ width: Math.min(100, home.sales_target?.pct || 0) + '%' }" /></div>
 			</router-link>
 
-			<!-- Quick action -->
-			<router-link :to="{ name: 'NewVisit' }" class="aa-btn-primary !rounded-2xl !py-4 shadow-lg">
-				<MapPin class="h-5 w-5" /> {{ $t("Start a Visit") }} </router-link>
-
-			<!-- Today's beat + productivity -->
-			<div class="aa-card">
-				<div class="mb-3 flex items-center justify-between">
-					<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Today") }}</p>
-					<router-link :to="{ name: 'Beat' }" class="text-xs font-medium text-saffron">Beat: {{ home.beat?.visited || 0 }}/{{ home.beat?.planned || 0 }}</router-link>
+			<section>
+				<div class="aa-section-head"><h2 class="aa-section-heading">Keep moving</h2><span class="text-xs text-gray-400">Frequent actions</span></div>
+				<div class="aa-panel overflow-hidden">
+					<router-link :to="{ name: 'Collections' }" class="aa-data-row"><span class="aa-icon-surface"><IndianRupee class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-navy-800 dark:text-white">Record a collection</span><span class="block text-xs text-gray-400">Receipts and outstanding balances</span></span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
+					<router-link :to="{ name: 'Expense' }" class="aa-data-row"><span class="aa-icon-surface"><ReceiptText class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-navy-800 dark:text-white">Add an expense</span><span class="block text-xs text-gray-400">Today {{ inrShort(home.expense?.today) }} · month {{ inrShort(home.expense?.month) }}</span></span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
+					<router-link :to="{ name: 'Customers' }" class="aa-data-row"><span class="aa-icon-surface"><Store class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-navy-800 dark:text-white">Find a dealer</span><span class="block text-xs text-gray-400">Customer history, credit and actions</span></span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
 				</div>
-				<div class="grid grid-cols-4 gap-2 text-center">
-					<div><p class="text-lg font-bold text-navy-700 dark:text-white">{{ v.total || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Visits") }}</p></div>
-					<div><p class="text-lg font-bold text-green-600">{{ v.productive || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Productive") }}</p></div>
-					<div><p class="text-lg font-bold text-amber-500">{{ v.zero_order || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Zero order") }}</p></div>
-					<div><p class="text-lg font-bold text-saffron">{{ v.strike_rate || 0 }}%</p><p class="text-xs text-gray-400">{{ $t("Strike") }}</p></div>
-				</div>
-			</div>
-
-			<!-- Order summary -->
-			<div class="grid grid-cols-2 gap-3">
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ o.orders || 0 }}</p><p class="text-xs text-gray-400">{{ $t("Orders today") }}</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ inrShort(o.value) }}</p><p class="text-xs text-gray-400">{{ $t("Order value") }}</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ fmt(o.qty) }} MT</p><p class="text-xs text-gray-400">{{ $t("Total qty") }}</p></div>
-				<div class="aa-card"><p class="text-xl font-bold text-navy-700 dark:text-white">{{ home.new_retailers || 0 }}</p><p class="text-xs text-gray-400">{{ $t("New retailers (mo)") }}</p></div>
-			</div>
-
-			<!-- Sales target -->
-			<router-link :to="{ name: 'Targets' }" class="aa-card block">
-				<div class="mb-1 flex justify-between text-sm">
-					<span class="font-semibold text-navy-600 dark:text-navy-200">{{ $t("Sales target (month)") }}</span>
-					<span class="text-gray-500">{{ inrShort(home.sales_target?.achieved) }} / {{ inrShort(home.sales_target?.target) }}</span>
-				</div>
-				<div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-navy-700">
-					<div class="h-full rounded-full bg-saffron" :style="{ width: Math.min(100, home.sales_target?.pct || 0) + '%' }"></div>
-				</div>
-				<p class="mt-1 text-right text-xs text-gray-400">{{ home.sales_target?.pct || 0 }}%</p>
-			</router-link>
-
-			<!-- Expense -->
-			<router-link :to="{ name: 'Expense' }" class="aa-card flex items-center justify-between">
-				<div>
-					<p class="font-semibold text-navy-700 dark:text-white">{{ $t("Expenses") }}</p>
-					<p class="text-xs text-gray-400">Today {{ inrShort(home.expense?.today) }} · Month {{ inrShort(home.expense?.month) }}</p>
-				</div>
-				<span class="rounded-lg bg-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-700">+ Add</span>
-			</router-link>
-
-			<!-- Quick access -->
-			<div class="grid grid-cols-4 gap-3">
-				<router-link :to="{ name: 'Kra' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Award class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("KRA") }}</span></router-link>
-				<router-link :to="{ name: 'Timeline' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Clock class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Timeline") }}</span></router-link>
-				<router-link :to="{ name: 'Collections' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><IndianRupee class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Collect") }}</span></router-link>
-				<router-link :to="{ name: 'Customers' }" class="aa-card flex flex-col items-center gap-1 py-3 text-center"><Store class="h-6 w-6 text-saffron" /><span class="text-xs font-medium text-navy-700 dark:text-white">{{ $t("Dealers") }}</span></router-link>
-			</div>
-		</div>
+			</section>
+		</main>
 
 		<BottomNav />
 	</div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue"
-import { Bell, MapPin, CalendarCheck, Award, Clock, IndianRupee, Store } from "lucide-vue-next"
+import { ref, computed, onMounted } from "vue"
+import { Bell, MapPin, CalendarCheck, IndianRupee, Store, Navigation, ReceiptText, ChevronRight } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { session } from "../data/session"
@@ -116,25 +105,21 @@ import wordmark from "../assets/logo-wordmark.png"
 const home = ref({})
 const v = computed(() => home.value.visits || {})
 const o = computed(() => home.value.order_summary || {})
-
+const firstName = computed(() => (home.value.employee_name || session.employeeName || "Field Sales").split(" ")[0])
+const dayLabel = computed(() => dayjs().format("dddd · D MMM"))
+const beatPct = computed(() => {
+	const planned = Number(home.value.beat?.planned || 0)
+	return planned ? Math.min(100, Math.round((Number(home.value.beat?.visited || 0) / planned) * 100)) : 0
+})
 const greeting = computed(() => {
 	const h = new Date().getHours()
 	return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
-})
-
-const week = computed(() => {
-	const today = dayjs()
-	const monday = today.subtract((today.day() + 6) % 7, "day")
-	return Array.from({ length: 7 }, (_, i) => {
-		const d = monday.add(i, "day")
-		return { iso: d.format("YYYY-MM-DD"), dow: d.format("dd")[0], day: d.format("D"), isToday: d.isSame(today, "day") }
-	})
 })
 
 function fmtTime(t) { return t ? dayjs(t).format("h:mm A") : "" }
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 
 onMounted(async () => {
-	try { home.value = await callCached("crm_app.sfa.get_home_summary") } catch (e) { /* */ }
+	try { home.value = await callCached("crm_app.sfa.get_home_summary") } catch (e) { /* last-known state remains visible */ }
 })
 </script>

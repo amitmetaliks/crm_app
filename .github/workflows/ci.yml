@@ -67,7 +67,7 @@ jobs:
       - name: Install bench
         run: pip install frappe-bench
 
-      - name: Init bench + apps (frappe v16, erpnext, crm, crm_app)
+      - name: Init bench + apps (frappe v16, erpnext, hrms, crm, crm_app)
         run: |
           # bench init shells out to `yarn install --check-files` to build
           # frappe's own JS assets — not guaranteed present/on PATH just
@@ -81,6 +81,7 @@ jobs:
           bench set-config -g redis_queue "redis://127.0.0.1:6379"
           bench set-config -g redis_socketio "redis://127.0.0.1:6379"
           bench get-app erpnext --branch version-16
+          bench get-app hrms --branch version-16
           bench get-app crm --branch main
           bench get-app "$GITHUB_WORKSPACE/crm_app"
 
@@ -88,7 +89,7 @@ jobs:
         run: |
           cd ~/frappe-bench
           bench new-site test_site --mariadb-root-password root --admin-password admin \
-            --mariadb-user-host-login-scope=% --install-app erpnext --install-app crm --install-app crm_app
+            --mariadb-user-host-login-scope=% --install-app erpnext --install-app hrms --install-app crm --install-app crm_app
           bench --site test_site migrate
 
       - name: Run crm_app tests

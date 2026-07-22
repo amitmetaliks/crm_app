@@ -1,11 +1,26 @@
 <template>
-	<div class="min-h-screen bg-gray-50 pb-28 dark:bg-navy-900">
-		<header class="aa-page-header !pb-5 !pt-5 flex items-center gap-3">
-			<button @click="goBack"><ChevronLeft class="h-6 w-6" /></button>
-			<h1 class="text-lg font-semibold">{{ checkedIn ? "Visit in progress" : "Start a Visit" }}</h1>
+	<div class="aa-workspace !pb-32">
+		<header class="aa-topbar !items-start">
+			<button class="aa-back" @click="goBack"><ChevronLeft class="h-5 w-5" /></button>
+			<div class="min-w-0 flex-1 px-1">
+				<p class="aa-kicker">Field visit</p>
+				<h1 class="mt-1 text-xl font-bold tracking-tight text-navy-800 dark:text-white">{{ checkedIn ? "Visit in progress" : "Start a visit" }}</h1>
+				<p class="mt-1 truncate text-xs text-gray-400">{{ selected?.label || "Choose the account, then check in" }}</p>
+			</div>
+			<span v-if="checkedIn" class="aa-pill aa-pill-green mt-1">Live</span>
 		</header>
 
-		<div class="mx-auto max-w-xl space-y-4 p-4">
+		<div class="aa-content pb-1 pt-3">
+			<div class="aa-panel flex items-center px-4 py-3">
+				<div class="flex flex-1 items-center gap-2"><span class="aa-progress-step" :class="selected ? 'aa-progress-step-active' : ''">1</span><span class="text-xs font-semibold" :class="selected ? 'text-navy-700 dark:text-white' : 'text-gray-400'">Account</span></div>
+				<div class="mx-2 h-px w-5 bg-gray-200 dark:bg-navy-700" />
+				<div class="flex flex-1 items-center justify-center gap-2"><span class="aa-progress-step" :class="checkedIn ? 'aa-progress-step-active' : ''">2</span><span class="text-xs font-semibold" :class="checkedIn ? 'text-navy-700 dark:text-white' : 'text-gray-400'">Capture</span></div>
+				<div class="mx-2 h-px w-5 bg-gray-200 dark:bg-navy-700" />
+				<div class="flex flex-1 items-center justify-end gap-2"><span class="aa-progress-step">3</span><span class="text-xs font-semibold text-gray-400">Close</span></div>
+			</div>
+		</div>
+
+		<div class="aa-content space-y-4 pt-4">
 			<!-- Resume an unsaved visit the app killed before Save -->
 			<div v-if="resumable" class="aa-card border border-amber-200 bg-amber-50 dark:border-amber-900/40">
 				<p class="text-sm text-amber-900">{{ $t("You have an unsaved visit for") }} <strong>{{ resumable.selected?.label }}</strong>.</p>
@@ -17,8 +32,9 @@
 			</div>
 
 			<!-- STEP 1: choose party (locked once checked in) -->
-			<div class="aa-card">
-				<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Who are you visiting?") }}</p>
+			<div class="aa-panel p-4">
+				<p class="aa-kicker">Step 1</p>
+				<p class="mb-3 mt-1 text-base font-bold text-navy-800 dark:text-white">{{ $t("Who are you visiting?") }}</p>
 
 				<div v-if="selected" class="flex items-center justify-between rounded-xl bg-saffron/5 p-3">
 					<div class="min-w-0">
@@ -67,7 +83,7 @@
 			</div>
 
 			<!-- STEP 2: purpose + contact (before check-in) -->
-			<div v-if="!checkedIn" class="aa-card space-y-3">
+			<div v-if="!checkedIn" class="aa-panel space-y-3 p-4">
 				<div>
 					<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">{{ $t("Purpose") }}</label>
 					<select v-model="purpose" class="aa-input">
@@ -85,19 +101,22 @@
 				v-if="!checkedIn"
 				@click="doCheckIn"
 				:disabled="!canCheckIn || busy"
-				class="aa-btn-primary !rounded-2xl !py-4 shadow-lg"
+				class="aa-hero-action w-full !py-4"
 			>
 				<MapPin class="h-5 w-5" /> {{ busy ? "Getting location…" : "Check in here" }}
 			</button>
 
 			<!-- AFTER CHECK-IN: details -->
 			<template v-if="checkedIn">
-				<div class="aa-card flex items-center gap-2 text-sm text-green-700">
+				<div class="aa-panel flex items-center justify-between p-4 text-sm text-green-700">
+					<span class="flex items-center gap-2">
 					<CheckCircle2 class="h-5 w-5" /> Checked in at {{ checkInLabel }}
+					</span>
+					<span class="text-xs text-gray-400">Draft saves automatically</span>
 				</div>
 
 				<!-- Photos -->
-				<div class="aa-card">
+				<div class="aa-panel p-4">
 					<p class="mb-2 text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Photos") }}</p>
 					<div class="flex flex-wrap gap-2">
 						<div v-for="(p, i) in photos" :key="i" class="relative">
@@ -113,7 +132,7 @@
 				</div>
 
 				<!-- Orders / inquiries -->
-				<div class="aa-card">
+				<div class="aa-panel p-4">
 					<div class="mb-2 flex items-center justify-between">
 						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Orders / Inquiries") }}</p>
 						<button @click="addOrder" class="text-xs font-medium text-saffron">+ Add</button>
@@ -140,7 +159,7 @@
 				</div>
 
 				<!-- Competitors -->
-				<div class="aa-card">
+				<div class="aa-panel p-4">
 					<div class="mb-2 flex items-center justify-between">
 						<p class="text-sm font-semibold text-navy-600 dark:text-navy-200">{{ $t("Competitor info") }}</p>
 						<button @click="addCompetitor" class="text-xs font-medium text-saffron">+ Add</button>
@@ -164,7 +183,7 @@
 				</div>
 
 				<!-- Notes + outcome -->
-				<div class="aa-card space-y-3">
+				<div class="aa-panel space-y-3 p-4">
 					<div>
 						<label class="mb-1 block text-sm font-medium text-navy-600 dark:text-navy-200">{{ $t("Notes") }}</label>
 						<textarea v-model="notes" rows="3" class="aa-input" :placeholder='$t("What happened on this visit?")'></textarea>
@@ -183,9 +202,9 @@
 					<input v-model="nextAction" class="aa-input" :placeholder='$t("Next action")' />
 				</div>
 
-				<div class="flex gap-3">
-					<button @click="save(false)" :disabled="busy" class="aa-btn-secondary flex-1 !rounded-2xl !py-3.5"> {{ $t("Save") }} </button>
-					<button @click="save(true)" :disabled="busy" class="aa-btn-primary flex-1 !rounded-2xl !py-3.5"> {{ $t("Check out") }} </button>
+				<div class="sticky bottom-3 z-20 flex gap-3 rounded-[1.35rem] border border-black/5 bg-white/95 p-2 shadow-[0_12px_35px_rgba(23,32,51,0.18)] backdrop-blur dark:bg-navy-800/95">
+					<button @click="save(false)" :disabled="busy" class="aa-quiet-action flex-1"> {{ $t("Save draft") }} </button>
+					<button @click="save(true)" :disabled="busy" class="aa-hero-action flex-1"> {{ $t("Check out") }} </button>
 				</div>
 			</template>
 		</div>

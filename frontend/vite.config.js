@@ -19,11 +19,6 @@ export default defineConfig({
 		},
 	},
 	plugins: [vue()],
-	optimizeDeps: {
-		// frappe-ui pulls in feather-icons (CJS); force pre-bundling so the dev
-		// server resolves its default export (production/rollup build is unaffected).
-		include: ["feather-icons", "showdown", "prismjs", "frappe-ui"],
-	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "src"),
@@ -32,17 +27,13 @@ export default defineConfig({
 	build: {
 		outDir: "../crm_app/public/frontend",
 		emptyOutDir: true,
+		// The service worker reads this manifest after an online launch and precaches every
+		// route chunk. That makes "offline" mean the whole app, not only screens visited before.
+		manifest: true,
 		target: "es2015",
 		sourcemap: false,
 		commonjsOptions: {
 			include: [/tailwind.config.js/, /node_modules/],
-		},
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					"frappe-ui": ["frappe-ui"],
-				},
-			},
 		},
 	},
 })

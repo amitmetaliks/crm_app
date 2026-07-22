@@ -1,11 +1,11 @@
-import { createResource } from "frappe-ui"
+import { call } from "./api"
 
 // One worker, served at root and scoped to the CRM (see main.js + crm_app/www/sw.js).
 const SW_URL = "/sw.js"
 const SW_SCOPE = "/amit-crm"
 
 function callMethod(url, params) {
-	return createResource({ url }).submit(params)
+	return call(url, params)
 }
 
 function urlBase64ToUint8Array(base64String) {
