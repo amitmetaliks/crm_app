@@ -29,7 +29,9 @@ export default defineConfig({
 		emptyOutDir: true,
 		// The service worker reads this manifest after an online launch and precaches every
 		// route chunk. That makes "offline" mean the whole app, not only screens visited before.
-		manifest: true,
+		// Emit at the outDir root (NOT the default .vite/ dot-directory, which Frappe's static
+		// server refuses to serve — a 404 there silently disables the whole precache).
+		manifest: "manifest.json",
 		target: "es2015",
 		sourcemap: false,
 		commonjsOptions: {

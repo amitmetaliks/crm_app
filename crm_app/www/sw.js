@@ -13,13 +13,17 @@
 const CACHE = "triam-crm-shell-v2"
 const SHELL = "/amit-crm" // the SPA entry HTML; served for every /amit-crm/* deep link
 const ASSET_PREFIX = "/assets/crm_app/frontend/"
-const BUILD_MANIFEST = ASSET_PREFIX + ".vite/manifest.json"
+// Served via /api/method (not a static /assets/*.json, which Frappe's static handler 404s).
+const BUILD_MANIFEST = "/api/method/crm_app.api.asset_manifest"
 
 async function refreshPrecache() {
 	try {
-		const manifestResponse = await fetch(BUILD_MANIFEST, { cache: "no-store" })
+		const manifestResponse = await fetch(BUILD_MANIFEST, { cache: "no-store", credentials: "same-origin" })
 		if (!manifestResponse.ok) return
-		const manifest = await manifestResponse.json()
+		const wrapped = await manifestResponse.json()
+		// Frappe wraps a whitelisted return value as { message: ... }; the raw manifest is a
+		// plain object too, so fall back to it for safety.
+		const manifest = (wrapped && wrapped.message) || wrapped || {}
 		const urls = new Set()
 		for (const entry of Object.values(manifest || {})) {
 			if (entry.file) urls.add(ASSET_PREFIX + entry.file)

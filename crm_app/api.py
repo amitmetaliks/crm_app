@@ -153,6 +153,24 @@ def ping() -> dict:
 	return {"ok": True, "app": "crm_app", "user": frappe.session.user}
 
 
+@frappe.whitelist(allow_guest=True)
+def asset_manifest() -> dict:
+	"""Return the built Vite asset manifest so the service worker can precache every route
+	chunk (whole-app offline). Served via /api/method because Frappe's static handler serves
+	/assets/** only for whitelisted extensions — a .json there 404s, silently disabling the
+	precache. The manifest is just public chunk filenames, so allow_guest is safe.
+	"""
+	import json
+	import os
+
+	path = os.path.join(frappe.get_app_path("crm_app"), "public", "frontend", "manifest.json")
+	try:
+		with open(path, encoding="utf-8") as f:
+			return json.load(f)
+	except Exception:
+		return {}
+
+
 @frappe.whitelist()
 def whoami() -> dict:
 	"""Identify the current user and their employee profile."""
