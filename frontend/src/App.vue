@@ -9,6 +9,16 @@
 	>
 		{{ net.failed }} submission(s) couldn't be saved — tap to retry
 	</router-link>
+	<!-- Session expired: the queue is stuck until sign-in. Say so — don't leave saved work
+	     looking like it's syncing when nothing can. -->
+	<router-link
+		v-else-if="net.blocked === 'auth' && net.pending"
+		:to="{ name: 'SyncCenter' }"
+		class="fixed inset-x-0 top-0 z-50 cursor-pointer px-3 py-1.5 text-center text-xs font-semibold text-white"
+		style="padding-top: env(safe-area-inset-top); background-color: #cc2929"
+	>
+		Session expired — sign in again to sync {{ net.pending }} saved item(s)
+	</router-link>
 	<router-link
 		v-else-if="!net.online || net.pending"
 		:to="{ name: 'SyncCenter' }"

@@ -5,7 +5,9 @@ import { currentUser, requireCurrentUser } from "./identity"
 // Reactive network/sync state for the UI banner.
 //   pending — queued writes still waiting to sync
 //   failed  — writes the SERVER rejected (validation); held for the rep to see, not dropped
-export const net = reactive({ online: navigator.onLine, pending: 0, failed: 0, syncing: false, lastSynced: 0 })
+//   blocked — the queue stopped for a reason the rep must act on. Currently "auth": the
+//             session expired, so nothing will sync until they sign in again. null otherwise.
+export const net = reactive({ online: navigator.onLine, pending: 0, failed: 0, syncing: false, lastSynced: 0, blocked: null })
 
 const DB_NAME = "triam-crm"
 const STORE = "queue"
@@ -180,6 +182,7 @@ export async function flush() {
 	if (!owner) { await refresh(); return }
 	net.syncing = true
 	let completed = 0
+	let hitAuth = false
 	try {
 		// Never replay another account's work under the active Frappe session. Ownerless rows
 		// from versions before account isolation are deliberately quarantined instead of guessed.
@@ -198,6 +201,7 @@ export async function flush() {
 				const kind = classify(e)
 				// Transient (network / server) or a dead session: stop the whole run and
 				// try the entire queue again later. Never touch the record.
+				if (kind === "auth") hitAuth = true
 				if (kind === "network" || kind === "server" || kind === "auth") break
 				// Permanent: the server rejected THIS payload and will again. Flag it so the
 				// rep can see and fix/retry/discard — but keep the data. Move on so one bad
@@ -211,6 +215,9 @@ export async function flush() {
 		}
 	} finally {
 		if (completed) markSynced()
+		// The queue is "blocked" only when the session is dead — the rep must sign in again.
+		// A network/server stop is transient (auto-retries) and stays plain "pending".
+		net.blocked = hitAuth ? "auth" : null
 		net.syncing = false
 		await refresh()
 	}
