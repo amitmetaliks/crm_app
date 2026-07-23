@@ -327,6 +327,57 @@ def add_photo(name, content_base64, filename=None, caption=None, latitude=None, 
 	return {"name": doc.name, "image": file_doc.file_url}
 
 
+@frappe.whitelist()
+def add_visit_photo_by_ref(client_ref, content_base64, filename=None, caption=None, latitude=None, longitude=None, idempotency_key=None):
+	"""Attach ONE photo to the visit identified by its client_ref.
+
+	The offline queue uploads photos as INDEPENDENT items (not bundled into the visit payload),
+	so a multi-photo visit on weak signal is several small, retryable requests visible one-by-one
+	in the Sync Centre — not one all-or-nothing megabyte blob whose 413 loses the whole visit.
+	FIFO ordering means the visit itself syncs first; if it never did (permanently rejected or
+	discarded), the photo has no visit to attach to and fails as such — it never wedges the queue.
+
+	Resolving the visit by (sales_person = me, client_ref) means a rep can only ever attach to
+	their own visit — no name is trusted from the client.
+	"""
+	employee = get_current_employee()
+	from crm_app import idempotency
+
+	prior = idempotency.replay(idempotency_key, employee)
+	if prior is not None:
+		return prior
+
+	name = frappe.db.get_value("CRM Visit", {"sales_person": employee, "client_ref": client_ref}, "name")
+	if not name:
+		frappe.throw(_("The visit for this photo hasn't been saved yet, so it can't be attached."))
+
+	raw = content_base64.split(",")[-1] if content_base64 else ""
+	if not raw:
+		return {"name": name, "skipped": True}
+	content = base64.b64decode(raw)
+	fname = filename or "visit-photo.jpg"
+	validate_upload(fname, content, images_only=True, max_mb=8)
+	file_doc = frappe.get_doc(
+		{"doctype": "File", "file_name": fname, "attached_to_doctype": "CRM Visit", "attached_to_name": name, "content": content, "is_private": 1}
+	).insert(ignore_permissions=True)
+	doc = frappe.get_doc("CRM Visit", name)
+	doc.append(
+		"photos",
+		{
+			"image": file_doc.file_url,
+			"caption": caption,
+			"captured_at": now_datetime(),
+			"latitude": flt(latitude) if latitude not in (None, "") else None,
+			"longitude": flt(longitude) if longitude not in (None, "") else None,
+		},
+	)
+	doc.save(ignore_permissions=True)
+	result = {"name": doc.name, "image": file_doc.file_url}
+	idempotency.record(idempotency_key, "field_visit.add_visit_photo_by_ref", result, employee)
+	frappe.db.commit()
+	return result
+
+
 # ── reads ───────────────────────────────────────────────────────────────────
 
 

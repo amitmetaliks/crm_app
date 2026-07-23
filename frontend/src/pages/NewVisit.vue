@@ -551,15 +551,24 @@ async function save(checkout) {
 				next_visit_date: nextVisitDate.value || null,
 				order_items: cleanOrders,
 				competitors: cleanComps,
-				// Only photos not already live-uploaded, so sync doesn't attach them twice.
-				photos: photoData.value
-					.map((b, i) => ({ content_base64: b, uploaded: photos.value[i]?.uploaded }))
-					.filter((p) => !p.uploaded)
-					.map((p) => ({ content_base64: p.content_base64 })),
 			}
 			await enqueue("crm_app.field_visit.submit_full_visit", { payload: JSON.stringify(payload) }, "Visit: " + (selected.value?.label || ""))
+
+			// Photos ride as INDEPENDENT queued uploads (not bundled into the visit blob): each
+			// is a small, retryable request, visible one-by-one in the Sync Centre, attached by
+			// client_ref once the visit lands. Skips any already live-uploaded while online.
+			const label = selected.value?.label || "visit"
+			const pendingPhotos = photoData.value.filter((b, i) => !photos.value[i]?.uploaded)
+			for (let i = 0; i < pendingPhotos.length; i++) {
+				await enqueue(
+					"crm_app.field_visit.add_visit_photo_by_ref",
+					{ client_ref: clientRef, content_base64: pendingPhotos[i], filename: `visit-${clientRef}-${i}.jpg` },
+					`Photo ${i + 1} of ${pendingPhotos.length} · ${label}`,
+				)
+			}
+
 			dropDraft() // queued for sync — cancel any pending debounce + clear
-			toast.success("Saved offline — will sync automatically")
+			toast.success(pendingPhotos.length ? `Saved offline — visit + ${pendingPhotos.length} photo(s) will sync` : "Saved offline — will sync automatically")
 			router.replace({ name: "Visits" })
 		}
 	} catch (e) {
