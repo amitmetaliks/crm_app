@@ -41,6 +41,28 @@
 				</div>
 			</section>
 
+			<section v-if="priorities.length">
+				<div class="aa-section-head">
+					<div><p class="aa-kicker">Needs you</p><h2 class="aa-section-heading mt-0.5">Today's priorities</h2></div>
+				</div>
+				<div class="aa-panel overflow-hidden">
+					<router-link v-for="(p, i) in priorities" :key="i" :to="p.route" class="aa-data-row">
+						<span class="aa-icon-surface"><component :is="prioIcon(p.type)" class="h-5 w-5" /></span>
+						<span class="min-w-0 flex-1">
+							<span class="block truncate text-sm font-semibold text-navy-800 dark:text-white">{{ p.title }}</span>
+							<span class="block truncate text-xs text-gray-400">{{ p.reason }}</span>
+						</span>
+						<span class="aa-pill shrink-0" :class="p.severity === 'high' ? 'aa-pill-red' : 'aa-pill-amber'">{{ p.cta }}</span>
+						<ChevronRight class="h-4 w-4 shrink-0 text-gray-300" />
+					</router-link>
+				</div>
+			</section>
+			<router-link v-else-if="prioLoaded" :to="{ name: 'Beat' }" class="aa-panel flex items-center gap-3 p-4">
+				<span class="aa-icon-surface !bg-green-50 !text-green-600"><CheckCircle2 class="h-5 w-5" /></span>
+				<span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-navy-800 dark:text-white">You're on top of things</span><span class="block text-xs text-gray-400">No overdue collections or follow-ups right now</span></span>
+				<ChevronRight class="h-4 w-4 text-gray-300" />
+			</router-link>
+
 			<section>
 				<div class="aa-section-head">
 					<div><p class="aa-kicker">Today</p><h2 class="aa-section-heading mt-0.5">Field progress</h2></div>
@@ -94,7 +116,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue"
-import { Bell, MapPin, CalendarCheck, IndianRupee, Store, Navigation, ReceiptText, ChevronRight } from "lucide-vue-next"
+import { Bell, MapPin, CalendarCheck, CalendarClock, CheckCircle2, IndianRupee, Store, Navigation, ReceiptText, ChevronRight } from "lucide-vue-next"
 import dayjs from "dayjs"
 import BottomNav from "../components/BottomNav.vue"
 import { session } from "../data/session"
@@ -103,6 +125,8 @@ import { inrShort } from "../utils/money"
 import wordmark from "../assets/logo-wordmark.png"
 
 const home = ref({})
+const priorities = ref([])
+const prioLoaded = ref(false)
 const v = computed(() => home.value.visits || {})
 const o = computed(() => home.value.order_summary || {})
 const firstName = computed(() => (home.value.employee_name || session.employeeName || "Field Sales").split(" ")[0])
@@ -119,7 +143,18 @@ const greeting = computed(() => {
 function fmtTime(t) { return t ? dayjs(t).format("h:mm A") : "" }
 function fmt(n) { return Number(n || 0).toLocaleString("en-IN") }
 
+const PRIO_ICONS = { collection: IndianRupee, followup: CalendarClock, beat: MapPin }
+function prioIcon(type) { return PRIO_ICONS[type] || MapPin }
+
 onMounted(async () => {
 	try { home.value = await callCached("crm_app.sfa.get_home_summary") } catch (e) { /* last-known state remains visible */ }
+	try {
+		const res = await callCached("crm_app.priorities.get_priorities")
+		priorities.value = (res && res.items) || []
+	} catch (e) {
+		/* offline with nothing cached — leave the section hidden */
+	} finally {
+		prioLoaded.value = true
+	}
 })
 </script>
