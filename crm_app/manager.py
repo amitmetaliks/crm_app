@@ -44,6 +44,100 @@ def _team_employees():
 	)
 
 
+def _mgr_inr(n):
+	n = flt(n)
+	if n >= 1e7:
+		return f"{n / 1e7:.2f} Cr"
+	if n >= 1e5:
+		return f"{n / 1e5:.2f} L"
+	return f"{n:,.0f}"
+
+
+def _manager_exceptions(out, frm_d, to_d):
+	"""The control-tower feed: everything that needs the manager's attention, ranked by
+	severity, each with a plain reason and a drill-down into the underlying records. Built
+	from values already computed for the dashboard plus a couple of targeted queries — no new
+	data sources, no scores.
+	"""
+	day = getdate(today())
+	ex = []
+
+	# Pending approvals — a manager-only blocker on the team's reimbursements.
+	pend = out.get("pending_approvals", 0)
+	if pend:
+		ex.append({"type": "approvals", "severity": "high", "title": f"{pend} approval(s) waiting",
+			"detail": "Clear the team's blocked reimbursements", "route": {"name": "Approvals"}})
+
+	# Biggest outstanding dealers — real money to chase, drills into the dealer.
+	rec = out.get("receivables", {})
+	if rec.get("available"):
+		for r in (rec.get("top") or [])[:2]:
+			ex.append({"type": "collection", "severity": "high", "title": r["customer_name"],
+				"detail": f"Outstanding ₹{_mgr_inr(r['outstanding'])}", "value": r["outstanding"],
+				"route": {"name": "CustomerDetail", "params": {"name": r["customer"]}}})
+
+	# Stale SAP feed — every number understates reality until it syncs.
+	for label, feed in (("Sales", out.get("feeds", {}).get("sales", {})), ("Payments", out.get("feeds", {}).get("payments", {}))):
+		if feed.get("available") and feed.get("stale"):
+			db = feed.get("days_behind")
+			ex.append({"type": "feed", "severity": "high",
+				"title": f"{label} feed is {db} days behind" if db is not None else f"{label} feed is stale",
+				"detail": "Dashboard numbers may understate reality until it syncs", "route": None})
+
+	# Target gap vs how much of the period has elapsed.
+	tgt = out.get("target", {})
+	if flt(tgt.get("amount")):
+		total_days = max(1, (getdate(to_d) - getdate(frm_d)).days + 1)
+		elapsed = min(total_days, max(1, (day - getdate(frm_d)).days + 1))
+		pace = round(elapsed / total_days * 100)
+		pct = flt(tgt.get("amount_pct"))
+		if pace - pct >= 10:
+			ex.append({"type": "target", "severity": "medium",
+				"title": f"Team at {round(pct)}% of target, pace expects {pace}%",
+				"detail": f"{round(pace - pct)} points behind for the period", "route": {"name": "Analytics"}})
+
+	# Planned beat stops today not visited yet (team-wide).
+	beats = frappe.get_all("CRM Beat Plan", filters={"plan_date": day}, fields=["name", "sales_person"])
+	if beats:
+		sp = {b.name: b.sales_person for b in beats}
+		entries = frappe.get_all(
+			"CRM Beat Plan Entry", filters={"parent": ["in", list(sp)], "customer": ["is", "set"]}, fields=["parent", "customer"]
+		)
+		done = {
+			(v.sales_person, v.customer)
+			for v in frappe.get_all(
+				"CRM Visit", filters={"visit_date": day, "visit_status": ["in", ["In Progress", "Completed"]]},
+				fields=["sales_person", "customer"], limit=5000,
+			)
+		}
+		missed = sum(1 for e in entries if (sp.get(e.parent), e.customer) not in done)
+		if missed:
+			ex.append({"type": "missed_visits", "severity": "medium", "title": f"{missed} planned stop(s) not visited yet",
+				"detail": "Across the team's beats today", "route": {"name": "Beat"}})
+
+	# Dealers going quiet — biggest lifetime value first.
+	try:
+		risk = get_at_risk_dealers(days=90, limit=2)
+	except Exception:
+		risk = []
+	for r in risk:
+		ex.append({"type": "at_risk", "severity": "medium", "title": r["customer_name"],
+			"detail": f"No purchase in {r['days_quiet']}d · ₹{_mgr_inr(r['lifetime_value'])} lifetime",
+			"route": {"name": "CustomerDetail", "params": {"name": r["customer"]}}})
+
+	# Attribution gap — sales the leaderboard cannot show (data-trust, low severity).
+	cq = out.get("coverage_quality", {})
+	if cq.get("available") and cq.get("reps_total"):
+		unmapped = cq["reps_total"] - cq.get("reps_matched", 0)
+		if unmapped > 0:
+			ex.append({"type": "attribution", "severity": "low", "title": f"{unmapped} rep code(s) not mapped",
+				"detail": "Their sales aren't on the leaderboard", "route": None})
+
+	rank = {"high": 0, "medium": 1, "low": 2}
+	ex.sort(key=lambda x: rank.get(x["severity"], 3))
+	return ex
+
+
 @frappe.whitelist()
 def get_manager_dashboard(period="mtd") -> dict:
 	"""One call, because a manager opens this on a phone between meetings."""
@@ -214,6 +308,9 @@ def get_manager_dashboard(period="mtd") -> dict:
 		"payments": sap_receivables.last_synced() if sap_receivables.available() else {"available": False},
 	}
 	out["coverage_quality"] = sap_sales.coverage() if sap_sales.available() else {"available": False}
+
+	# The control-tower feed: ranked, drill-down exceptions built from the values above.
+	out["exceptions"] = _manager_exceptions(out, frm_d, to_d)
 	return out
 
 

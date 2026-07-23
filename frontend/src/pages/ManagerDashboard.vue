@@ -19,13 +19,18 @@
 					<div v-if="d.target?.amount" class="mt-5"><div class="flex justify-between text-xs text-white/60"><span>Target progress</span><span>{{ d.target.amount_pct }}%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-white/15"><div class="h-full rounded-full bg-saffron" :style="{ width: Math.min(d.target.amount_pct, 100) + '%' }" /></div></div>
 				</section>
 
-				<section v-if="attentionCount">
-					<div class="aa-section-head"><div><p class="aa-kicker">Act now</p><h2 class="aa-section-heading mt-0.5">Needs attention</h2></div><span class="aa-pill aa-pill-red">{{ attentionCount }}</span></div>
+				<section v-if="d.exceptions?.length">
+					<div class="aa-section-head"><div><p class="aa-kicker">Act now</p><h2 class="aa-section-heading mt-0.5">Needs attention</h2></div><span class="aa-pill aa-pill-red">{{ d.exceptions.length }}</span></div>
 					<div class="aa-panel overflow-hidden">
-						<div v-if="staleFeed" class="aa-data-row bg-amber-50/60 dark:bg-amber-900/10"><span class="aa-icon-surface"><DatabaseZap class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-amber-900 dark:text-amber-200">Data feed may be behind</span><span class="block text-xs text-amber-700 dark:text-amber-300">Sales {{ fmtDate(d.feeds?.sales?.last_invoice_date) }} · payments {{ fmtDate(d.feeds?.payments?.last_posting_date) }}</span></span></div>
-						<router-link v-if="d.pending_approvals" :to="{ name: 'Approvals' }" class="aa-data-row"><span class="aa-icon-surface"><ClipboardCheck class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-navy-800 dark:text-white">{{ d.pending_approvals }} approvals waiting</span><span class="block text-xs text-gray-400">Clear the team’s blocked requests</span></span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
-						<router-link v-for="r in topReceivables" :key="'due-' + r.customer" :to="{ name: 'CustomerDetail', params: { name: r.customer } }" class="aa-data-row"><span class="aa-icon-surface"><IndianRupee class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold text-navy-800 dark:text-white">{{ r.customer_name }}</span><span class="block text-xs text-gray-400">Priority collection</span></span><span class="text-sm font-bold text-red-600">{{ inrShort(r.outstanding) }}</span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
-						<router-link v-for="r in topAtRisk" :key="'risk-' + r.customer" :to="{ name: 'CustomerDetail', params: { name: r.customer } }" class="aa-data-row"><span class="aa-icon-surface"><UserRoundX class="h-5 w-5" /></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold text-navy-800 dark:text-white">{{ r.customer_name }}</span><span class="block text-xs text-gray-400">No purchase since {{ fmtDate(r.last_invoice) }}</span></span><span class="aa-pill aa-pill-red">{{ r.days_quiet }}d</span><ChevronRight class="h-4 w-4 text-gray-300" /></router-link>
+						<component :is="e.route ? 'router-link' : 'div'" v-for="(e, i) in d.exceptions" :key="i" :to="e.route || undefined" class="aa-data-row">
+							<span class="aa-icon-surface" :class="exTone(e.severity)"><component :is="exIcon(e.type)" class="h-5 w-5" /></span>
+							<span class="min-w-0 flex-1">
+								<span class="block truncate text-sm font-semibold text-navy-800 dark:text-white">{{ e.title }}</span>
+								<span class="block truncate text-xs text-gray-400">{{ e.detail }}</span>
+							</span>
+							<span v-if="e.value" class="shrink-0 text-sm font-bold text-red-600">{{ inrShort(e.value) }}</span>
+							<ChevronRight v-if="e.route" class="h-4 w-4 shrink-0 text-gray-300" />
+						</component>
 					</div>
 				</section>
 
@@ -64,20 +69,20 @@ import { t } from "../data/i18n"
 const periods = [{ k: "mtd", label: "This month" }, { k: "30d", label: "30 days" }, { k: "90d", label: "90 days" }]
 const period = ref("mtd")
 const d = ref({})
-const atRisk = ref([])
 const loading = ref(true)
 const periodLabel = computed(() => t(periods.find((p) => p.k === period.value)?.label || ""))
-const staleFeed = computed(() => d.value.feeds?.sales?.stale || d.value.feeds?.payments?.stale)
-const topReceivables = computed(() => (d.value.receivables?.top || []).slice(0, 3))
-const topAtRisk = computed(() => atRisk.value.slice(0, 3))
-const attentionCount = computed(() => Number(!!staleFeed.value) + Number(d.value.pending_approvals || 0) + topReceivables.value.length + topAtRisk.value.length)
 
-function fmtDate(value) { return value ? dayjs(value).format("DD MMM") : "Not available" }
+// The exceptions feed is computed and ranked on the SERVER (crm_app.manager get_manager_dashboard
+// -> exceptions); the frontend only maps type -> icon and severity -> tone.
+const EX_ICONS = { approvals: ClipboardCheck, collection: IndianRupee, feed: DatabaseZap, target: TrendingUp, missed_visits: MapPinned, at_risk: UserRoundX, attribution: DatabaseZap }
+const EX_TONES = { high: "!bg-red-50 !text-red-600", medium: "!bg-amber-50 !text-amber-700", low: "!bg-gray-100 !text-gray-500" }
+function exIcon(type) { return EX_ICONS[type] || ClipboardCheck }
+function exTone(sev) { return EX_TONES[sev] || EX_TONES.low }
+
 async function load() {
 	loading.value = true
 	try {
 		d.value = await call("crm_app.manager.get_manager_dashboard", { period: period.value })
-		try { atRisk.value = await call("crm_app.manager.get_at_risk_dealers") || [] } catch (e) { atRisk.value = [] }
 	} catch (e) { d.value = { error: true } }
 	finally { loading.value = false }
 }
