@@ -182,6 +182,56 @@ def get_customer(name):
 	}
 
 
+def _fmt_inr(n):
+	n = flt(n)
+	if n >= 1e7:
+		return f"{n / 1e7:.2f} Cr"
+	if n >= 1e5:
+		return f"{n / 1e5:.2f} L"
+	return f"{n:,.0f}"
+
+
+def _recommended_action(name, cust_name, outstanding, balance_as_of, in_credit, balance, orders_count, days_since_order, visit_count):
+	"""The single next best action for this dealer, from reliable data only.
+
+	Priority is deliberate and explainable (money owed → a promised follow-up that's due →
+	a dealer going quiet → an active dealer never visited → an advance to convert → keep
+	warm) — not a score. Each carries a plain reason and a deep link into the acting screen.
+	"""
+	visit_route = {"name": "NewVisit", "query": {"id": name, "ptype": "Customer", "label": cust_name}}
+
+	if flt(outstanding) > 0:
+		reason = f"Outstanding ₹{_fmt_inr(outstanding)}"
+		if balance_as_of:
+			reason += f" · as of {balance_as_of}"
+		return {"tone": "urgent", "label": "Collect payment", "reason": reason, "cta": "Collect",
+			"route": {"name": "Collect", "query": {"customer": name, "label": cust_name}}}
+
+	fu = frappe.db.get_value(
+		"CRM Visit",
+		{"customer": name, "next_action": ["is", "set"], "next_visit_date": ["<=", getdate()]},
+		["next_action", "next_visit_date"],
+		order_by="visit_date desc",
+		as_dict=True,
+	)
+	if fu and fu.get("next_action"):
+		overdue = (getdate() - getdate(fu.next_visit_date)).days
+		when = "today" if overdue <= 0 else f"{overdue}d ago"
+		return {"tone": "followup", "label": "Follow up", "reason": f"{fu.next_action} · was due {when}", "cta": "Visit",
+			"route": {"name": "NewVisit", "query": {"id": name, "ptype": "Customer", "label": cust_name, "purpose": "Follow-up"}}}
+
+	if orders_count and days_since_order is not None and days_since_order > 90:
+		return {"tone": "warn", "label": "Win back", "reason": f"No order in {days_since_order} days", "cta": "Visit", "route": visit_route}
+
+	if orders_count and not visit_count:
+		return {"tone": "info", "label": "Introduce yourself", "reason": "Active dealer, no visit logged yet", "cta": "Visit", "route": visit_route}
+
+	if in_credit:
+		return {"tone": "info", "label": "Push an order", "reason": f"Dealer is ₹{_fmt_inr(abs(flt(balance)))} in advance", "cta": "Visit", "route": visit_route}
+
+	return {"tone": "info", "label": "Log a visit", "reason": "Keep the relationship warm", "cta": "Visit", "route": visit_route}
+
+
 @frappe.whitelist()
 def get_customer_360(name):
 	"""Everything a rep needs while standing outside the shop, in one call.
@@ -304,6 +354,9 @@ def get_customer_360(name):
 	if _has("Customer", "credit_limit"):
 		credit_limit = flt(frappe.db.get_value("Customer", name, "credit_limit"))
 
+	visit_count = frappe.db.count("CRM Visit", {"party_type": "Customer", "customer": name})
+	cust_name = base["customer"]["customer_name"] if base.get("customer") else name
+
 	return {
 		**base,
 		"orders": orders,
@@ -314,12 +367,17 @@ def get_customer_360(name):
 		"dispatches": dispatches,
 		"overdue": overdue,
 		"credit_limit": credit_limit,
-		"visit_count": frappe.db.count("CRM Visit", {"party_type": "Customer", "customer": name}),
+		"visit_count": visit_count,
 		"last_visit": str(last_visit) if last_visit else None,
 		"days_since_visit": days_since_visit,
 		"days_since_order": days_since_order,
 		# Same rule of thumb the insights module uses: quiet for a quarter = at risk.
 		"at_risk": bool(days_since_order is not None and days_since_order > 90),
+		# The one thing to do next at this dealer — server-computed, explainable, deep-linked.
+		"next_action": _recommended_action(
+			name, cust_name, base.get("outstanding"), base.get("balance_as_of"),
+			base.get("in_credit"), base.get("balance"), orders["count"], days_since_order, visit_count,
+		),
 	}
 
 

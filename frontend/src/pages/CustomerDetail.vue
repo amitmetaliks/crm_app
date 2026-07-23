@@ -41,6 +41,19 @@
 				</p>
 			</div>
 
+			<!-- The one thing to do next — server-computed, deep-linked -->
+			<router-link v-if="d.next_action" :to="d.next_action.route" class="aa-panel flex items-center gap-3 p-4">
+				<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="actionTone(d.next_action.tone)">
+					<component :is="d.next_action.cta === 'Collect' ? IndianRupee : CalendarClock" class="h-5 w-5" />
+				</span>
+				<span class="min-w-0 flex-1">
+					<span class="aa-kicker">{{ $t("Recommended next") }}</span>
+					<span class="block text-sm font-bold text-navy-800 dark:text-white">{{ d.next_action.label }}</span>
+					<span class="block truncate text-xs text-gray-500">{{ d.next_action.reason }}</span>
+				</span>
+				<span class="inline-flex shrink-0 items-center rounded-lg bg-saffron px-3.5 py-2 text-xs font-bold text-navy-700">{{ d.next_action.cta }}</span>
+			</router-link>
+
 			<!-- The numbers that matter at the door -->
 			<div class="aa-panel grid grid-cols-2 gap-0 overflow-hidden">
 				<div class="border-r border-[#e7e5df] p-4 dark:border-navy-700">
@@ -251,6 +264,14 @@ const nextBestAction = computed(() => {
 	if (Number(d.value.days_since_visit || 0) >= 14) return { title: "Schedule a follow-up visit", detail: `Last field visit was ${ago(d.value.days_since_visit)}.`, to: visitTo("Follow-up") }
 	return { title: "Grow the next order", detail: "Account health is stable. Review stock and identify the next requirement.", to: visitTo("Order Booking") }
 })
+
+const ACTION_TONES = {
+	urgent: "bg-saffron/15 text-saffron",
+	followup: "bg-amber-50 text-amber-700",
+	warn: "bg-red-50 text-red-600",
+	info: "bg-navy-100 text-navy-700",
+}
+function actionTone(tone) { return ACTION_TONES[tone] || ACTION_TONES.info }
 
 function formatDate(x) { return x ? dayjs(x).format("DD MMM YYYY") : "" }
 
