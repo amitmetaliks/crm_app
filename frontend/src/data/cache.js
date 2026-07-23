@@ -128,22 +128,21 @@ export async function prefetchDealers() {
 
 // Server search when online; local filter over the cached list when offline. Same result
 // shape as search_parties ({party_type,id,label,sub,phone}).
-export async function searchDealers(query, party_type = "Customer", limit = 10) {
+export async function searchDealers(query, party_type = "Customer", limit = 10, category = "") {
 	const q = (query || "").trim()
 	if (navigator.onLine) {
 		try {
-			return (await call("crm_app.customers.search_parties", { query: q, party_type, limit })) || []
+			return (await call("crm_app.customers.search_parties", { query: q, party_type, limit, category: category || undefined })) || []
 		} catch (e) {
 			if (!isNetworkError(e)) throw e
 		}
 	}
 	const row = await idbGet(dealersKey())
-	const list = (row && row.value) || []
+	let list = (row && row.value) || []
+	if (category) list = list.filter((d) => d.category === category)
 	const ql = q.toLowerCase()
-	const filtered = ql
-		? list.filter((d) => (d.label || "").toLowerCase().includes(ql) || (d.id || "").toLowerCase().includes(ql))
-		: list
-	return filtered.slice(0, limit)
+	if (ql) list = list.filter((d) => (d.label || "").toLowerCase().includes(ql) || (d.id || "").toLowerCase().includes(ql))
+	return list.slice(0, limit)
 }
 
 // Explicit logout removes customer financial/read data for that account. Queued writes live

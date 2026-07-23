@@ -24,10 +24,12 @@ def _exists(doctype: str) -> bool:
 
 
 @frappe.whitelist()
-def search_parties(query=None, party_type=None, limit=20):
+def search_parties(query=None, party_type=None, limit=20, category=None):
 	"""Search dealers/customers and (if installed) CRM Leads & Deals.
 
-	Returns a flat list of {party_type, id, label, sub, phone}.
+	Returns a flat list of {party_type, id, label, sub, phone, category}. A ``category`` filter
+	applies to dealers only (Leads/Deals have no dealer category), so it implicitly narrows the
+	result to Customers.
 	"""
 	get_current_employee()  # auth gate
 	query = (query or "").strip()
@@ -37,18 +39,67 @@ def search_parties(query=None, party_type=None, limit=20):
 	want = party_type or "all"
 
 	if want in ("all", "Customer") and _exists("Customer"):
-		results += _search_customer(query, limit)
-	if want in ("all", "CRM Lead") and _exists("CRM Lead"):
-		results += _search_crm("CRM Lead", query, limit)
-	if want in ("all", "CRM Deal") and _exists("CRM Deal"):
-		results += _search_crm("CRM Deal", query, limit)
+		results += _search_customer(query, limit, category=category)
+	# A category filter is a dealer concept — don't dilute it with leads/deals.
+	if not category:
+		if want in ("all", "CRM Lead") and _exists("CRM Lead"):
+			results += _search_crm("CRM Lead", query, limit)
+		if want in ("all", "CRM Deal") and _exists("CRM Deal"):
+			results += _search_crm("CRM Deal", query, limit)
 
 	return results[: limit * 2]
 
 
+def _category_field():
+	"""The column that holds a dealer's category (Distributor / Dealer / Sub-Dealer / …).
+
+	Prefer the purpose-built ``custom_dealer_category`` Select, but only if it is actually
+	populated — on the restored backup it exists yet is blank on all 2000+ dealers. Where it
+	is blank, fall back to ``customer_group`` (which does carry the tiers), so the filter is
+	useful today and upgrades to the proper field automatically once it gets filled in.
+	"""
+	if _has("Customer", "custom_dealer_category"):
+		try:
+			if frappe.db.count("Customer", {"custom_dealer_category": ["!=", ""]}) > 0:
+				return "custom_dealer_category"
+		except Exception:
+			pass
+	return "customer_group" if _has("Customer", "customer_group") else None
+
+
+def _party_row(r, cat_field):
+	return {
+		"party_type": "Customer",
+		"id": r.name,
+		"label": r.get("customer_name") or r.name,
+		"sub": r.get("territory") or r.get("customer_group") or "",
+		"phone": r.get("mobile_no") or "",
+		"category": (r.get(cat_field) or "") if cat_field else "",
+	}
+
+
 @frappe.whitelist()
-def list_my_parties(limit=800):
-	"""The rep's own dealers as a flat {party_type,id,label,sub,phone} list.
+def dealer_categories():
+	"""Distinct dealer categories that actually have dealers — the filter chips.
+
+	Drawn from ALL customers, matching what the dealer search (search_parties) returns, so a
+	chip never filters to an empty list. Returns only non-blank values, so the UI shows a tab
+	only where there is data.
+	"""
+	get_current_employee()
+	cat_field = _category_field()
+	if not cat_field or not _exists("Customer"):
+		return {"field": cat_field, "categories": []}
+	rows = frappe.get_all(
+		"Customer", filters={cat_field: ["!=", ""]}, fields=[cat_field], group_by=cat_field, limit=50
+	)
+	cats = sorted({r.get(cat_field) for r in rows if r.get(cat_field)})
+	return {"field": cat_field, "categories": cats}
+
+
+@frappe.whitelist()
+def list_my_parties(limit=800, category=None):
+	"""The rep's own dealers as a flat {party_type,id,label,sub,phone,category} list.
 
 	Cached by the app on load so the rep can still PICK a dealer for a visit when offline
 	(the live search_parties needs a connection). Scoped to rep_customers — the dealers he
@@ -62,27 +113,25 @@ def list_my_parties(limit=800):
 	names = list(rep_customers(employee))
 	if not names:
 		return []
+	cat_field = _category_field()
 	fields = ["name", "customer_name"]
 	for f in ("customer_group", "territory", "mobile_no"):
 		if _has("Customer", f):
 			fields.append(f)
-	rows = frappe.get_all(
-		"Customer", filters={"name": ["in", names]}, fields=fields, order_by="customer_name asc", limit=int(limit)
-	)
-	return [
-		{
-			"party_type": "Customer",
-			"id": r.name,
-			"label": r.get("customer_name") or r.name,
-			"sub": r.get("territory") or r.get("customer_group") or "",
-			"phone": r.get("mobile_no") or "",
-		}
-		for r in rows
-	]
+	if cat_field and cat_field not in fields:
+		fields.append(cat_field)
+	filters = {"name": ["in", names]}
+	if category and cat_field:
+		filters[cat_field] = category
+	rows = frappe.get_all("Customer", filters=filters, fields=fields, order_by="customer_name asc", limit=int(limit))
+	return [_party_row(r, cat_field) for r in rows]
 
 
-def _search_customer(query, limit):
+def _search_customer(query, limit, category=None):
 	filters = {"disabled": 0} if _has("Customer", "disabled") else {}
+	cat_field = _category_field()
+	if category and cat_field:
+		filters[cat_field] = category
 	or_filters = None
 	if query:
 		or_filters = [["customer_name", "like", f"%{query}%"], ["name", "like", f"%{query}%"]]
@@ -90,6 +139,8 @@ def _search_customer(query, limit):
 	for f in ("customer_group", "territory", "mobile_no"):
 		if _has("Customer", f):
 			fields.append(f)
+	if cat_field and cat_field not in fields:
+		fields.append(cat_field)
 	rows = frappe.get_all(
 		"Customer",
 		filters=filters,
@@ -98,16 +149,7 @@ def _search_customer(query, limit):
 		order_by="modified desc",
 		limit=limit,
 	)
-	return [
-		{
-			"party_type": "Customer",
-			"id": r.name,
-			"label": r.get("customer_name") or r.name,
-			"sub": r.get("territory") or r.get("customer_group") or "",
-			"phone": r.get("mobile_no") or "",
-		}
-		for r in rows
-	]
+	return [_party_row(r, cat_field) for r in rows]
 
 
 def _search_crm(doctype, query, limit):

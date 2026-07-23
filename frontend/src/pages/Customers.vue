@@ -11,6 +11,22 @@
 				<input v-model="query" @input="onSearch" class="aa-search" :placeholder='$t("Search name, area or account")' />
 			</div>
 
+			<!-- Category filter — chips only appear for categories that actually have dealers -->
+			<div v-if="categories.length" class="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+				<button
+					@click="setCategory('')"
+					class="min-h-9 shrink-0 rounded-full px-3.5 text-xs font-semibold transition"
+					:class="category === '' ? 'bg-navy-700 text-white' : 'bg-gray-100 text-gray-500 dark:bg-navy-800 dark:text-gray-300'"
+				>{{ $t("All") }}</button>
+				<button
+					v-for="c in categories"
+					:key="c"
+					@click="setCategory(c)"
+					class="min-h-9 shrink-0 rounded-full px-3.5 text-xs font-semibold transition"
+					:class="category === c ? 'bg-navy-700 text-white' : 'bg-gray-100 text-gray-500 dark:bg-navy-800 dark:text-gray-300'"
+				>{{ c }}</button>
+			</div>
+
 			<div class="mb-3 mt-6 flex items-center justify-between">
 				<h2 class="aa-section-heading">{{ query ? "Search results" : "My accounts" }}</h2>
 				<span class="text-xs font-medium text-gray-400">{{ rows.length }} shown</span>
@@ -33,7 +49,7 @@
 							<MapPin v-if="r.sub" class="h-3 w-3" /> {{ r.sub || r.party_type }}
 						</span>
 					</span>
-					<span class="aa-pill aa-pill-gray">{{ r.party_type === "Customer" ? "Dealer" : r.party_type }}</span>
+					<span class="aa-pill aa-pill-gray shrink-0">{{ r.party_type === "Customer" ? (r.category || "Dealer") : r.party_type }}</span>
 					<ChevronRight class="h-4 w-4 text-gray-300" />
 				</router-link>
 			</div>
@@ -49,11 +65,13 @@ import { ChevronRight, Search, UserRoundPlus, MapPin } from "lucide-vue-next"
 import BottomNav from "../components/BottomNav.vue"
 import Skeleton from "../components/Skeleton.vue"
 import EmptyState from "../components/EmptyState.vue"
-import { searchDealers } from "../data/cache"
+import { searchDealers, callCached } from "../data/cache"
 
 const query = ref("")
 const rows = ref([])
 const loading = ref(true)
+const category = ref("")
+const categories = ref([])
 let timer = null
 
 function initials(label) {
@@ -61,13 +79,20 @@ function initials(label) {
 }
 async function load() {
 	loading.value = true
-	try { rows.value = (await searchDealers(query.value, "", 25)) || [] }
+	try { rows.value = (await searchDealers(query.value, "", 25, category.value)) || [] }
 	catch (e) { rows.value = [] }
 	finally { loading.value = false }
 }
+function setCategory(c) { category.value = c; load() }
 function onSearch() {
 	clearTimeout(timer)
 	timer = setTimeout(load, 300)
 }
-onMounted(load)
+onMounted(async () => {
+	try {
+		const res = await callCached("crm_app.customers.dealer_categories")
+		categories.value = (res && res.categories) || []
+	} catch (e) { /* no chips — filter simply won't show */ }
+	await load()
+})
 </script>
