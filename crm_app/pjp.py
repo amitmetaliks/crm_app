@@ -282,26 +282,31 @@ def auto_generate_daily_beats():
 
 
 def generate_beat_for(employee, day):
-	"""Internal (scheduler) variant: no session, so it takes the employee explicitly."""
+	"""Internal (scheduler) variant: no session, so it takes the employee explicitly.
+
+	Only builds a day that has no beat yet, and only once per rep per day: topping up an
+	existing beat put back a stop the rep had removed, and a re-run re-created a beat
+	he had deleted (26 Oct 2026). The rep can still top up by hand (generate_beat)."""
+	stamp = f"crm_app_beat_generated_{employee}"
+	if frappe.db.get_default(stamp) == str(day):
+		return {"created": 0}
+	if frappe.db.exists("CRM Beat Plan", {"sales_person": employee, "plan_date": day}):
+		return {"created": 0}
 	pjp = _active_pjp(employee)
 	if not pjp:
 		return {"created": 0}
 	due = _due_entries(pjp, day)
 	if not due:
 		return {"created": 0}
-	name = frappe.db.get_value("CRM Beat Plan", {"sales_person": employee, "plan_date": day}, "name")
-	if name:
-		doc = frappe.get_doc("CRM Beat Plan", name)
-	else:
-		doc = frappe.new_doc("CRM Beat Plan")
-		doc.sales_person = employee
-		doc.plan_date = day
-		doc.title = pjp.title
-		doc.status = "Active"
-		doc.beat_type = _dominant_type(due)
-		doc.territory = next((e.area for e in due if e.area), None)
+	doc = frappe.new_doc("CRM Beat Plan")
+	doc.sales_person = employee
+	doc.plan_date = day
+	doc.title = pjp.title
+	doc.status = "Active"
+	doc.beat_type = _dominant_type(due)
+	doc.territory = next((e.area for e in due if e.area), None)
 	added = _append_stops(doc, due)
-	if added or not name:
-		doc.save(ignore_permissions=True)
-		frappe.db.commit()
+	doc.save(ignore_permissions=True)
+	frappe.db.set_default(stamp, str(day))
+	frappe.db.commit()
 	return {"created": added}
