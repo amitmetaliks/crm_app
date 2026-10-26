@@ -33,8 +33,21 @@ def notify(user: str, subject: str, body: str = "", route: str = "/amit-crm"):
 		pass
 
 
+def _first_run_today(job: str) -> bool:
+	"""True only for the first run of `job` today. A second run the same day (a manual
+	re-run, a scheduler retry) sent every reminder again (26 Oct 2026)."""
+	key = f"crm_app_{job}_ran_on"
+	if frappe.db.get_default(key) == today():
+		return False
+	frappe.db.set_default(key, today())
+	frappe.db.commit()
+	return True
+
+
 def send_beat_reminders():
 	"""Morning nudge: tell each rep how many stops are on today's beat."""
+	if not _first_run_today("beat_reminders"):
+		return
 	day = today()
 	for bp in frappe.get_all(
 		"CRM Beat Plan",
@@ -50,6 +63,8 @@ def send_beat_reminders():
 
 def send_followup_reminders():
 	"""Remind reps about visits whose next_visit_date is today."""
+	if not _first_run_today("followup_reminders"):
+		return
 	day = today()
 	for v in frappe.get_all(
 		"CRM Visit",
@@ -67,6 +82,8 @@ def send_followup_reminders():
 
 def flag_missed_visits():
 	"""Flag yesterday's planned-but-not-visited beat stops to the rep."""
+	if not _first_run_today("missed_visits"):
+		return
 	yday = add_days(today(), -1)
 	for bp in frappe.get_all(
 		"CRM Beat Plan", filters={"plan_date": yday}, fields=["name", "sales_person"]
